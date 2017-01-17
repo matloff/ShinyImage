@@ -1,8 +1,11 @@
-Package: imagehistory
+Package: ShinyImage
 Type: Package
-Title: ImageHistory
+Title: ShinyImage
 Version: 0.1.0
-Authors@R: person("Alexander", "Fu", email = "aafu@ucdavis.edu", role = c("aut", "cre"))
+Authors@R: c(person("Alexander", "Fu", email = "aafu@ucdavis.edu", 
+        role = c("aut", "cre")),
+     person("Norm", "Matloff", email = "nsmatloff@ucdavis.edu", 
+        role = c("aut", "cre")))
 Description: Imaging package, with an emphasis on recording history of changes.
 License: MIT
 LazyData: TRUE
