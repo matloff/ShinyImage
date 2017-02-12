@@ -1,7 +1,7 @@
 
 
-source("http://bioconductor.org/biocLite.R") #Install package
-biocLite("EBImage")
+source("http://bioconductor.org/biocLite.R", verbose = FALSE) #Install package
+biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
 library(EBImage)                             #Include EBImage Lib
 
 # action object, can be extended to add more operations
@@ -83,7 +83,6 @@ img = function(inputImage) {
     } else {
       print("No action to redo")
     }
-
   }
 
 
@@ -105,18 +104,22 @@ img = function(inputImage) {
   # TODO: clamp brightness to set amount
   remove_brightness = function() {
     current_image <<- current_image - 0.1
-    brightness <<- brightness - 0.1
+    contrast <<- contrast - 0.1
     add_action()
   }
 
   # add contrast
   add_contrast = function() {
-    # To do
+    current_image <<- current_image * 1.1
+    contrast <<- contrast * 1.1
+    add_action()
   }
 
   # remove contrast
   remove_contrast = function() {
-    # To do
+    current_image <<- current_image * 0.9
+    contrast <<- contrast * 0.9
+    add_action()
   }
 
   # use locator to get corners of an image. Automatically finds min and max coordinates.
