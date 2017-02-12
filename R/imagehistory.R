@@ -85,6 +85,11 @@ img = function(inputImage) {
     }
   }
 
+  # Way to display image in Shiny
+  getimg = function() {
+    return (renderPlot({display(current_image, method="raster")}))
+  }
+
 
   # plot output of image
   render= function() {
@@ -145,6 +150,7 @@ img = function(inputImage) {
     remove_brightness=remove_brightness,
     crop=crop,
     undo=undo,
-    redo=redo
+    redo=redo,
+    getimg=getimg
   ))
 }
