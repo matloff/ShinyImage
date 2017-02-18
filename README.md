@@ -1,10 +1,28 @@
 # ShinyImg
 Imaging package, with an emphasis on recording history of changes.
 
-## Installation Errors
-If you receive the error:
-"fftwtools.c:28:18: fatalerror: fftw3.h: No such file or directory", download and install
-from this link: http://micro.stanford.edu/wiki/Install_FFTW3
+## Prerequisites
+
+### Linux Specific
+```ffwtools``` must be installed fpr this package to work. 
+It can be found at this link:
+https://cran.r-project.org/web/packages/fftwtools/index.html
+
+Then follow the instructions below,
+
+### Windows Specific
+No additional steps are needed besides the steps below.
+
+### Both Platforms
+The following package must be installed in order to use EBImage, an image library.
+In order to do so, run the commands:
+```R
+source("http://bioconductor.org/biocLite.R", verbose = FALSE) #Install package
+biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
+```
+Having done this, you can install ShinyImg.
+
+
 ## Example Usage
 
 ```R

@@ -1,7 +1,3 @@
-
-
-source("http://bioconductor.org/biocLite.R", verbose = FALSE) #Install package
-biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
 library(EBImage)                             #Include EBImage Lib
 
 # action object, can be extended to add more operations
