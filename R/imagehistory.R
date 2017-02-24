@@ -19,14 +19,12 @@ action = function(bright, cont, gam, crops) {
   }
 
   # create object
-  return(list(
-    get_action=get_action
-  ))
+  return(list(get_action = get_action))
 }
 
 
 # img object, requires an input source for an image
-img = function(inputImage) {
+shinyimg = function(inputImage) {
   # base image
   local_img = readImage(inputImage)
   # makes a copy to display
@@ -44,7 +42,8 @@ img = function(inputImage) {
   add_action = function() {
     if (actions < length(img_history))
       img_history <<- img_history[1:actions]
-    img_history <<- c(img_history, action(brightness, contrast, 0, c(xy1, xy2)))
+    img_history <<-
+      c(img_history, action(brightness, contrast, 0, c(xy1, xy2)))
     actions <<- actions + 1
     render()
   }
@@ -54,7 +53,8 @@ img = function(inputImage) {
     args = action$get_action()
     current_image <<- local_img * 1
     current_image <<- current_image + args[1]
-    current_image <<- current_image[args[4]:args[6], args[5]:args[7],]
+    current_image <<-
+      current_image[args[4]:args[6], args[5]:args[7], ]
   }
 
   # undo last move
@@ -83,13 +83,15 @@ img = function(inputImage) {
 
   # Way to display image in Shiny
   getimg = function() {
-    return (renderPlot({display(current_image, method="raster")}))
+    return (renderPlot({
+      display(current_image, method = "raster")
+    }))
   }
 
 
   # plot output of image
-  render= function() {
-    display(current_image, method="raster")
+  render = function() {
+    display(current_image, method = "raster")
   }
 
   # adjust brightness
@@ -133,20 +135,62 @@ img = function(inputImage) {
     y2 = max(location$y[1], location$y[2])
     xy1 = c(x1, y1)
     xy2 = c(x2, y2)
-    current_image <<- current_image[x1:x2, y1:y2,]
+    current_image <<- current_image[x1:x2, y1:y2, ]
     add_action()
   }
 
   # add original image
   add_action()
 
-  return(list(
-    render=render,
-    add_brightness=add_brightness,
-    remove_brightness=remove_brightness,
-    crop=crop,
-    undo=undo,
-    redo=redo,
-    getimg=getimg
-  ))
+  return(
+    list(
+      render = render,
+      add_brightness = add_brightness,
+      remove_brightness = remove_brightness,
+      crop = crop,
+      undo = undo,
+      redo = redo,
+      getimg = getimg
+    )
+  )
 }
+
+start_gui = function(img) {
+  if (!require("shiny")) {
+    install.packages("shiny")
+  }
+
+  if (!require("shinydashboard")) {
+    install.packages("shinydashboard")
+  }
+  library("shinydashboard")
+  library("shiny")
+
+  server <- function(input, output) {
+    output$distPlot <- renderPlot({
+      hist(rnorm(input$obs), col = 'darkgray', border = 'white')
+    })
+
+    observeEvent(input$close, {
+      stopApp()
+    })
+    output$img <- img$getimg()
+
+    output$info <- renderText({
+      paste0("x=", input$plot_click$x, "\ny=", input$plot_click$y)
+    })
+
+  }
+
+  ui <- fluidPage(plotOutput("img", click = "plot_click"),
+                  verbatimTextOutput("info"))
+  cat("ShinyImg GUI will now start running.\n")
+  cat("Please use the close button in the GUI to stop the server.")
+  shinyApp(ui = ui, server = server)
+}
+
+start_gui(
+  shinyimg(
+    "https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg"
+  )
+)

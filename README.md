@@ -2,18 +2,21 @@
 Imaging package, with an emphasis on recording history of changes.
 
 ## Prerequisites
-
-### Linux Specific
+There are two prerequisite steps. The first is platform-dependent. The second step is the same for all platforms.
+### 1a. Linux Specific
 ```ffwtools``` must be installed fpr this package to work. 
 It can be found at this link:
 https://cran.r-project.org/web/packages/fftwtools/index.html
 
-Then follow the instructions below,
+Then follow the instructions in step 2.
 
-### Windows Specific
-No additional steps are needed besides the steps below.
+### 1b. Windows Specific
+No additional steps are needed besides step 2.
 
-### Both Platforms
+### 1c. Mac Specific
+To do.
+
+### 2. Installing EBImage
 The following package must be installed in order to use EBImage, an image library.
 In order to do so, run the commands:
 ```R
@@ -23,13 +26,18 @@ biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
 Having done this, you can install ShinyImg.
 
 
+## Installation Errors
+If you receive the error:
+"fftwtools.c:28:18: fatalerror: fftw3.h: No such file or directory", download and install
+from this link: http://micro.stanford.edu/wiki/Install_FFTW3
+ 
 ## Example Usage
 
 ```R
 > # Online images can be used
-> tiger = img("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
+> tiger = shinyimg("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
 > # Local is fine also
-> tiger_local = img("~/Tigerwater_edit2.jpg")
+> tiger_local = shinyimg("~/Tigerwater_edit2.jpg")
 >
 > # Crops the image. Will allow you to specify two points on the canvas that make up opposite ends of
 > # the rectangular crop.
