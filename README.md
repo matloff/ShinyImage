@@ -9,6 +9,10 @@ There are two prerequisite steps. The first is platform-dependent. The second st
 It can be found at this link:
 https://cran.r-project.org/web/packages/fftwtools/index.html
 
+If you recieve the error:
+`"fftwtools.c:28:18: fatalerror: fftw3.h: No such file or directory"`
+please look under Installation Errors below to get the header.
+
 Then follow the instructions in step 2.
 
 ### 1b. Windows Specific
@@ -29,8 +33,11 @@ Having done this, you can install ShinyImg.
 
 ## Installation Errors
 If you receive the error:
-"fftwtools.c:28:18: fatalerror: fftw3.h: No such file or directory", download and install
-from this link: http://micro.stanford.edu/wiki/Install_FFTW3
+"fftwtools.c:28:18: fatalerror: fftw3.h: No such file or directory", follow the 
+instructions at this link: http://micro.stanford.edu/wiki/Install_FFTW3
+
+Note: the wget URL listed under General Remarks is outdated (404). Use the
+following tar file instead: http://www.fftw.org/fftw-3.3.6-pl1.tar.gz
  
 ## Example Usage
 
