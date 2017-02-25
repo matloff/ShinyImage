@@ -5,6 +5,7 @@ Imaging package, with an emphasis on recording history of changes.
 There are two prerequisite steps. The first is platform-dependent. The second step is the same for all platforms.
 ### 1a. Linux Specific
 ```ffwtools``` must be installed fpr this package to work. 
+
 It can be found at this link:
 https://cran.r-project.org/web/packages/fftwtools/index.html
 
