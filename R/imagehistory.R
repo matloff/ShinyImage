@@ -1,6 +1,19 @@
 library(EBImage)                             #Include EBImage Lib
 
-# action object, can be extended to add more operations
+#' An action represents the changes that have
+#' been done to a certain file. Currently, it
+#' contains brightness, contrast, gamma, and
+#' crop information.
+#' 
+#' @param bright the current brightness value.
+#' @param cont the current contrast value
+#' @param gam the gamma value
+#' @param crops the coordinates of crops
+#' 
+#' @return A concatenated sequence of action values.
+#' @examples
+#' Should not be used by the user.
+#' 
 action = function(bright, cont, gam, crops) {
   brightness = bright
   contrast = cont
@@ -23,7 +36,15 @@ action = function(bright, cont, gam, crops) {
 }
 
 
-# img object, requires an input source for an image
+
+#' An EBImage wrapper with integrated history tracking.
+#' 
+#' @param inputImage A URL or the local path of an image
+#' @return A ShinyImg object with manipulation functions
+#' @examples
+#' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+#' web_tiger = shinyimg("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
+#'
 shinyimg = function(inputImage) {
   # base image
   local_img = readImage(inputImage)
@@ -57,7 +78,13 @@ shinyimg = function(inputImage) {
       current_image[args[4]:args[6], args[5]:args[7], ]
   }
 
-  # undo last move
+  #' Undoes the last change done to this image. 
+  #' When the original image state is reached,
+  #' no more undos are possible.
+  #' @examples
+  #' local_tiger = shinyimg(\"Tigerwater_edit2.jpg\")
+  #' local_tiger$add_brightness()
+  #' local_tiger$undo() # Undoes the brightness addition
   undo = function() {
     if (actions != 1) {
       actions <<- actions - 1
@@ -69,7 +96,13 @@ shinyimg = function(inputImage) {
 
   }
 
-  # redo last move
+  #' Redos an undo'd action. Will no longer redo if there are no
+  #' more undos to redo.
+  #' @examples
+  #' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+  #' local_tiger$add_brightness()
+  #' local_tiger$undo() # Undoes the brightness addition
+  #' local_tiger$redo() # Redoes the brightness addition
   redo = function() {
     if (actions < length(img_history)) {
       actions <<- actions + 1
@@ -81,7 +114,14 @@ shinyimg = function(inputImage) {
     }
   }
 
-  # Way to display image in Shiny
+  #' Returns a Shiny compatible image
+  #' @return a image that can be used in Shiny
+  #' @examples
+  #' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+  #' local_tiger$add_brightness()
+  #' shiny_tiger = local_tiger$getimg() #Now usable by Shiny
+  #' 
+  
   getimg = function() {
     return (renderPlot({
       display(current_image, method = "raster")
@@ -94,7 +134,10 @@ shinyimg = function(inputImage) {
     display(current_image, method = "raster")
   }
 
-  # adjust brightness
+  #' Adds brightness to the image
+  #' @examples
+  #' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+  #' local_tiger$add_brightness()
   # TODO: clamp brightness to set amount
   add_brightness = function() {
     #img_history = c(img_history, action()   )
@@ -103,7 +146,10 @@ shinyimg = function(inputImage) {
     add_action()
   }
 
-  # darken the image
+  #' Removes brightness (darkens) to the image
+  #' @examples
+  #' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+  #' local_tiger$remove_brightness()
   # TODO: clamp brightness to set amount
   remove_brightness = function() {
     current_image <<- current_image - 0.1
@@ -111,14 +157,20 @@ shinyimg = function(inputImage) {
     add_action()
   }
 
-  # add contrast
+  #' Adds contrast to the image
+  #' @examples
+  #' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+  #' local_tiger$add_contrast()
   add_contrast = function() {
     current_image <<- current_image * 1.1
     contrast <<- contrast * 1.1
     add_action()
   }
 
-  # remove contrast
+  #' Removes contrast from the image
+  #' @examples
+  #' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+  #' local_tiger$remove_contrast()
   remove_contrast = function() {
     current_image <<- current_image * 0.9
     contrast <<- contrast * 0.9
@@ -126,6 +178,11 @@ shinyimg = function(inputImage) {
   }
 
   # use locator to get corners of an image. Automatically finds min and max coordinates.
+  #' After two points are selected, a cropping selection can be create
+  #' in order to crop the image to the desired size.
+  #' @examples
+  #' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+  #' local_tiger$crop()
   crop = function() {
     print("Select the two opposite corners of a rectangle on the plot.")
     location = locator(2)
@@ -155,6 +212,14 @@ shinyimg = function(inputImage) {
   )
 }
 
+#' A Shiny application that requires a ShinyImg to edit
+#' (most likely will be changed in the future)
+#' 
+#' @param img A ShinyImg to edit using the GUI editor
+#' @examples
+#' local_tiger = shinyimg("Tigerwater_edit2.jpg")
+#' start_gui(local_tiger)
+#'
 start_gui = function(img) {
   if (!require("shiny")) {
     install.packages("shiny")
