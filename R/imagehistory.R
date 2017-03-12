@@ -169,7 +169,16 @@ shinyimg <- R6Class("shinyimg",
                         self$contrast <- self$contrast * 0.9
                         self$add_action()
                       },
-                      
+                      set_brightness = function(brightness) {
+                        self$current_image <- self$local_img + brightness
+                        self$brightness <- brightness
+                        self$add_action()
+                      },
+                      set_contrast = function(contrast) {
+                        self$current_image <- self$local_img * contrast
+                        self$contrast <- contrast
+                        self$add_action()
+                      },
                       crop = function() {
                         print("Select the two opposite corners of a rectangle on the plot.")
                         location = locator(2)
@@ -264,31 +273,64 @@ start_gui = function(img) {
   library("shinydashboard")
   library("shiny")
   
-  server <- function(input, output) {
-    output$distPlot <- renderPlot({
-      hist(rnorm(input$obs), col = 'darkgray', border = 'white')
+  server <- function(input, output, session) {
+    
+    current_image <- reactive({
+      current_image <- img$current_image
+    })
+    
+    updateSliderInput(session, "brightness", value = img$brightness * 10)
+    updateSliderInput(session, "contrast", value = (1 - img$contrast) * 10)
+    
+    observe({
+      cat("Startup succeeded")
     })
     
     observeEvent(input$close, {
       stopApp()
     })
-    output$img <- img$getimg()
     
-    output$info <- renderText({
-      paste0("x=", input$plot_click$x, "\ny=", input$plot_click$y)
+    output$plot2 <- renderPlot({
+      display(current_image(), method = "raster")
     })
     
+    observeEvent(input$brightness, {
+      img$set_brightness(input$brightness / 10)
+      output$plot2 <- renderPlot({
+        display(img$current_image, method = "raster")
+      })
+    })
+    observeEvent(input$contrast, {
+      actualContrast = (1 + input$contrast / 10)
+      img$set_contrast(actualContrast)
+      output$plot2 <- renderPlot({
+        display(img$current_image, method = "raster")
+      })
+    })
+    
+    output$img <- img$getimg()
   }
   
-  ui <- fluidPage(plotOutput("img", click = "plot_click"),
-                  verbatimTextOutput("info"))
+  ui <- dashboardPage(
+    dashboardHeader(title = "ShinyImg GUI"),
+    dashboardSidebar(
+ 
+        sliderInput("brightness", "Image Brightness", -10, 10, 0),
+        sliderInput("contrast", "Image Contrast", -10, 10, 0)
+
+      
+    ),
+    dashboardBody(
+      # Boxes need to be put in a row (or column)
+      fluidRow(
+        box(plotOutput("plot2", height = 250))
+      )
+    )
+  )
+    #fluidPage(plotOutput("img", click = "plot_click"),
+     #             verbatimTextOutput("info"))
   cat("ShinyImg GUI will now start running.\n")
   cat("Please use the close button in the GUI to stop the server.")
   shinyApp(ui = ui, server = server)
 }
 
-start_gui(
-  shinyimg(
-    "https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg"
-  )
-)
