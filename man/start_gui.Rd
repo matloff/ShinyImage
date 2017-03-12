@@ -15,7 +15,7 @@ A Shiny application that requires a ShinyImg to edit
 (most likely will be changed in the future)
 }
 \examples{
-local_tiger = shinyimg("Tigerwater_edit2.jpg")
+local_tiger = shinyimg$new("Tigerwater_edit2.jpg")
 start_gui(local_tiger)
 
 }

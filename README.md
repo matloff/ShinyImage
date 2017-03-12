@@ -25,14 +25,14 @@ R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz
 </pre>
 
 (changing the version number as necessary).
-
+z
 ## Example Usage
 
 Here we will perform several actions, both to illustrate some ShinyImage operations and also to show the journaling, i.e. version save/restore.
 
 <pre>
 # load image, whether local file or from the Web
-> tiger = shinyimg("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
+> tiger = shinyimg$new("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
 
 # crop the image
 > tiger$crop()
