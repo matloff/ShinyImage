@@ -17,6 +17,4 @@ local_tiger = shinyimg$new("Tigerwater_edit2.jpg")
 local_tiger$save("tiger.si")
 # Restart R 
 reloaded_tiger = shinyload("tiger.si")
-
-
 }
