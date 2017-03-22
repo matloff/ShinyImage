@@ -15,8 +15,8 @@ Object of \code{\link{R6Class}} with manipulation functions.
 An EBImage wrapper with integrated history tracking.
 }
 \examples{
-local_tiger = shinyimg$new\\(\\"Tigerwater_edit2.jpg\\"\\)
-web_tiger = shinyimg$new("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
+local_tiger = shinyimg$new('Tigerwater_edit2.jpg')
+web_tiger = shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
 
 local_tiger$add_brightness()
 local_tiger$undo() # Undoes the brightness addition
@@ -35,9 +35,9 @@ local_tiger$remove_contrast() # Removes Contrast
 
 local_tiger$crop() # Allows the user to select two points to crop to.
 
-local_tiger$save("save.ri") # Saves the current state. The filename is optional.
+local_tiger$save('save.ri') # Saves the current state. The filename is optional.
 
-local_tiger$reload("save.ri") # Loads from a previously saved state. The filename is optional.
+local_tiger$load('save.ri') # Loads from a previously saved state. The filename is optional. Requires a previously instantiated shinyimg instance (argument provided to new can be null).
 
 #' @section Methods:
 \\describe{
@@ -52,8 +52,8 @@ local_tiger$reload("save.ri") # Loads from a previously saved state. The filenam
   \\item{\\code{add_contrast()}}{Adds contrast to the image.}
   \\item{\\code{remove_contrast()}}{Removes contrast from the image.}
   \\item{\\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates. After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
-  \\item{\\code{save(filepath)}}{Saves the current state to be resumed later. \\code{filepath} has a default value of "workspace.si"}
-  \\item{\\code{load(filepath)}}{Loads a previously saved state. \\code{filepath} has a default value of "workspace.si"}
+  \\item{\\code{save(filepath)}}{Saves the current state to be resumed later. \\code{filepath} has a default value of 'workspace.si'}
+  \\item{\\code{load(filepath)}}{Loads a previously saved state. \\code{filepath} has a default value of 'workspace.si'}
   }
 }
 \keyword{data}

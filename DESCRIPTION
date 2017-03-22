@@ -10,3 +10,4 @@ Description: Imaging package, with an emphasis on recording history of changes.
 Depends: EBImage
 License: MIT
 LazyData: TRUE
+RoxygenNote: 6.0.1

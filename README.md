@@ -2,7 +2,7 @@
 
 Imaging package, with an emphasis on recording history of changes.
 
-## Installatiuon
+## Installation
 
 The R library ffwtools is needed, so install it from CRAN.  This should be
 straightforward on Macs or on Windows machine; for Linux see 
@@ -15,6 +15,18 @@ source("http://bioconductor.org/biocLite.R", verbose = FALSE) #Install package
 biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
 </pre>
 
+You will also need to install R6. 
+
+Run this command from within R:
+
+<pre>
+install.packages("R6")
+# And if you would like to use the GUI, run the commands
+# below as well
+install.packages("shiny")
+install.packages("shinydashboard")
+</pre>
+
 Having done this, you can install ShinyImage.  For instance, download
 the .zip package from https://github.com/matloff/ShinyImage and unpack it,
 creating a directory/folder ShinyImage-master.  Then type 
@@ -23,9 +35,9 @@ creating a directory/folder ShinyImage-master.  Then type
 R CMD build ShinyImage-master
 R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz
 </pre>
-
+with z being the location you wish to install ShinyImg to
 (changing the version number as necessary).
-z
+
 ## Example Usage
 
 Here we will perform several actions, both to illustrate some ShinyImage operations and also to show the journaling, i.e. version save/restore.
