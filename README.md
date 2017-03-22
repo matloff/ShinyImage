@@ -69,6 +69,22 @@ Here we will perform several actions, both to illustrate some ShinyImage operati
 > tiger$redo()
 # and finally, display the image
 > tiger$render()
+# We can also save the image to edit later on:
+> tiger$save("tiger-water.si")
+# And later we can come back after a cold boot to do:
+> tiger = shinyload("tiger-water.si")
+# If you want to revert to a previous saved state, you can also do:
+> tiger$load("tiger-water.si")
+# This will load the image back to the state it was in when you saved the image. 
+>
+>
+# A gui can also be spawned to edit images, either with a raw image file or an existing ShinyImage.
+> editor_instance = shinygui$new()
+# The following is using an instance of ShinyImage
+> editor_instance$load(tiger)
+# And this is using a raw image:
+> editor_instance$load("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
+# The plus side of the former is that if the editor crashes, the image changes are all still saved in the "tiger" variable!
 </pre>
 
 <h3>

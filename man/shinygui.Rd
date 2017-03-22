@@ -18,12 +18,14 @@ The ShinyImg GUI editor
 local_tiger = shinyimg$new("Tigerwater_edit2.jpg")
 editor_instance = shinygui$new()
 editor_instance$load(tiger)
+# The original image can also be provided:
+editor_instance$load("Tigerwater_edit2.jpg")
 #' @section Methods:
 \\describe{
   \\item{Documentation}{The user should create an instance to facilitate the gui editing of an image.}
   \\item{\\code{new()}}{Default constructor. No arguments required.}
 
-  \\item{\\code{load()}}{Loads a ShinyImage in order to process.}
+  \\item{\\code{load()}}{Loads a ShinyImage or raw image in order to process.}
   }
 
 }
