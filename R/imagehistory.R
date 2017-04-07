@@ -88,6 +88,7 @@ siaction <- R6Class("siaction",
 #'   \item{\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates. After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
 #'   \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
 #'   \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
+#'   \item{\code{dim()}}{Returns the current image's dimentions.}
 #'   }
 shinyimg <- R6Class("shinyimg",
                     lock_objects = FALSE,
@@ -97,6 +98,8 @@ shinyimg <- R6Class("shinyimg",
                       actions = 0,
                       xy1 = c(0, 0),
                       xy2 = NULL,
+                      xoffset = 0,
+                      yoffset = 0,
                       img_history = c(),
                       local_img = NULL,
                       current_image = NULL,
@@ -123,7 +126,6 @@ shinyimg <- R6Class("shinyimg",
                                             crop2y = self$xy2[2]) {
                         if (self$actions < length(self$img_history))
                           self$img_history <- self$img_history[1:self$actions]
-                        
                         self$img_history <-
                           c(self$img_history, siaction$new(bright, cont, gam, c(c(crop1x,crop1y), c(crop2x, crop2y))))
                         self$actions <- self$actions + 1
@@ -141,8 +143,8 @@ shinyimg <- R6Class("shinyimg",
                         args = dataframe$get_action()
               
                         self$current_image <- self$local_img * args[2]
-                        self$current_image <- self$local_img + args[1]
-                        self$current_image <- self$local_img[args[4]:args[6], args[5]:args[7], ]
+                        self$current_image <- self$current_image + args[1]
+                        self$current_image <- self$current_image[args[4]:args[6], args[5]:args[7], ]
                       },
                       
                       add_brightness = function() {
@@ -185,12 +187,26 @@ shinyimg <- R6Class("shinyimg",
                         y1 = min(location$y[1], location$y[2])
                         x2 = max(location$x[1], location$x[2])
                         y2 = max(location$y[1], location$y[2])
-                        self$xy1 = c(x1, y1)
-                        self$xy2 = c(x2, y2)
-                        self$current_image <<- self$current_image[x1:x2, y1:y2, ]
+                        self$current_image <<- self$current_image[x1:x2, y1:y2,]
+                        
+                        # In order to maintain a correct cropping, we need to know how much of
+                        # the original image has already been cropped.
+                        xdiff = x2 - x1
+                        ydiff = y2 - y1
+                        
+                        self$xoffset = self$xoffset + x1
+                        self$yoffset = self$yoffset + y1
+                        
+                        self$xy1 = c(self$xoffset, self$yoffset)
+                        self$xy2 = c(self$xoffset + xdiff, self$yoffset + ydiff)
                         self$add_action()
                       },
-                      
+                      cropxy = function(x1, x2, y1, y2) {
+                        self$xy1 = c(x1, y1)
+                        self$xy2 = c(x2, y2)
+                        self$add_action()
+                        self$applyAction(self$img_history[self$actions])
+                      },                        
                       undo = function() {
                         if (self$actions != 1) {
                           self$actions <- self$actions - 1
@@ -252,6 +268,9 @@ shinyimg <- R6Class("shinyimg",
                         self$actions <- actions
                         self$applyAction(self$img_history[self$actions])
                         self$render()
+                      }, 
+                      size = function() {
+                        dim(self$current_image)
                       }
                     )
 )
@@ -311,7 +330,6 @@ public = list(
     }
     library("shinydashboard")
     library("shiny")
-    
     server <- function(input, output, session) {
       
       current_image <- reactive({
@@ -347,6 +365,49 @@ public = list(
         })
       })
       
+      observeEvent(input$x1, {
+        if (input$x1 >= input$x2) {
+          updateSliderInput(session, "x1", value = input$x2 - 1)
+          return
+        }
+        
+        img$cropxy(input$x1, input$x2, input$y1, input$y2)
+        output$plot2 <- renderPlot({
+          display(img$current_image, method = "raster")
+        })
+      })
+      observeEvent(input$y1, {
+        if (input$y1 >= input$y2) {
+          updateSliderInput(session, "y1", value = input$y2 - 1)
+          return
+        }
+        img$cropxy(input$x1, input$x2, input$y1, input$y2)      
+        output$plot2 <- renderPlot({
+          display(img$current_image, method = "raster")
+        })
+      })
+      observeEvent(input$x2, {
+        if (input$x2 <= input$x1) {
+          updateSliderInput(session, "x2", value = input$x1 + 1)
+          return
+        }
+        img$cropxy(input$x1, input$x2, input$y1, input$y2)
+        output$plot2 <- renderPlot({
+          display(img$current_image, method = "raster")
+        })
+      })
+      
+      observeEvent(input$y2, {
+        if (input$y2 <= input$y1) {
+          updateSliderInput(session, "y2", value = input$y1 + 1)
+          return
+        }
+        img$cropxy(input$x1, input$x2, input$y1, input$y2)
+        output$plot2 <- renderPlot({
+          display(img$current_image, method = "raster")
+        })
+      })
+      
       output$img <- img$getimg()
     }
     
@@ -355,12 +416,16 @@ public = list(
       dashboardSidebar(
         
         sliderInput("brightness", "Image Brightness", -10, 10, 0),
-        sliderInput("contrast", "Image Contrast", -10, 10, 0)
+        sliderInput("contrast", "Image Contrast", -10, 10, 0),
+        sliderInput("x1", "X1 Crop", 0, img$size()[1], 0),
+        sliderInput("x2", "X2 Crop", 0, img$size()[1], img$size()[1]),
+        sliderInput("y1", "Y1 Crop", 0, img$size()[2], 0),
+        sliderInput("y2", "Y2 Crop", 0, img$size()[2], img$size()[2])
       ),
       dashboardBody(
         # Boxes need to be put in a row (or column)
         fluidRow(
-          box(plotOutput("plot2", height = 250))
+          box(width = 12, background = "black", plotOutput("plot2", height = img$size()[2]/2, width = img$size()[1]/2))
         )
       )
     )
