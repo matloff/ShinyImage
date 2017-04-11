@@ -1,46 +1,50 @@
 # ShinyImage
 
-Imaging package, with an emphasis on recording history of changes.
+Imaging package, with an emphasis on *journaling*, i.e.  recording
+history of changes.  Undo/redo operations, ability to display multiple
+versions (currently under construction), etc.  The history is
+persistent, i.e. across sessions.  Can be run from the R command line,
+or from a Shiny-based GUI.
 
 ## Installation
 
-The R library ffwtools is needed, so install it from CRAN.  This should be
-straightforward on Macs or on Windows machine; for Linux see 
+The R library __ffwtools__ is needed, so install it from CRAN.  This should be
+straightforward on Macs or on Windows machines; for Linux see 
 <a href="#Linux">these special instructions.</a> 
 
-Now install EBImage.  Run these commands from within R:
+Now install **EBImage**.  Run these commands from within R:
 
 <pre>
 source("http://bioconductor.org/biocLite.R", verbose = FALSE) #Install package
 biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
 </pre>
 
-You will also need to install R6. 
-
+You will also need to install **R6** from CRAN. 
 Run this command from within R:
 
 <pre>
-install.packages("R6")
-# And if you would like to use the GUI, run the commands
+install.packages('R6')
+# and if you would like to use the GUI, run the command
 # below as well
-install.packages("shiny")
-install.packages("shinydashboard")
+install.packages(c('shiny','shinydashboard'))
 </pre>
 
 Having done this, you can install ShinyImage.  For instance, download
-the .zip package from https://github.com/matloff/ShinyImage and unpack it,
-creating a directory/folder ShinyImage-master.  Then type 
+the **.zip** package from __https://github.com/matloff/ShinyImag__ and
+unpack it, creating a directory/folder **ShinyImage-master**.  Then from a
+terminal window, run 
 
 <pre>
 R CMD build ShinyImage-master
 R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz
 </pre>
-with z being the location you wish to install ShinyImg to
+with __z__ being the location you wish to install ShinyImg to
 (changing the version number as necessary).
 
 ## Example Usage
 
-Here we will perform several actions, both to illustrate some ShinyImage operations and also to show the journaling, i.e. version save/restore.
+Here we will perform several actions, both to illustrate some ShinyImage
+operations and also to show the journaling. 
 
 <pre>
 # load image, whether local file or from the Web
@@ -104,7 +108,7 @@ Here we will perform several actions, both to illustrate some ShinyImage operati
 </pre>
 
 <p>
-where y is your desired installation directory for ffwtools.  
+where __y__ is your desired installation directory for __ffwtools__.  
 </li> </p>
 
 <li> Run the usual make; make install sequence.
