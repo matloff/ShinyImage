@@ -20,7 +20,7 @@ library(R6)
 #'   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
 #'   \item{\code{new(brightness, contrast, gamma, crop)}}{This method is used to create object of this class with the appropriate parameters.}
 #'
-#'   \item{\code{get_action()}}{This method returns a c()'d list of the input parameters.}
+#'   \item{\code{get_action()}}{This method returns a c() list of the input parameters.}
 #' }
 siaction <- R6Class("siaction",
                     lock_objects = FALSE,
@@ -40,6 +40,8 @@ siaction <- R6Class("siaction",
                       }
                     )
 )
+
+
 #' An EBImage wrapper with integrated history tracking.
 #'
 #' @docType class
@@ -49,6 +51,8 @@ siaction <- R6Class("siaction",
 #' @return Object of \code{\link{R6Class}} with manipulation functions.
 #' @format \code{\link{R6Class}} object.
 #' @examples
+#' 
+#' 
 #' local_tiger = shinyimg$new('Tigerwater_edit2.jpg')
 #' web_tiger = shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
 #'
@@ -88,7 +92,9 @@ siaction <- R6Class("siaction",
 #'   \item{\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates. After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
 #'   \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
 #'   \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
-#'   \item{\code{dim()}}{Returns the current image's dimentions.}
+#'   \item{\code{dim()}}{Returns the current image dimentions.}
+#'   \item{\code{render()}}{Renders the current image.}
+#'   \item{\code{toggle_render()}}{Toggles the automatic rendering after making a change. By default, this option is off.}
 #'   }
 shinyimg <- R6Class("shinyimg",
                     lock_objects = FALSE,
@@ -103,6 +109,7 @@ shinyimg <- R6Class("shinyimg",
                       img_history = c(),
                       local_img = NULL,
                       current_image = NULL,
+                      autodisplay = 0,
                       autosave_filename = "workspace.si",
                       initialize = function(inputImage = NULL, autosave_filename = NULL) {
                         if (!is.null(inputImage)) {
@@ -129,7 +136,9 @@ shinyimg <- R6Class("shinyimg",
                         self$img_history <-
                           c(self$img_history, siaction$new(bright, cont, gam, c(c(crop1x,crop1y), c(crop2x, crop2y))))
                         self$actions <- self$actions + 1
-                        self$render()
+                        if (self$autodisplay) {
+                          self$render()
+                        }
                       },
                       getimg = function() {
                         return (renderPlot({
@@ -211,7 +220,9 @@ shinyimg <- R6Class("shinyimg",
                         if (self$actions != 1) {
                           self$actions <- self$actions - 1
                           self$applyAction(self$img_history[self$actions])
-                          self$render()
+                          if (self$autodisplay) {
+                            self$render()
+                          }
                         } else {
                           print("No action to undo")
                         }
@@ -221,7 +232,9 @@ shinyimg <- R6Class("shinyimg",
                         if (self$actions < length(self$img_history)) {
                           self$actions <- self$actions + 1
                           self$applyAction(self$img_history[self$actions])
-                          self$render()
+                          if (self$autodisplay) {
+                            self$render()
+                          }
                         } else {
                           print("No action to redo")
                         }
@@ -267,10 +280,18 @@ shinyimg <- R6Class("shinyimg",
                         }
                         self$actions <- actions
                         self$applyAction(self$img_history[self$actions])
-                        self$render()
+                        if (self$autodisplay) {
+                          self$render()
+                        }
                       }, 
                       size = function() {
                         dim(self$current_image)
+                      },
+                      toggle_render = function() {
+                        self$autodisplay = 1 - self$autodisplay;
+                        if (self$autodisplay) {
+                          self$render()
+                        }
                       }
                     )
 )

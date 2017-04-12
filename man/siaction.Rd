@@ -29,7 +29,7 @@ Class providing object describing one action.
   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
   \item{\code{new(brightness, contrast, gamma, crop)}}{This method is used to create object of this class with the appropriate parameters.}
 
-  \item{\code{get_action()}}{This method returns a c()'d list of the input parameters.}
+  \item{\code{get_action()}}{This method returns a c() list of the input parameters.}
 }}
 }}
 

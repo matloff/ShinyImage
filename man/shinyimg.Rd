@@ -15,6 +15,8 @@ Object of \code{\link{R6Class}} with manipulation functions.
 An EBImage wrapper with integrated history tracking.
 }
 \examples{
+
+
 local_tiger = shinyimg$new('Tigerwater_edit2.jpg')
 web_tiger = shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
 
@@ -54,6 +56,9 @@ local_tiger$load('save.ri') # Loads from a previously saved state. The filename 
   \\item{\\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates. After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
   \\item{\\code{save(filepath)}}{Saves the current state to be resumed later. \\code{filepath} has a default value of 'workspace.si'}
   \\item{\\code{load(filepath)}}{Loads a previously saved state. \\code{filepath} has a default value of 'workspace.si'}
+  \\item{\\code{dim()}}{Returns the current image dimentions.}
+  \\item{\\code{render()}}{Renders the current image.}
+  \\item{\\code{toggle_render()}}{Toggles the automatic rendering after making a change. By default, this option is off.}
   }
 }
 \keyword{data}
