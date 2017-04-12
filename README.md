@@ -8,47 +8,62 @@ or from a Shiny-based GUI.
 
 ## Installation
 
-The R library __ffwtools__ is needed, so install it from CRAN.  This should be
-straightforward on Macs or on Windows machines; for Linux see 
+You will need the following packages for the command-line interface to the
+package:
+
+<UL>
+
+<li> 
+<b>ffwtools</b>:  Instead from CRAN, except for Linux; for the latter,
+  sse 
 <a href="#Linux">these special instructions.</a> 
+</li> </p> 
 
-Now install **EBImage**.  Run these commands from within R:
+<li>
+<b>EBImage</b>:  Run these commands from within R:
+</p>
 
-<pre>
+```R
 source("http://bioconductor.org/biocLite.R", verbose = FALSE) #Install package
 biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
-</pre>
+```
+</li> </p> 
 
-You will also need to install **R6** from CRAN. 
-Run this command from within R:
+<li>
+<b>R6</b>: Install from CRAN. 
 
-<pre>
-install.packages('R6')
+```R
 # and if you would like to use the GUI, run the command
 # below as well
 install.packages(c('shiny','shinydashboard'))
-</pre>
+```
+</li> </p> 
+
+</UL>
 
 Having done this, you can install ShinyImage.  For instance, download
-the **.zip** package from __https://github.com/matloff/ShinyImag__ and
+the **.zip** package available [here](//github.com/matloff/ShinyImag) and
 unpack it, creating a directory/folder **ShinyImage-master**.  Then from a
 terminal window, run 
 
-<pre>
+```
 R CMD build ShinyImage-master
 R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz
-</pre>
+```
+
 with __z__ being the location you wish to install ShinyImg to
 (changing the version number as necessary).
 
 ## Example Usage
 
 Here we will perform several actions, both to illustrate some ShinyImage
-operations and also to show the journaling. 
+operations and also to show the journaling.  All operations will use the
+R command line; examples of the GUI are given later in this document.
 
-<pre>
+```R
 # load image, whether local file or from the Web
-> tiger = shinyimg$new("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
+> tiger <- 
+   shinyimg$new("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
 
 # crop the image
 > tiger$crop()
@@ -73,23 +88,37 @@ operations and also to show the journaling.
 > tiger$redo()
 # and finally, display the image
 > tiger$render()
-# We can also save the image to edit later on:
+
+# we can also save the image to edit later on
 > tiger$save("tiger-water.si")
-# And later we can come back after a cold boot to do:
-> tiger = shinyload("tiger-water.si")
-# If you want to revert to a previous saved state, you can also do:
+# and later we can come back after a cold boot to do:
+> tiger <- shinyload("tiger-water.si")
+# if you want to revert to a previous saved state, you can also do:
 > tiger$load("tiger-water.si")
-# This will load the image back to the state it was in when you saved the image. 
->
->
+# this will load the image back to the state it was in when you saved the image.
+```
+
+## GUI Installation and Usage
+
+### Installation
+
+Download from CRAN:
+
+```R
+install.packages(c('shiny','shinydashboard'))
+```
+
+### Usage
+
+```R
 # A gui can also be spawned to edit images, either with a raw image file or an existing ShinyImage.
-> editor_instance = shinygui$new()
+> editor_instance <- shinygui$new()
 # The following is using an instance of ShinyImage
 > editor_instance$load(tiger)
 # And this is using a raw image:
 > editor_instance$load("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
 # The plus side of the former is that if the editor crashes, the image changes are all still saved in the "tiger" variable!
-</pre>
+```
 
 <h3>
 <a name="Linux">Installing ffwtools on Linux </a> 
