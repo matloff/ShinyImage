@@ -15,7 +15,7 @@ package:
 
 <li> 
 <b>ffwtools</b>:  Instead from CRAN, except for Linux; for the latter,
-  sse 
+  see 
 <a href="#Linux">these special instructions.</a> 
 </li> </p> 
 
@@ -65,9 +65,6 @@ R command line; examples of the GUI are given later in this document.
 > tiger <- 
    shinyimg$new("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
 
-# 'tiger' is an object of class 'shinyimg', which in turn is a subclass
-# of 'R6'
-
 # crop the image
 > tiger$crop()
 [1] "Select the two opposite corners of a rectangle on the plot."
@@ -99,7 +96,6 @@ R command line; examples of the GUI are given later in this document.
 # if you want to revert to a previous saved state, you can also do:
 > tiger$load("tiger-water.si")
 # this will load the image back to the state it was in when you saved the image.
-> tiger$undo()  # not too late to undo changes made before the save!
 ```
 
 ## GUI Installation and Usage
@@ -124,13 +120,6 @@ install.packages(c('shiny','shinydashboard'))
 # The plus side of the former is that if the editor crashes, the image changes are all still saved in the "tiger" variable!
 ```
 
-## Documentation 
-
-```R
-> ?shinyimg  # the various operations, e.g. crop(), are described here
-
-```
-
 <h3>
 <a name="Linux">Installing ffwtools on Linux </a> 
 </h3>
@@ -148,10 +137,10 @@ install.packages(c('shiny','shinydashboard'))
 </pre>
 
 <p>
-where <b>y</b> is your desired installation directory for <b>ffwtools</b>.  
+where __y__ is your desired installation directory for __ffwtools__.  
 </li> </p>
 
-<li> Run the usual <b>make; make install</b> sequence.
+<li> Run the usual make; make install sequence.
 </li> </p>
 
 <li> Set environment variables:
@@ -159,7 +148,7 @@ where <b>y</b> is your desired installation directory for <b>ffwtools</b>.
 
 <pre>
 export C_INCLUDE_PATH = x/fftw-3.3.6-pl1/api 
-export LD_RUN_PATH = ylib 
+export LD_RUN_PATH = y/lib 
 export LIBRARY_PATH = y/lib 
 </pre>
 </li> </p>
