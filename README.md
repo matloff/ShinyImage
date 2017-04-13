@@ -42,7 +42,7 @@ install.packages(c('shiny','shinydashboard'))
 </UL>
 
 Having done this, you can install ShinyImage.  For instance, download
-the **.zip** package available [here](//github.com/matloff/ShinyImag) and
+the **.zip** package available [here](//github.com/matloff/ShinyImage) and
 unpack it, creating a directory/folder **ShinyImage-master**.  Then from a
 terminal window, run 
 
@@ -147,9 +147,9 @@ where __y__ is your desired installation directory for __ffwtools__.
 </p>
 
 <pre>
-export C_INCLUDE_PATH = x/fftw-3.3.6-pl1/api 
-export LD_RUN_PATH = y/lib 
-export LIBRARY_PATH = y/lib 
+export C_INCLUDE_PATH=x/fftw-3.3.6-pl1/api 
+export LD_RUN_PATH=y/lib 
+export LIBRARY_PATH=y/lib 
 </pre>
 </li> </p>
 
