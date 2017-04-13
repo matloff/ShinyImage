@@ -64,6 +64,10 @@ R command line; examples of the GUI are given later in this document.
 # load image, whether local file or from the Web
 > tiger <- 
    shinyimg$new("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
+> tiger$render()  # diplay image
+
+# enable automatic re-display every time a change is made
+> tiger$toggle_render()
 
 # crop the image
 > tiger$crop()
