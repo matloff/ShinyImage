@@ -77,7 +77,7 @@ siaction <- R6Class("siaction",
 #' 
 #' local_tiger$load('save.ri') # Loads from a previously saved state. The filename is optional. Requires a previously instantiated shinyimg instance (argument provided to new can be null).
 #' 
-#' #' @section Methods:
+#' @section Methods:
 #' \describe{
 #'   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
 #'   \item{\code{new(img)}}{Default constructor. \code{img} can be either a URL or a location of a local image.}
@@ -417,7 +417,34 @@ public = list(
           display(img$current_image, method = "raster")
         })
       })
-      
+      observeEvent(input$plot1_dblclick, {
+        brush <- input$plot1_brush
+        if (!is.null(brush)) {
+          startx = brush$xmin
+          starty = brush$ymin
+          if (startx < 0)
+            startx = 0
+          if (starty < 0)
+            starty = 0
+          endx = brush$xmax
+          endy = brush$ymax
+          xbound = input$x2 - input$x1
+          ybound = input$y2 - input$y1
+          if (endx > xbound)
+            endx = xbound
+          if (endy > ybound)
+            endy = ybound
+          img$cropxy(input$x1 + startx, input$x1 + endx, input$y1 + starty, input$y1 + endy)
+          savedx1 = input$x1 + startx
+          savedx2 = input$x1 + endx
+          savedy1 = input$y1 + starty
+          savedy2 = input$y1 + endy
+          updateSliderInput(session, "x1", value = savedx1)
+          updateSliderInput(session, "x2", value = savedx2)
+          updateSliderInput(session, "y1", value = savedy1)
+          updateSliderInput(session, "y2", value = savedy2)
+        }
+      })
       observeEvent(input$y2, {
         if (input$y2 <= input$y1) {
           updateSliderInput(session, "y2", value = input$y1 + 1)
@@ -446,7 +473,16 @@ public = list(
       dashboardBody(
         # Boxes need to be put in a row (or column)
         fluidRow(
-          box(width = 12, background = "black", plotOutput("plot2", height = img$size()[2]/2, width = img$size()[1]/2))
+          box(width = 12, 
+              background = "black", 
+              plotOutput("plot2", 
+                height = img$size()[2]/2, width = img$size()[1]/2,
+                dblclick = "plot1_dblclick",
+                  brush = brushOpts(
+                    id = "plot1_brush",
+                    resetOnNew = TRUE
+                 )
+            ))
         )
       )
     )
