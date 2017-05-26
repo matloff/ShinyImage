@@ -131,51 +131,9 @@ shinyimg <- R6Class("shinyimg",
                       # filename.
                       initialize = function(inputImage = NULL, 
                                             autosave_filename = NULL) {
-                        <<<<<<< HEAD
+                      
                         self$set_default()
                         startup(inputImage, autosave_filename)
-                        =======
-                          
-                          # Set the autosave filename if it is not null
-                          if (!is.null(autosave_filename))
-                            self$autosave_filename <- autosave_filename
-                        
-                        if (!is.null(inputImage)) {
-                          # Here the user passed in an argument for inputImage
-                          # We use the readImage functionality to read in the
-                          # image to form an EBImage. This may be changed at 
-                          # a later time. 
-                          self$local_img <- readImage(inputImage)
-                          # Here we set the current image to the original 
-                          # image. Multiplying by one essentially copies the 
-                          # image. The reason this works is that the
-                          # multiplication function when applied to an image 
-                          # changes contrast. In this case, 1 is the default 
-                          # contrast, and thus we are essentially making 
-                          # a copy by not changing the contrast but telling 
-                          # it to make another image. 
-                          self$current_image <- self$local_img * 1
-                          
-                          # Here we set the xy2 coordinate, which is the lower 
-                          # right coordinate of the image. 
-                          self$xy2 <- c(dim(self$local_img)[1], 
-                                        dim(self$local_img)[2])
-                          
-                          # Add the "base" action, which is the original image. 
-                          self$add_action()
-                        } else {
-                          # TODO: Maybe some sort of error message?
-                          result = tryCatch({
-                            self$load()
-                          }, warning = function(w) {
-                            
-                          }, error = function(e) {
-                            
-                          }, finally = {
-                            
-                          });
-                        }
-                        >>>>>>> 067041be3abf9d0c22856af5abd455733c07a0b1
                       },
                       # The main workhorse function for scribing an action.
                       # crop parameters refer to the top left x, top left y,
