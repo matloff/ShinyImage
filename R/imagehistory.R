@@ -215,7 +215,7 @@ shinyimg <- R6Class("shinyimg",
                       # Adjusts brightness by 0.1. This is a good increment
                       # but a variable brightness function should be added.
                       add_brightness = function() {
-                        self$current_image <- self$current_image + 0.1
+                        self$lazy_actions <- self$lazy_actions + 1
                         self$brightness <- self$brightness + 0.1
                         self$add_action()
                       },
@@ -223,7 +223,7 @@ shinyimg <- R6Class("shinyimg",
                       # Adjusts brightness by -0.1. This is a good decrement
                       # but a variable brightness function should be added.
                       remove_brightness = function() {
-                        self$current_image <- self$current_image - 0.1
+                        self$lazy_actions <- self$lazy_actions + 1
                         self$brightness <- self$brightness - 0.1
                         self$add_action()
                       },
@@ -231,7 +231,7 @@ shinyimg <- R6Class("shinyimg",
                       # Adjusts contrast by 0.1. This is a good increment
                       # but a variable contrast function should be added.
                       add_contrast = function() {
-                        self$current_image <- self$current_image * 1.1
+                        self$lazy_actions <- self$lazy_actions + 1
                         self$contrast <- self$contrast * 1.1
                         self$add_action()
                       },
@@ -239,7 +239,7 @@ shinyimg <- R6Class("shinyimg",
                       # Adjusts contrast by -0.1. This is a good increment
                       # but a variable contrast function should be added.
                       remove_contrast = function() {
-                        self$current_image <- self$current_image * 0.9
+                        self$lazy_actions <- self$lazy_actions + 1
                         self$contrast <- self$contrast * 0.9
                         self$add_action()
                       },
@@ -248,7 +248,7 @@ shinyimg <- R6Class("shinyimg",
                       # by the Shiny app.
                       # TODO: Document the usage of this function.
                       set_brightness = function(brightness) {
-                        self$current_image <- self$local_img + brightness
+                        self$lazy_actions <- self$lazy_actions + 1
                         self$brightness <- brightness
                         self$add_action()
                       },
@@ -257,7 +257,7 @@ shinyimg <- R6Class("shinyimg",
                       # by the Shiny app.
                       # TODO: Document the usage of this function.
                       set_contrast = function(contrast) {
-                        self$current_image <- self$local_img * contrast
+                        self$lazy_actions <- self$lazy_actions + 1
                         self$contrast <- contrast
                         self$add_action()
                       },
@@ -363,6 +363,12 @@ shinyimg <- R6Class("shinyimg",
                       
                       # plot output of image
                       render = function() {
+                        # Reset the lazy actions 
+                        self$lazy_actions = 0;
+                        
+                        # Apply all pending actions
+                        self$applyAction(self$img_history[self$actions])
+                        
                         if (!is.null(self$current_image)) {
                           display(self$current_image, method = "raster")
                         }
