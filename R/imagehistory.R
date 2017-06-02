@@ -151,6 +151,11 @@ shinyimg <- R6Class("shinyimg",
                         }
                         
                       },
+                      # Returns a copy of this image. One copy's changes will not affect the other.
+                      copy = function() {
+                        #TODO: Different options for cloning, like collapsing history
+                        return (self$clone())
+                      },
                       # The main workhorse function for scribing an action.
                       # crop parameters refer to the top left x, top left y,
                       # bottom right x, bottom right y respectively. 
