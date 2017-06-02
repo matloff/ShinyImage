@@ -129,11 +129,27 @@ shinyimg <- R6Class("shinyimg",
                       autosave_filename = "workspace.si",
                       # Startup function. Can take a image, and/or the autosave
                       # filename.
+                      lazy_load = 0,
+                      # Determines if we apply the transfomation immediately or not. 
+                      # Defaults to off.
+                      lazy_actions = 0,
                       initialize = function(inputImage = NULL, 
                                             autosave_filename = NULL) {
                       
                         self$set_default()
                         startup(inputImage, autosave_filename)
+                      },
+                      toggle_ll = function() {
+                        lazy_load <- 1 - lazy_load;
+                        if (lazy_load == 1) {
+                          if (lazy_actions != 0) {
+                            self$applyAction(self$img_history[self$actions])
+                          }
+                          cat("Lazy loading on")
+                        } else {
+                          cat("Lazy loading off")
+                        }
+                        
                       },
                       # The main workhorse function for scribing an action.
                       # crop parameters refer to the top left x, top left y,
