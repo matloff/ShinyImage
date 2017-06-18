@@ -27,22 +27,24 @@ siaction <- R6Class("siaction",
                     # it doesn't need to be
                     lock_objects = FALSE,
                     public = list(
+                      # Initialize all the values of this action
+                      initialize = function(brightness, contrast, gamma, crop) {
+                        private$brightness <- brightness
+                        private$contrast <- contrast
+                        private$gamma <- gamma
+                        private$crop <- crop
+                      },
+                      # Get the c()'d properties of this particular action
+                      get_action = function() {
+                        return (c(private$brightness, private$contrast, private$gamma, private$crop))
+                      }
+                    ),
+                    private = list(
                       # Properties of this action
                       brightness = 0,
                       contrast = 0,
                       gamma = 0,
-                      crop = NULL,
-                      # Initialize all the values of this action
-                      initialize = function(brightness, contrast, gamma, crop) {
-                        self$brightness <- brightness
-                        self$contrast <- contrast
-                        self$gamma <- gamma
-                        self$crop <- crop
-                      },
-                      # Get the c()'d properties of this particular action
-                      get_action = function() {
-                        return (c(self$brightness, self$contrast, self$gamma, self$crop))
-                      }
+                      crop = NULL
                     )
 )
 
@@ -104,7 +106,326 @@ siaction <- R6Class("siaction",
 shinyimg <- R6Class("shinyimg",
                     lock_objects = FALSE,
                     public = list(
-                      # Default Brightness
+                      # Constructor of the shinyimg class
+                      initialize = function(inputImage = NULL, 
+                                            autosave_filename = NULL) {
+                        self$set_default()
+                        private$startup(inputImage, autosave_filename)
+                      },
+                      # Resets this object's values to the default ones.
+                      set_default = function() {
+                        # Default brightness
+                        private$brightness = 0
+                        # Default Contrast
+                        private$contrast = 1
+                        # CURRENT Number of actions. Can be less than the
+                        # Actual number of actions due to undos.
+                        private$actions = 0
+                        # Crop coordinates
+                        private$xy1 = c(0, 0)
+                        private$xy2 = NULL
+                        # Crop offsets 
+                        # (relative to top left, which is 0, 0)
+                        private$xoffset = 0
+                        private$yoffset = 0
+                        # List of image histories
+                        private$img_history = c()
+                        # Variable to store the source image
+                        private$local_img = NULL
+                        # Variable to store the current image to display
+                        private$current_image = NULL
+                        # Option to have the output automatically rendered
+                        private$autodisplay = 0
+                        # The filename used for the autosave in 
+                        # case of crashes
+                        private$autosave_filename = "workspace.si"
+                        # Determines if we lazy load
+                        private$lazy_load = 0
+                        # The number of lazy actions we have done so far.
+                        private$lazy_actions = 0
+                      },
+                      # Outputs the image as a plot
+                      render = function() {
+                        # Reset the lazy actions
+                        private$lazy_actions = 0;
+                        
+                        # Apply all pending actions
+                        private$applyAction(private$img_history[private$actions])
+                        
+                        # If we actually have an image currently, try to display it. 
+                        if (!is.null(private$current_image)) {
+                          display(private$current_image, method = "raster")
+                        }
+                      },
+                      # Function to write the current state of the program to 
+                      # file.
+                      save = function(file = private$autosave_filename) {
+                        # Generated action matrix done in O(1) time.
+                        action_matrix <- matrix(NA, 
+                                                nrow=length(private$img_history), 
+                                                ncol=7)
+                        # Fill in the history data
+                        i = 1
+                        for (item in private$img_history) {
+                          history <- item$get_action()
+                          # TODO: Map function perhaps?
+                          action_matrix[i, ] <- c(history[1], history[2], 
+                                                  history[3], history[4], 
+                                                  history[5], history[6], 
+                                                  history[7])
+                          i = i + 1
+                        }
+                        # Save the current action number
+                        actions <- private$actions
+                        # Save the current image as well
+                        img <- imageData(private$local_img)
+                        # Save everything to file.
+                        base::save(action_matrix, actions, img, file=file)
+                      },
+                      # Counterpart to the save function, will load from
+                      # previous save file.
+                      load = function(file = private$autosave_filename) {
+                        base::load(file)
+                        # Generate the image history.
+                        private$img_history = c()
+                        
+                        private$local_img <- Image(img)
+                        
+                        # Not sure if this fixes the issue -- Had
+                        # some weird color issues like loading in
+                        # black and white. This seems to have fixed the
+                        # issue.
+                        colorMode(private$local_img) = Color
+                        
+                        # FIll in the action matrix
+                        for (i in 1:dim(action_matrix)[1]) {
+                          private$add_action(action_matrix[i, 1],
+                                             action_matrix[i, 2],
+                                             action_matrix[i, 3],
+                                             action_matrix[i, 4],
+                                             action_matrix[i, 5],
+                                             action_matrix[i, 6],
+                                             action_matrix[i, 7]
+                          )
+                        }
+                        private$actions <- actions
+                        
+                        # Apply the latest action
+                        private$applyAction(
+                          private$img_history[private$actions])
+                        
+                        # TODO: See if this should go in applyAction 
+                        # instead.
+                        if (private$autodisplay) {
+                          self$render()
+                        }
+                      },
+                      # Uses the actions list (img_history) to undo the last
+                      # done action. DOES NOT PRUNE THE LIST AT THIS POINT. 
+                      undo = function() {
+                        # If there are more actions to undo besides the 
+                        # original
+                        # image (aka action #1)
+                        if (private$actions != 1) {
+                          # Step back by one action
+                          private$actions <- private$actions - 1
+                          
+                          # Apply the action.
+                          private$applyAction(
+                            private$img_history[private$actions])
+                          
+                          # TODO: IDEA. Lazy loading. Don't actually apply 
+                          # the action UNTIL we're done undoing.
+                          
+                          # TODO: See if this autodisplay should be applied
+                          # to the applyAction function instead.
+                          if (private$autodisplay) {
+                            self$render()
+                          }
+                        } else {
+                          # There are no actions to undo.
+                          print("No action to undo")
+                        }
+                      },
+                      # Uses the actions list (img_history) to redo the last
+                      # undone action.
+                      redo = function() {
+                        # If there are actions to redo
+                        if (private$actions < length(private$img_history)) {
+                          # Increment by one action, then apply it
+                          private$actions <- private$actions + 1
+                          private$applyAction(
+                            private$img_history[private$actions])
+                          
+                          # TODO: IDEA. Lazy loading. Don't actually apply the
+                          # action UNTIL we're done redoing.
+                          
+                          # TODO: See if this autodisplay should be applied to
+                          # the applyAction function instead.
+                          if (private$autodisplay) {
+                            self$render()
+                          }
+                        } else {
+                          # No actions to redo.
+                          print("No action to redo")
+                        }
+                      },
+                      
+                      toggle_ll = function() {
+                        private$lazy_load <- 1 - private$lazy_load;
+                        if (private$lazy_load == 1) {
+                          if (private$lazy_actions != 0) {
+                            private$applyAction(
+                              private$img_history[private$actions])
+                          }
+                          cat("Lazy loading on")
+                        } else {
+                          cat("Lazy loading off")
+                        }
+                      },
+                      # Returns a copy of this image. 
+                      # One copy's changes will not affect the other.
+                      copy = function() {
+                        #TODO: Different options for cloning, 
+                        # like collapsing history
+                        return (self$clone())
+                      },
+                      # Rendering function used to get a plot that can be
+                      # used by Shiny
+                      getimg = function() {
+                        return (renderPlot({
+                          display(private$current_image, method = "raster")
+                        }))
+                      },
+                      
+                      # Adjusts brightness by 0.1. This is a good increment
+                      # but a variable brightness function should be added.
+                      add_brightness = function() {
+                        # Adds 0.1 brightness.
+                        mutator(1, 0.1)
+                      },
+                      
+                      # Adjusts brightness by -0.1. This is a good decrement
+                      # but a variable brightness function should be added.
+                      remove_brightness = function() {
+                        # removes 0.1 brightness.
+                        mutator(1, -0.1)
+                      },
+                      
+                      # Adjusts contrast by 0.1. This is a good increment
+                      # but a variable contrast function should be added.
+                      add_contrast = function() {
+                        # Adds 0.1 contrast.
+                        mutator(3, 0.1)
+                      },
+                      
+                      # Adjusts contrast by -0.1. This is a good increment
+                      # but a variable contrast function should be added.
+                      remove_contrast = function() {
+                        # removes 0.1 contrast.
+                        mutator(3, -0.1)
+                      },
+                      
+                      # Adjusts brightness by the argument. Mainly used
+                      # by the Shiny app.
+                      # TODO: Document the usage of this function.
+                      set_brightness = function(brightness) {
+                        # Sets brightness.
+                        mutator(2, brightness)
+                      },
+                      
+                      # Adjusts contrast by the argument. Mainly used
+                      # by the Shiny app.
+                      # TODO: Document the usage of this function.
+                      set_contrast = function(contrast) {
+                        # Sets brightness.
+                        mutator(4, contrast)
+                      },
+                      
+                      # The command line cropper uses locator to have the
+                      # user locate the two corners of the subimage. 
+                      crop = function() {
+                        print("Select the two opposite corners 
+                              of a rectangle on the plot.")
+                        location = locator(2)
+                        x1 = min(location$x[1], location$x[2])
+                        y1 = min(location$y[1], location$y[2])
+                        x2 = max(location$x[1], location$x[2])
+                        y2 = max(location$y[1], location$y[2])
+                        private$current_image <<- 
+                          private$current_image[x1:x2,y1:y2,]
+                        
+                        # In order to maintain a correct cropping, 
+                        # we need to know how much of
+                        # the original image has already been cropped.
+                        xdiff = x2 - x1
+                        ydiff = y2 - y1
+                        
+                        # The offset is needed to maintain the ABSOLUTE 
+                        # crop data.
+                        private$xoffset = private$xoffset + x1
+                        private$yoffset = private$yoffset + y1
+                        
+                        # Create the absolute crop data using the offsets
+                        # and new area.
+                        private$xy1 = c(private$xoffset, private$yoffset)
+                        private$xy2 = c(private$xoffset + xdiff, 
+                                        private$yoffset + ydiff)
+                        private$add_action()
+                      },
+                      # The function used by Shiny to crop using absolute 
+                      # coordinates. 
+                      cropxy = function(x1, x2, y1, y2) {
+                        # TODO: Temporary workaround to prevent an image 
+                        # with a height or a width from being created. 
+                        # Should be removed when the image return method 
+                        # is fixed below. 
+                        
+                        if (abs(x1-x2) == 0 || abs(y1-y2) == 0)
+                          return
+                        
+                        # TODO: Make sure the ABSOLUTE coordinates are not
+                        private$xy1 = c(min(x1, x2), min(y1, y2))
+                        private$xy2 = c(max(x1,x2), max(y1,y2))
+                        # We use the add action in order to apply 
+                        # that action.
+                        private$add_action()
+                        
+                        # TODO: Temporary workaround to return the correct 
+                        # image. Is not efficient because it generates the 
+                        # image from scratch every time. 
+                        private$applyAction(
+                          private$img_history[private$actions])
+                      },
+                      # Returns the size of the current image.
+                      # Needed for Shiny to determine the max values of
+                      # the sliders. 
+                      size = function() {
+                        dim(private$current_image)
+                      },
+                      # Function that handles the automatic render toggle.
+                      # Default autodisplay is off. 
+                      toggle_render = function() {
+                        private$autodisplay = 1 - private$autodisplay;
+                        if (private$autodisplay) {
+                          self$render()
+                        }
+                      },
+                      # Gets the raw matrix slices of the current image
+                      get_raw = function() {
+                        return (imageData(private$current_img))
+                      }
+                      #Uses a matrix as the image. Can be used to reintegrate
+                      # a get_raw generated matrix.
+                      # Disabled as this feature could be abused. 
+                      #import_matrix = function(m) {
+                      #	private$set_default()
+                      #	private$startup(NULL, NULL, m)
+                      #}
+                    ),
+                    private = list(
+                      # The following are the members of the shinyimg obj.
+                      # Default brightness
                       brightness = 0,
                       # Default Contrast
                       contrast = 1,
@@ -127,401 +448,143 @@ shinyimg <- R6Class("shinyimg",
                       autodisplay = 0,
                       # The filename used for the autosave in case of crashes
                       autosave_filename = "workspace.si",
-                      # Startup function. Can take a image, and/or the autosave
-                      # filename.
+                      # Startup function. Can take a image, and/or
+                      # the autosave filename.
                       lazy_load = 0,
-                      # Determines if we apply the transfomation immediately or not. 
+                      # Determines if we apply the transfomation 
+                      # immediately or not. 
                       # Defaults to off.
                       lazy_actions = 0,
-                      initialize = function(inputImage = NULL, 
-                                            autosave_filename = NULL) {
                       
-                        self$set_default()
-                        startup(inputImage, autosave_filename)
-                      },
-                      toggle_ll = function() {
-                        lazy_load <- 1 - lazy_load;
-                        if (lazy_load == 1) {
-                          if (lazy_actions != 0) {
-                            self$applyAction(self$img_history[self$actions])
-                          }
-                          cat("Lazy loading on")
-                        } else {
-                          cat("Lazy loading off")
-                        }
+                      # The following are the private functions
+                      mutator = function(actionID, amount) {
                         
+                        # Add a lazy action count. 
+                        private$lazy_actions <- private$lazy_actions + 1
+                        
+                        switch(actionID,
+                               # ActionID 1, brightness adjustment
+                               private$brightness <- 
+                                 private$brightness + amount,
+                               
+                               # ActionID 2, brightness setting
+                               private$brightness <- amount,
+                               
+                               #  ActionID 3, contrast adjustment
+                               private$contrast <- 
+                                 private$contrast + amount,
+                               
+                               #  ActionID 4, contrast setting
+                               private$contrast <- amount
+                        )
+                        
+                        private$add_action()
                       },
-                      # Returns a copy of this image. One copy's changes will not affect the other.
-                      copy = function() {
-                        #TODO: Different options for cloning, like collapsing history
-                        return (self$clone())
-                      },
+                      
                       # The main workhorse function for scribing an action.
                       # crop parameters refer to the top left x, top left y,
                       # bottom right x, bottom right y respectively. 
-                      add_action = function(bright = self$brightness, 
-                                            cont = self$contrast, 
+                      add_action = function(bright = private$brightness, 
+                                            cont = private$contrast, 
                                             gam = 0, 
-                                            crop1x = self$xy1[1],
-                                            crop1y = self$xy1[2], 
-                                            crop2x = self$xy2[1], 
-                                            crop2y = self$xy2[2]) {
+                                            crop1x = private$xy1[1],
+                                            crop1y = private$xy1[2], 
+                                            crop2x = private$xy2[1], 
+                                            crop2y = private$xy2[2]
+                      ) {
                         
-                        # If we are not at the most recent image, we need to 
-                        # prune the extra actions. 
-                        if (self$actions < length(self$img_history))
-                          self$img_history <- self$img_history[1:self$actions]
+                        # If we are not at the most recent image, we need 
+                        # to prune the extra actions. 
+                        if (private$actions < 
+                            length(private$img_history)) {
+                          private$img_history <- 
+                            private$img_history[1:private$actions]
+                        }
                         
-                        # Use the siaction constructor to create a new action 
-                        # and add it to the img_history list.
-                        self$img_history <-
-                          c(self$img_history, siaction$new(bright, 
-                                                           cont, 
-                                                           gam, 
-                                                           c(
-                                                             c(crop1x,crop1y), 
-                                                             c(crop2x, crop2y)
-                                                           )))
-                        # Add one to the action counter because we just added 
-                        # an action to the action list
-                        self$actions <- self$actions + 1
+                        # Use the siaction constructor to create a 
+                        # new action and add it to the img_history list.
+                        private$img_history <-
+                          c(private$img_history, siaction$new(bright, 
+                                                              cont, 
+                                                              gam, 
+                                                              c(
+                                                                c(crop1x,crop1y), 
+                                                                c(crop2x, crop2y)
+                                                              )))
+                        # Add one to the action counter because we just 
+                        # added an action to the action list
+                        private$actions <- private$actions + 1
                         
-                        # If the autodisplay flag is on, render the changes.
-                        if (self$autodisplay) {
+                        # If the autodisplay flag is on, render the 
+                        # changes.
+                        if (private$autodisplay) {
                           self$render()
                         }
                       },
-                      # Rendering function used to get a plot that can be
-                      # used by Shiny
-                      getimg = function() {
-                        return (renderPlot({
-                          display(self$current_image, method = "raster")
-                        }))
-                      },
-                      # This function essentially generates a modified image
+                      
+                      # This function generates a modified image
                       # from the original (local_img)
                       applyAction = function(action) {
                         # Unpack the action variable
                         dataframe = action[[1]]
+                        
                         # Use the action's getter to return the c()'d args
                         args = dataframe$get_action()
                         
                         # args[2] is contrast, but we use local_img as
                         # the source image.
-                        self$current_image <- self$local_img * args[2]
+                        private$current_image <- 
+                          private$local_img * args[2]
                         # args[1] is brightness
-                        self$current_image <- self$current_image + args[1]
+                        private$current_image <- 
+                          private$current_image + args[1]
                         
-                        # args[4] through args[7] are ABSOLUTE crop locations.
-                        self$current_image <- self$current_image[
+                        # args[4] through args[7] are ABSOLUTE 
+                        # crop locations.
+                        private$current_image <- private$current_image[
                           args[4]:args[6], args[5]:args[7], 
                           ]
                       },
-                      # Adjusts brightness by 0.1. This is a good increment
-                      # but a variable brightness function should be added.
-                      add_brightness = function() {
-                        self$lazy_actions <- self$lazy_actions + 1
-                        self$brightness <- self$brightness + 0.1
-                        self$add_action()
-                      },
-                      
-                      # Adjusts brightness by -0.1. This is a good decrement
-                      # but a variable brightness function should be added.
-                      remove_brightness = function() {
-                        self$lazy_actions <- self$lazy_actions + 1
-                        self$brightness <- self$brightness - 0.1
-                        self$add_action()
-                      },
-                      
-                      # Adjusts contrast by 0.1. This is a good increment
-                      # but a variable contrast function should be added.
-                      add_contrast = function() {
-                        self$lazy_actions <- self$lazy_actions + 1
-                        self$contrast <- self$contrast * 1.1
-                        self$add_action()
-                      },
-                      
-                      # Adjusts contrast by -0.1. This is a good increment
-                      # but a variable contrast function should be added.
-                      remove_contrast = function() {
-                        self$lazy_actions <- self$lazy_actions + 1
-                        self$contrast <- self$contrast * 0.9
-                        self$add_action()
-                      },
-                      
-                      # Adjusts brightness by the argument. Mainly used
-                      # by the Shiny app.
-                      # TODO: Document the usage of this function.
-                      set_brightness = function(brightness) {
-                        self$lazy_actions <- self$lazy_actions + 1
-                        self$brightness <- brightness
-                        self$add_action()
-                      },
-                      
-                      # Adjusts contrast by the argument. Mainly used
-                      # by the Shiny app.
-                      # TODO: Document the usage of this function.
-                      set_contrast = function(contrast) {
-                        self$lazy_actions <- self$lazy_actions + 1
-                        self$contrast <- contrast
-                        self$add_action()
-                      },
-                      # The command line cropper uses locator to have the
-                      # user locate the two corners of the subimage. 
-                      crop = function() {
-                        print("Select the two opposite corners 
-                              of a rectangle on the plot.")
-                        location = locator(2)
-                        x1 = min(location$x[1], location$x[2])
-                        y1 = min(location$y[1], location$y[2])
-                        x2 = max(location$x[1], location$x[2])
-                        y2 = max(location$y[1], location$y[2])
-                        self$current_image <<- self$current_image[x1:x2, 
-                                                                  y1:y2,]
-                        
-                        # In order to maintain a correct cropping, we need to
-                        # know how much of
-                        # the original image has already been cropped.
-                        xdiff = x2 - x1
-                        ydiff = y2 - y1
-                        
-                        # The offset is needed to maintain the ABSOLUTE crop
-                        # data.
-                        self$xoffset = self$xoffset + x1
-                        self$yoffset = self$yoffset + y1
-                        
-                        # Create the absolute crop data using the offsets and
-                        # new area.
-                        self$xy1 = c(self$xoffset, self$yoffset)
-                        self$xy2 = c(self$xoffset + xdiff, 
-                                     self$yoffset + ydiff)
-                        self$add_action()
-                      },
-                      
-                      # The function used by Shiny to crop using absolute 
-                      # coordinates. 
-                      cropxy = function(x1, x2, y1, y2) {
-                        # TODO: Temporary workaround to prevent an image with a
-                        # Height or a width from being created. Should be 
-                        # removed when the image return method is fixed below. 
-                        if (abs(x1-x2) == 0 || abs(y1-y2) == 0)
-                          return
-                        
-                        # TODO: Make sure the ABSOLUTE coordinates are not 
-                        self$xy1 = c(min(x1, x2), min(y1, y2))
-                        self$xy2 = c(max(x1,x2), max(y1,y2))
-                        # We use the add action in order to apply that action.
-                        self$add_action()
-                        # TODO: Temporary workaround to return the correct 
-                        # image. Is not efficient because it generates the 
-                        # image from scratch every time. 
-                        self$applyAction(self$img_history[self$actions])
-                      },
-                      # Uses the actions list (img_history) to undo the last
-                      # done action. DOES NOT PRUNE THE LIST AT THIS POINT. 
-                      undo = function() {
-                        # If there are more actions to undo besides the 
-                        # original
-                        # image (aka action #1)
-                        if (self$actions != 1) {
-                          # Step back by one action
-                          self$actions <- self$actions - 1
-                          
-                          # Apply the action.
-                          self$applyAction(self$img_history[self$actions])
-                          
-                          # TODO: IDEA. Lazy loading. Don't actually apply the
-                          # action UNTIL we're done undoing.
-                          
-                          # TODO: See if this autodisplay should be applied to
-                          # the applyAction function instead.
-                          if (self$autodisplay) {
-                            self$render()
-                          }
-                        } else {
-                          # There are no actions to undo.
-                          print("No action to undo")
-                        }
-                      },
-                      # Uses the actions list (img_history) to redo the last
-                      # undone action.
-                      redo = function() {
-                        # If there are actions to redo
-                        if (self$actions < length(self$img_history)) {
-                          # Increment by one action, then apply it
-                          self$actions <- self$actions + 1
-                          self$applyAction(self$img_history[self$actions])
-                          
-                          # TODO: IDEA. Lazy loading. Don't actually apply the
-                          # action UNTIL we're done redoing.
-                          
-                          # TODO: See if this autodisplay should be applied to
-                          # the applyAction function instead.
-                          if (self$autodisplay) {
-                            self$render()
-                          }
-                        } else {
-                          # No actions to redo.
-                          print("No action to redo")
-                        }
-                      },
-                      
-                      # plot output of image
-                      render = function() {
-                        # Reset the lazy actions 
-                        self$lazy_actions = 0;
-                        
-                        # Apply all pending actions
-                        self$applyAction(self$img_history[self$actions])
-                        
-                        if (!is.null(self$current_image)) {
-                          display(self$current_image, method = "raster")
-                        }
-                      },
-                      # Function to write the current state of the program to 
-                      # file.
-                      save = function(file = self$autosave_filename) {
-                        # Generated action matrix done in O(1) time.
-                        action_matrix <- matrix(NA, 
-                                                nrow=length(self$img_history), 
-                                                ncol=7)
-                        # Fill in the history data
-                        i = 1
-                        for (item in self$img_history) {
-                          history <- item$get_action()
-                          # TODO: Map function perhaps?
-                          action_matrix[i, ] <- c(history[1], history[2], 
-                                                  history[3], history[4], 
-                                                  history[5], history[6], 
-                                                  history[7])
-                          i = i + 1
-                        }
-                        # Save the current action number
-                        actions <- self$actions
-                        # Save the current image as well
-                        img <- imageData(self$local_img)
-                        # Save everything to file.
-                        base::save(action_matrix, actions, img, file=file)
-                      },
-                      # Counterpart to the save function, will load from
-                      # previous save file.
-                      load = function(file = self$autosave_filename) {
-                        base::load(file)
-                        # Generate the image history.
-                        self$img_history = c()
-                        
-                        self$local_img <- Image(img)
-                        
-                        # Not sure if this fixes the issue -- Had
-                        # some weird color issues like loading in
-                        # black and white. This seems to have fixed the
-                        # issue.
-                        colorMode(self$local_img) = Color
-                        
-                        # FIll in the action matrix
-                        for (i in 1:dim(action_matrix)[1]) {
-                          self$add_action(action_matrix[i, 1],
-                                          action_matrix[i, 2],
-                                          action_matrix[i, 3],
-                                          action_matrix[i, 4],
-                                          action_matrix[i, 5],
-                                          action_matrix[i, 6],
-                                          action_matrix[i, 7]
-                          )
-                        }
-                        self$actions <- actions
-                        
-                        # Apply the latest action
-                        self$applyAction(self$img_history[self$actions])
-                        
-                        # TODO: See if this should go in applyAction instead.
-                        if (self$autodisplay) {
-                          self$render()
-                        }
-                      }, 
-                      
-                      # Returns the size of the current image.
-                      # Needed for Shiny to determine the max values of
-                      # the sliders. 
-                      size = function() {
-                        dim(self$current_image)
-                      },
-                      # Function that handles the automatic render toggle.
-                      # Default autodisplay is off. 
-                      toggle_render = function() {
-                        self$autodisplay = 1 - self$autodisplay;
-                        if (self$autodisplay) {
-                          self$render()
-                        }
-                      },
-                      # Gets the raw matrix slices of the current image
-                      get_raw = function() {
-                        return (imageData(self$current_img))
-                      },
-                      #Uses a matrix as the image. Can be used to reintegrate
-                      # a get_raw generated matrix.
-                      # Should reset default values.
-                      set_default = function() {
-                        self$brightness = 0
-                        # Default Contrast
-                        self$contrast = 1
-                        # CURRENT Number of actions. Can be less than the
-                        # Actual number of actions due to undos.
-                        self$actions = 0
-                        # Crop coordinates
-                        self$xy1 = c(0, 0)
-                        self$xy2 = NULL
-                        # Crop offsets (relative to top left, which is 0, 0)
-                        self$xoffset = 0
-                        self$yoffset = 0
-                        # List of image histories
-                        self$img_history = c()
-                        # Variable to store the source image
-                        self$local_img = NULL
-                        # Variable to store the current image to display
-                        self$current_image = NULL
-                        # Option to have the output automatically rendered
-                        self$autodisplay = 0
-                        # The filename used for the autosave in case of crashes
-                        self$autosave_filename = "workspace.si"
-                      },
-                      import_matrix = function(m) {
-                        self$set_default()
-                        self$startup(NULL, NULL, m)
-                      },
-                      startup = function(inputImage, autosave_filename, m = NULL) {
+                      # The matr argument imports a matrix as the image.
+                      # The remaining two arguments are supplied by the 
+                      # constructors for shinyimg.
+                      startup = function(inputImage, autosave_filename, 
+                                         matr = NULL) {
                         # Set the autosave filename if it is not null
                         if (!is.null(autosave_filename))
-                          self$autosave_filename <- autosave_filename
+                          private$autosave_filename <- autosave_filename
                         
                         if (!is.null(inputImage)) {
-                          # Here the user passed in an argument for inputImage
-                          # We use the readImage functionality to read in the
-                          # image to form an EBImage. This may be changed at 
-                          # a later time. 
-                          self$local_img <- readImage(inputImage)
+                          # Here the user passed in an argument for 
+                          # inputImage We use the readImage functionality
+                          # to read in the image to form an EBImage. This
+                          # may be changed at a later time. 
+                          private$local_img <- readImage(inputImage)
                           # Here we set the current image to the original 
-                          # image. Multiplying by one essentially copies the 
-                          # image. The reason this works is that the
-                          # multiplication function when applied to an image 
-                          # changes contrast. In this case, 1 is the default 
-                          # contrast, and thus we are essentially making 
-                          # a copy by not changing the contrast but telling 
-                          # it to make another image. 
-                          self$current_image <- self$local_img * 1
+                          # image. Multiplying by one essentially copies 
+                          # the image. The reason this works is that the
+                          # multiplication function when applied to an 
+                          # image changes contrast. In this case, 1 is 
+                          # the default contrast, and thus we are 
+                          # essentially making a copy by not changing 
+                          # the contrast but telling it to make another
+                          # image. 
+                          private$current_image <- private$local_img * 1
                           
-                          # Here we set the xy2 coordinate, which is the lower 
-                          # right coordinate of the image. 
-                          self$xy2 <- c(dim(self$local_img)[1], 
-                                        dim(self$local_img)[2])
+                          # Here we set the xy2 coordinate, which is the
+                          # lower right coordinate of the image. 
+                          private$xy2 <- c(dim(private$local_img)[1], 
+                                           dim(private$local_img)[2])
                           
-                          # Add the "base" action, which is the original image. 
-                          self$add_action()
-                        } else if (!is.null(m)) {
+                          # Add the "base" action, which is the original
+                          # image. 
+                          private$add_action()
+                        } else if (!is.null(matr)) {
                           
-                          # Possible that m is not actually a matrix. Could error. 
+                          # TODO: Possible that m is not actually a matrix.
+                          # Could error. 
                           result = tryCatch({
-                            self$local_img <- Image(m)
+                            private$local_img <- Image(matr)
                           }, warning = function(w) {
                             return
                           }, error = function(e) {
@@ -531,26 +594,28 @@ shinyimg <- R6Class("shinyimg",
                           });
                           
                           # Here we set the current image to the original 
-                          # image. Multiplying by one essentially copies the 
-                          # image. The reason this works is that the
-                          # multiplication function when applied to an image 
-                          # changes contrast. In this case, 1 is the default 
-                          # contrast, and thus we are essentially making 
-                          # a copy by not changing the contrast but telling 
-                          # it to make another image. 
-                          self$current_image <- self$local_img * 1
+                          # image. Multiplying by one essentially copies 
+                          # the image. The reason this works is that the
+                          # multiplication function when applied to an 
+                          # image changes contrast. In this case, 1 is 
+                          # the default contrast, and thus we are 
+                          # essentially making a copy by not changing 
+                          # the contrast but telling it to make another 
+                          # image. 
+                          private$current_image <- private$local_img * 1
                           
-                          # Here we set the xy2 coordinate, which is the lower 
-                          # right coordinate of the image. 
-                          self$xy2 <- c(dim(self$local_img)[1], 
-                                        dim(self$local_img)[2])
+                          # Here we set the xy2 coordinate, which is the 
+                          # lower right coordinate of the image. 
+                          private$xy2 <- c(dim(private$local_img)[1], 
+                                           dim(private$local_img)[2])
                           
-                          # Add the "base" action, which is the original image. 
-                          self$add_action()
+                          # Add the "base" action, which is the original 
+                          # image. 
+                          private$add_action()
                         } else {
                           # TODO: Maybe some sort of error message?
                           result = tryCatch({
-                            self$load()
+                            private$load()
                           }, warning = function(w) {
                             
                           }, error = function(e) {
@@ -562,6 +627,11 @@ shinyimg <- R6Class("shinyimg",
                       }
                     )
 )
+
+
+
+
+
 
 #' Wrapper to load an image from a cold boot. 
 #' 
