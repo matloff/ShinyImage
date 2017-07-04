@@ -1,6 +1,16 @@
 library(EBImage)
 library(shiny)
 
+
+#purpose of this version 
+#version 9
+#keep and reset are working
+#purpose of this version is to download image
+
+#!!!!!!!!!!!!!!!!!!!!!!!!! ideas to save history !!!!!!!!!!!!!!!!!!!!!!!!!
+#1) SAVE slider inputs
+
+
 #to run shiny app
 #must have the two libraries -- EBIMAGE and SHINY 
 #  runApp('filename.R')
@@ -26,6 +36,9 @@ library(shiny)
 
 #helps with error messages
 #https://shiny.rstudio.com/articles/validation.html
+
+#persistent data storage
+#http://shiny.rstudio.com/articles/persistent-data-storage.html
 
 #------- START OF CODE --------
 #sample image we are currently using 
@@ -66,7 +79,13 @@ ui <- fluidPage(
         #supported types are jpeg, png, and tiff
       sliderInput("bright", "Increase/Decrease Brightness:", min = -1, max = 1, value = 0, step = 0.01),
       sliderInput("contrast", "Increase/Decrease Contrast:", min = 0, max = 10, value = 1, step = 0.1), 
-      sliderInput("gamma", "Increase/Decrease Gamma Correction", min = 0, max = 50, value = 1, step = 0.5)
+      sliderInput("gamma", "Increase/Decrease Gamma Correction", min = 0, max = 50, value = 1, step = 0.5),
+      tags$head(tags$style(HTML('#button1{background-color:red}'))),
+      tags$head(tags$style(HTML('#button2{background-color:red}'))),
+      actionButton("button1", "Undo"), 
+      actionButton("button2", "Redo"), 
+      actionButton("button3", "Reset"), 
+      textOutput("help")
     ),
 
     mainPanel(
@@ -81,7 +100,12 @@ ui <- fluidPage(
 
        plotOutput("plot2"),
        #imageOutput("try"),
-       downloadButton("downloadCrop", label = "Download Cropped"),
+       actionButton("keep", label = "Keep"),
+       downloadButton("download1", label = "Download Image"),
+       tags$head(tags$style(HTML('#download2{background-color:red}'))),
+       tags$head(tags$style(HTML('#download3{background-color:red}'))),
+       downloadButton("download2", label = "Download Image Log"),
+       downloadButton("download3", label = "Download Image Current Settings"),
        #TODO fix action button 
        verbatimTextOutput("info")
      )
@@ -90,161 +114,129 @@ ui <- fluidPage(
 
 #------ SERVER -------
 server <- function(input, output, session) {
-
+  obj <- 1 #used as counter for the keep function
 #TO DO not working right now 
 #creates a plot that changes with slider inputs for 
 # -- gamma, contrast, and brightness
+  fileInput <- reactive({
 
-  output$plot1 <- renderPlot({
+    #if the user clicks a different radio button
+    #uploads another file
+    #uploads another url
+    #clicks the RESET button
+    #they will reset the image in plot1
+    input$radio
+    input$file1
+    input$url1
+    input$button3
     
+    #user clicked sample -- default
     if(input$radio == 1)
     {
-      display(sample ^ input$gamma * input$contrast + input$bright, method = "raster")
+      foto0 <-readImage('https://www.k9rl.com/wp-content/uploads/2016/08/Pembroke-Welsh-Corgi.jpg')
+      return(foto0)
     }
 
-    #TODO: FIX ERROR MESSAGE FOR URL 
-    if(input$radio == 3)
-    {
-      #validate(
-       # need(input$url != 'NULL', "Must have valid URL of type JPEG, PNG, or TIFF"))
-
-      foto <- readImage(input$url1)
-      display(foto ^ input$gamma * input$contrast + input$bright, method = "raster")
-    }
-    else 
+    #user uploaded their own image
+    if(input$radio == 2)
     {
       inFile <- input$file1
       if(is.null(inFile))
         return(NULL)
 
-#causing issues with upload image then sample it changes image to sample 
+      #validate(need(!is.null(inFile)), "Must enter valid URL of a jpeg, png, or tiff")
       oldNames = inFile$datapath
       newNames = file.path(dirname(inFile$datapath), inFile$name)
       file.rename(from = oldNames, to = newNames)
       inFile$datapath <- newNames
-      foto <- readImage(inFile$datapath)
 
-      display(foto ^ input$gamma * input$contrast + input$bright, method = "raster")
+      foto1 <- readImage(inFile$datapath)
+      return(foto1)
+    }
+
+    #user uploaded link
+    if (input$radio == 3)
+    {
+     validate(need(input$url != "", "Must type in a valid jpeg, png, or tiff"))
+
+      foto2 <- readImage(input$url1)
+      return(foto2)
     }
   })
 
-#text output
+  imageOutput <- reactive({
+    updatedImage <- fileInput()
+    validate(need(!is.null(fileInput()), "Must upload a valid jpeg, png, or tiff"))
+
+
+
+
+    #keep function 
+    #uses a counter
+    #when the user clicks keep, it updates the obk so that they are equivalent
+    #makes it so that the updated image isn't from a previous radio button
+    if(input$keep == obj)
+    {
+      isolate({
+        obj <<- obj+1
+        p <- input$plot_brush
+        cropped <- updatedImage
+        updatedImage2 <- cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),]  
+        session$resetBrush("plot_brush")
+        return(updatedImage2)
+      })
+    }
+    else return(updatedImage)
+  })
+
+  output$plot1 <- renderPlot({
+    display(imageOutput() ^ input$gamma * input$contrast + input$bright, method = "raster")
+  })
+
+  #text box to see variables
+  output$help <- renderText({
+    paste0("number of keep: ", input$keep, " obj: ", obj, " number of reset: ", input$button3)
+    })
+
+  #text to differentiate original vs cropped version
   output$txt1 <- renderText({
       "Cropped Version (Press Keep to save and update to cropped version)"
   })
 
-#creates a plot that changes with above
-# and cropping 
-#TODO
-#need to fix KEEP button and update cropped version to plot 1
-  output$plot2 <- renderPlot({
-
-
-#currently only catches two error messages
-#TODO: fix both error messages popping up
-      #p <- input$plot_brush
-
-      validate(
-      need(input$plot_brush != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
-
-      #validate(
-      #need(exists(input$plot_brush), "Highlighted portion is out of the bounds of your image")
-
-
-      #)
-
-     if(input$radio == 1)
-        {
-          p <- input$plot_brush
-          cropped <- sample ^ input$gamma * input$contrast + input$bright
-
-          validate(
-            need(p$xmax <= dim(sample)[1], "Highlighted portion is out of bounds on the x-axis of your image 1")
-          )
-
-          validate(
-            need(p$ymax <= dim(sample)[2], "Highlighted portion is out of bounds on the y-axis of your image 1")
-          )
-
-          validate(
-            need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2")
-          )
-
-          validate(
-            need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2")
-          )
-
-          display(cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),], method = "raster")        
-        }
-    if(input$radio == 3)
-     {
-            p <- input$plot_brush
-
-            foto <- readImage(input$url1)
-
-
-          validate(
-            need(p$xmax <= dim(foto)[1], "Highlighted portion is out of bounds on the x-axis of your image 1")
-          )
-
-          validate(
-            need(p$ymax <= dim(foto)[2], "Highlighted portion is out of bounds on the y-axis of your image 1")
-          )
-
-          validate(
-            need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2")
-          )
-
-          validate(
-            need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2")
-          )
-
-
-          cropped <- foto ^ input$gamma * input$contrast + input$bright
-          display(cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),], method = "raster")
-
-     }
-
-    else 
-    {
-      p <- input$plot_brush
-
-      inFile <- input$file1
-      if(is.null(inFile))
-        return(NULL)
-
-      oldNames = inFile$datapath
-      newNames = file.path(dirname(inFile$datapath), inFile$name)
-      file.rename(from = oldNames, to = newNames)
-      inFile$datapath <- newNames
-      foto <- readImage(inFile$datapath)
-
-
-      validate(
-        need(p$xmax <= dim(foto)[1], "Highlighted portion is out of bounds on the x-axis of your image 1")
-      )
-
-      validate(
-        need(p$ymax <= dim(foto)[2], "Highlighted portion is out of bounds on the y-axis of your image 1")
-      )
-
-      validate(
-        need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2")
-      )
-
-      validate(
-        need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2")
-      )
-
-      cropped <- foto ^ input$gamma * input$contrast + input$bright
-      display(cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),], method = "raster")
-    }
+  #creates the images for the cropped version
+  #uses EBImage and brushing to give dimesions to the cropped function
+  imageOutput2 <- reactive({
+    p <- input$plot_brush
+    cropped <- imageOutput()
+    updatedImage2 <- cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),]    
+    return(updatedImage2)
   })
-  
+
+  #creates plot
+  #also fixes error messages
+  output$plot2 <- renderPlot({
+      validate(need(input$plot_brush != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
+
+      p <- input$plot_brush
+      cropped <- imageOutput()
+
+      validate(need(p$xmax <= dim(sample)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
+      validate(need(p$ymax <= dim(sample)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
+      validate(need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2"))
+      validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
+
+      display(imageOutput2() ^ input$gamma * input$contrast + input$bright, method = "raster")
+  })
+
+
+
 #updates slider with new file input from user or change in radio buttons
-  observe(
-  {
+  observe({
+    #if user clicks a new radio button, uploads new file, or url
+    #the sliders will change
+    #and the brush will default 
     input$file1
+    input$url1
     input$radio
     
     updateSliderInput(session, "bright", value = 0)
@@ -253,18 +245,24 @@ server <- function(input, output, session) {
     session$resetBrush("plot_brush")
   })
 
+#TODO: if user inputs a photo with pre-set sliders; it needs to change to those values 
+#needs to undo crop
+    observe(
+    {
+      input$button3
 
-  #output$try <- renderImage({
-   #   readImage(output$plot2)
-      #https://stackoverflow.com/questions/39175099/reading-objects-from-shiny-output-object-not-allowed
-      #help make it reactive 
-    #})
-  #output$downloadCrop <- downloadHandler(
-   # tempfile = tempfile("", , ".jpeg")
-   # writeImage((cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),], method = "raster"), )
+      updateSliderInput(session, "bright", value = 0)
+      updateSliderInput(session, "contrast", value = 1)
+      updateSliderInput(session, "gamma", value = 1)
+      session$resetBrush("plot_brush")
+    })
 
-    #}
-    #)
+#TODO: if user uploads a .png file, should return same type of file
+#currently only returns jpeg because all three radio buttons dont have an image type
+  output$download1 <- downloadHandler('temp.jpeg', function(file) {
+    writeImage(imageOutput()^ input$gamma * input$contrast + input$bright, file)
+  })
+
 #gives information about brushing 
   output$info <- renderText({
     xy_str <- function(e) {
@@ -287,20 +285,3 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
-
-#to do list 
-#1. figure out how to brush (viewfinder + thing; highlight an area)
-#3 figure out how to upload photo
-#4. fix errors
-
-#catch error messages --> translate them
-#Error: non-numeric argument to mathematical function --> cropping function is unused
-#Error: subscript out of bounds: cropping outside of the photo
-#Error: only 0's may be mixed with negative subscripts
-#when i click upload image --> reset slider buttons
-
-#LOG EVERYTHING __ MOST IMPORTANT PART 
-#get rid of error messages
-#allow user to upload link
-
