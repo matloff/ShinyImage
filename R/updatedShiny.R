@@ -40,10 +40,39 @@ library(shiny)
 
 #persistent data storage
 #http://shiny.rstudio.com/articles/persistent-data-storage.html
+#http://deanattali.com/2015/06/14/mimicking-google-form-shiny/#save
+
+#download button -- input
+#https://stackoverflow.com/questions/43663352/r-count-shiny-download-button-clicks
 
 #------- START OF CODE --------
 #sample image we are currently using 
 sample <-readImage('https://www.k9rl.com/wp-content/uploads/2016/08/Pembroke-Welsh-Corgi.jpg')
+
+#temporary
+#currently only saving to my machine in a folder called temp
+#TODO -- fix so its more general -- downloads/temp folder
+responsesDir <- file.path("/Users/arielshin/Desktop/temp")
+#fields that will be downloaded 
+fieldsAll <- c("bright", "contrast", "gamma", "dimen")
+
+#humantime -- more human friendly time
+humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
+
+loadData <- function() {
+  files <- list.files(file.path(responsesDir), full.names = TRUE)
+  data <- lapply(files, read.csv, stringsAsFactors = FALSE)
+  data <- dplyr::rbind_all(data)
+  data
+}
+
+saveData <- function(data) {
+  fileName <- sprintf("%s_%s.csv", 
+            humanTime(),
+            digest::digest(data))
+  write.csv(x = data, file = file.path(responsesDir, fileName), 
+        row.names = FALSE, quote = TRUE)
+}
 
 #------- UI PAGE ---------
 ui <- fluidPage(
@@ -86,6 +115,7 @@ ui <- fluidPage(
       actionButton("button1", "Undo"), 
       actionButton("button2", "Redo"), 
       actionButton("button3", "Reset"), 
+      textOutput("dimen"), #dimensions of the picture 
       textOutput("help")
     ),
 
@@ -173,6 +203,10 @@ server <- function(input, output, session) {
     #uses a counter
     #when the user clicks keep, it updates the obk so that they are equivalent
     #makes it so that the updated image isn't from a previous radio button
+
+    #2 FIXES NEEDED
+    #1) WHEN USER CLICKS KEEP WITHOUT HIGHLIGHTING ANYTHING
+    #2) WHEN USER CLICKS KEEP WHEN THE BRUSHING IS OUT OF BOUNDS
     if(input$keep == obj)
     {
       isolate({
@@ -263,6 +297,11 @@ server <- function(input, output, session) {
       session$resetBrush("plot_brush")
     })
 
+
+    output$dimen <- renderText({
+      #paste0("x axis: ", dim(imageOutput())[1], " y axis: ", dim(imageOutput())[2])
+      dim(imageOutput())[1]
+    })
 #TODO: if user uploads a .png file, should return same type of file
 #currently only returns jpeg because all three radio buttons dont have an image type
   output$download1 <- downloadHandler('temp.jpeg', function(file) {
@@ -288,6 +327,30 @@ server <- function(input, output, session) {
       "brush: ", xy_range_str(input$plot_brush)
     )
   })
+
+
+  #DATA STORAGE SECTION
+  #THE ABOVE SECTION IS THE IAMGE EDITOR
+  formData <- reactive({
+    data <- sapply(fieldsAll, function(x) input[[x]])
+    data <- t(data)
+    data #saves the data 
+  })
+
+#this observes clicks on the the buttons 
+  observe({
+    if(is.null(input$rnd))
+      saveData(formData())
+    })
+
+  output$download3 <- downloadHandler(
+    filename = function() { 
+      sprintf("ex_%s.csv", humanTime())
+    },
+    content = function(file) {
+      write.csv(loadData(), file, row.names = FALSE)
+    }
+  )
 }
 
 shinyApp(ui, server)
