@@ -54,7 +54,7 @@ sample <-readImage('https://www.k9rl.com/wp-content/uploads/2016/08/Pembroke-Wel
 #TODO -- fix so its more general -- downloads/temp folder
 responsesDir <- file.path("/Users/arielshin/Desktop/temp")
 #fields that will be downloaded 
-fieldsAll <- c("bright", "contrast", "gamma", "dimen")
+fieldsAll <- c("bright", "contrast", "gamma")
 
 #humantime -- more human friendly time
 humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
@@ -115,7 +115,7 @@ ui <- fluidPage(
       actionButton("button1", "Undo"), 
       actionButton("button2", "Redo"), 
       actionButton("button3", "Reset"), 
-      textOutput("dimen"), #dimensions of the picture 
+      textOutput("dimetext"), #dimensions of the picture 
       textOutput("help")
     ),
 
@@ -130,11 +130,11 @@ ui <- fluidPage(
        textOutput("txt1"),
 
        plotOutput("plot2"),
-       #imageOutput("try"),
+       tags$head(tags$style(HTML('#keep{background-color:yellow}'))),
        actionButton("keep", label = "Keep"),
        downloadButton("download1", label = "Download Image"),
        tags$head(tags$style(HTML('#download2{background-color:red}'))),
-       tags$head(tags$style(HTML('#download3{background-color:red}'))),
+       tags$head(tags$style(HTML('#download3{background-color:yellow}'))),
        downloadButton("download2", label = "Download Image Log"),
        downloadButton("download3", label = "Download Image Current Settings"),
        #TODO fix action button 
@@ -213,7 +213,13 @@ server <- function(input, output, session) {
         obj <<- obj+1
         p <- input$plot_brush
         cropped <- updatedImage
-        updatedImage2 <- cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),]  
+
+        if(is.null(input$plot_brush))
+          updatedImage2 <- updatedImage
+
+        else
+          updatedImage2 <- cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),]  
+
         session$resetBrush("plot_brush")
         return(updatedImage2)
       })
@@ -222,15 +228,17 @@ server <- function(input, output, session) {
   })
 
   output$plot1 <- renderPlot({
-    if(input$keep == obj && is.null(input$plot_brush))
-    {
+    #if(input$keep == obj && is.null(input$plot_brush))
+    #{
       #TODO
       #NEED TO FIX
       #WHEN USER CLICKS KEEP AND THE BRUSHING FEATURE IS NOT ON -- NEEDS TO DO NOTHING
       #IT DISPLAYED ORIGINAL BEFORE BECAUSE REACTIVE
       #RIGHT NOW IT DISPLAYS NOTHNIG
-    }
-    else display(imageOutput() ^ input$gamma * input$contrast + input$bright, method = "raster")
+     # display(imageOutput()[0:dime1(), 0:dime2(),]^ input$gamma * input$contrast + input$bright, method = "raster")
+    #}
+    #else 
+    display(imageOutput() ^ input$gamma * input$contrast + input$bright, method = "raster")
   })
 
   #text box to see variables
@@ -298,10 +306,6 @@ server <- function(input, output, session) {
     })
 
 
-    output$dimen <- renderText({
-      #paste0("x axis: ", dim(imageOutput())[1], " y axis: ", dim(imageOutput())[2])
-      dim(imageOutput())[1]
-    })
 #TODO: if user uploads a .png file, should return same type of file
 #currently only returns jpeg because all three radio buttons dont have an image type
   output$download1 <- downloadHandler('temp.jpeg', function(file) {
@@ -328,12 +332,26 @@ server <- function(input, output, session) {
     )
   })
 
+    output$dimetext <- renderText({
+      paste0("x axis: ", dime1(), " y axis: ", dime2())
+    })
+
+    dime1 <- reactive({
+        dim(imageOutput())[1]
+      })
+
+    dime2 <- reactive({
+        dim(imageOutput())[2]
+    })
+
 
   #DATA STORAGE SECTION
   #THE ABOVE SECTION IS THE IAMGE EDITOR
   formData <- reactive({
     data <- sapply(fieldsAll, function(x) input[[x]])
+    data <- c(data, dimenX = dime1(), dimenY = dime2())
     data <- t(data)
+
     data #saves the data 
   })
 
