@@ -5,7 +5,8 @@ library(shiny)
 #purpose of this version 
 #version 9
 #keep and reset are working
-#purpose of this version is to download image
+#download image is working
+#whats not working -- undo, redo, download iamge log, download image current setting
 
 #!!!!!!!!!!!!!!!!!!!!!!!!! ideas to save history !!!!!!!!!!!!!!!!!!!!!!!!!
 #1) SAVE slider inputs
@@ -168,9 +169,6 @@ server <- function(input, output, session) {
     updatedImage <- fileInput()
     validate(need(!is.null(fileInput()), "Must upload a valid jpeg, png, or tiff"))
 
-
-
-
     #keep function 
     #uses a counter
     #when the user clicks keep, it updates the obk so that they are equivalent
@@ -190,7 +188,15 @@ server <- function(input, output, session) {
   })
 
   output$plot1 <- renderPlot({
-    display(imageOutput() ^ input$gamma * input$contrast + input$bright, method = "raster")
+    if(input$keep == obj && is.null(input$plot_brush))
+    {
+      #TODO
+      #NEED TO FIX
+      #WHEN USER CLICKS KEEP AND THE BRUSHING FEATURE IS NOT ON -- NEEDS TO DO NOTHING
+      #IT DISPLAYED ORIGINAL BEFORE BECAUSE REACTIVE
+      #RIGHT NOW IT DISPLAYS NOTHNIG
+    }
+    else display(imageOutput() ^ input$gamma * input$contrast + input$bright, method = "raster")
   })
 
   #text box to see variables
