@@ -1,49 +1,17 @@
 library(EBImage)
 library(shiny)
 
+#version 10 
+#image ID is now working
+#download log is now working
 
-#purpose of this version 
-#version 9
-#keep and reset are working
-#download image is working
-#whats not working -- undo, redo, download iamge log, download image current setting
+#keep button -- currently pops up even when brush is out of bounds + nothing is highlighted 
+    #Currently it is only hidden after you click keep 
+    #needs to be hidden when brushing feature is off or out of bounds
+    #it shows after plot2 pops up the first time 
 
-#!!!!!!!!!!!!!!!!!!!!!!!!! ideas to save history !!!!!!!!!!!!!!!!!!!!!!!!!
-#1) SAVE slider inputs
-
-
-#to run shiny app
-#must have the two libraries -- EBIMAGE and SHINY 
-#  runApp('filename.R')
-
-#-------- LINKS THAT I'M STILL USING TO HELP ME CREATE THE SHINY GUI ----------
-#links to creating action button 
-#https://shiny.rstudio.com/articles/action-buttons.html
-
-#links to using ebimage
-#https://www.r-bloggers.com/r-image-analysis-using-ebimage/
-
-#ebimage documentation 
-#https://www.bioconductor.org/packages/devel/bioc/manuals/EBImage/man/EBImage.pdf
-
-#plotoutput options
-#https://shiny.rstudio.com/reference/shiny/latest/plotOutput.html
-
-#links to create brushing
-#https://shiny.rstudio.com/articles/plot-interaction.html
-
-#dynamic ui to fix upload button 
-#https://shiny.rstudio.com/articles/dynamic-ui.html
-
-#helps with error messages
-#https://shiny.rstudio.com/articles/validation.html
-
-#persistent data storage
-#http://shiny.rstudio.com/articles/persistent-data-storage.html
-#http://deanattali.com/2015/06/14/mimicking-google-form-shiny/#save
-
-#download button -- input
-#https://stackoverflow.com/questions/43663352/r-count-shiny-download-button-clicks
+#ideas
+#undo and redo -- should be disabled if it goes past the number of undo/redoes allowed 
 
 #------- START OF CODE --------
 #sample image we are currently using 
@@ -62,7 +30,7 @@ humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
 loadData <- function() {
   files <- list.files(file.path(responsesDir), full.names = TRUE)
   data <- lapply(files, read.csv, stringsAsFactors = FALSE)
-  data <- dplyr::rbind_all(data)
+  data <- dplyr::bind_rows(data)
   data
 }
 
@@ -76,16 +44,14 @@ saveData <- function(data) {
 
 #------- UI PAGE ---------
 ui <- fluidPage(
+  shinyjs::useShinyjs(), 
 
   titlePanel("Shiny Image"), 
 
   sidebarLayout(
     sidebarPanel(
-
-      #TODO: needs to be fixed so that when the upload image radio button is clikced
-      #      the fileinput is shown 
       radioButtons("radio", label = ("Sample or Upload Image"), 
-        choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3), selected = 1),
+        choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Image Log" = 4), selected = 1),
       conditionalPanel(
         condition = "input.radio == 2",
         fileInput(inputId = 'file1',
@@ -106,6 +72,27 @@ ui <- fluidPage(
           placeholder = 'JPEG, PNG, and TIFF are supported',
           value = '')
       ),
+      conditionalPanel(
+        condition = "input.radio == 4",
+        fileInput(inputId = 'file2',
+          label = 'Upload Image Log CSV',
+          placeholder = 'Only CSV issupported',
+          accept = c(
+            "txt/csv", 
+            "text/comma-separated-values,text/plain", 
+            ".csv")),
+        fileInput(inputId = 'file3',
+          label = 'Upload Image used in Image Log',
+          placeholder = 'JPEG, PNG, or TIFF',
+          accept = c(
+            "image/jpeg",
+            "image/x-png",
+            "image/tiff",
+            ".jpg",
+            ".png",
+            ".tiff"))
+      ),
+
         #supported types are jpeg, png, and tiff
       sliderInput("bright", "Increase/Decrease Brightness:", min = -1, max = 1, value = 0, step = 0.01),
       sliderInput("contrast", "Increase/Decrease Contrast:", min = 0, max = 10, value = 1, step = 0.1), 
@@ -116,7 +103,8 @@ ui <- fluidPage(
       actionButton("button2", "Redo"), 
       actionButton("button3", "Reset"), 
       textOutput("dimetext"), #dimensions of the picture 
-      textOutput("help")
+      textOutput("help"),
+      textOutput("idReader")
     ),
 
     mainPanel(
@@ -127,16 +115,15 @@ ui <- fluidPage(
        brush = "plot_brush"
        ),
 
+       downloadButton("download1", label = "Download Image"),
+       downloadButton("download3", label = "Download Image Log"),
+       
        textOutput("txt1"),
-
        plotOutput("plot2"),
        tags$head(tags$style(HTML('#keep{background-color:yellow}'))),
-       actionButton("keep", label = "Keep"),
-       downloadButton("download1", label = "Download Image"),
-       tags$head(tags$style(HTML('#download2{background-color:red}'))),
-       tags$head(tags$style(HTML('#download3{background-color:yellow}'))),
-       downloadButton("download2", label = "Download Image Log"),
-       downloadButton("download3", label = "Download Image Current Settings"),
+       shinyjs::hidden(
+        actionButton("keep", label = "Keep")
+       ),
        #TODO fix action button 
        verbatimTextOutput("info")
      )
@@ -175,7 +162,6 @@ server <- function(input, output, session) {
       if(is.null(inFile))
         return(NULL)
 
-      #validate(need(!is.null(inFile)), "Must enter valid URL of a jpeg, png, or tiff")
       oldNames = inFile$datapath
       newNames = file.path(dirname(inFile$datapath), inFile$name)
       file.rename(from = oldNames, to = newNames)
@@ -188,11 +174,17 @@ server <- function(input, output, session) {
     #user uploaded link
     if (input$radio == 3)
     {
-     validate(need(input$url != "", "Must type in a valid jpeg, png, or tiff"))
-
+      validate(need(input$url1 != "", "Must type in a valid jpeg, png, or tiff"))
       foto2 <- readImage(input$url1)
       return(foto2)
     }
+
+    if (input$radio == 4)
+    {
+      foto0 <-readImage('https://www.k9rl.com/wp-content/uploads/2016/08/Pembroke-Welsh-Corgi.jpg')
+      return(foto0)
+    }
+
   })
 
   imageOutput <- reactive({
@@ -221,6 +213,7 @@ server <- function(input, output, session) {
           updatedImage2 <- cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),]  
 
         session$resetBrush("plot_brush")
+        shinyjs::hide("keep")
         return(updatedImage2)
       })
     }
@@ -240,10 +233,27 @@ server <- function(input, output, session) {
     #else 
     display(imageOutput() ^ input$gamma * input$contrast + input$bright, method = "raster")
   })
+  
+
+  imgID <- reactive({
+    if(input$radio == 1)
+      id <- paste0("id1-sample")
+    if(input$radio == 2)
+      id <- paste0("id2-", input$file1[[1]])
+    if(input$radio == 3)
+      id <- paste0("id3-", input$url1)
+    if(input$radio == 4)
+      id <- paste0("")
+  return(id)
+  })
 
   #text box to see variables
   output$help <- renderText({
-    paste0("number of keep: ", input$keep, " obj: ", obj, " number of reset: ", input$button3)
+    paste0("number of keep: ", input$keep, " obj: ", obj)
+    })
+
+  output$idReader <- renderText({
+    paste0("ID: ", imgID())
     })
 
   #text to differentiate original vs cropped version
@@ -256,17 +266,16 @@ server <- function(input, output, session) {
   imageOutput2 <- reactive({
     p <- input$plot_brush
     cropped <- imageOutput()
-    updatedImage2 <- cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),]    
+    updatedImage2 <- cropped[p$xmin:p$xmax,p$ymin:p$ymax,]    
     return(updatedImage2)
   })
 
   #creates plot
   #also fixes error messages
   output$plot2 <- renderPlot({
-      validate(need(input$plot_brush != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
 
       p <- input$plot_brush
-      cropped <- imageOutput()
+      validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
 
       validate(need(p$xmax <= dim(sample)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
       validate(need(p$ymax <= dim(sample)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
@@ -274,9 +283,8 @@ server <- function(input, output, session) {
       validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
 
       display(imageOutput2() ^ input$gamma * input$contrast + input$bright, method = "raster")
+      shinyjs::show("keep")
   })
-
-
 
 #updates slider with new file input from user or change in radio buttons
   observe({
@@ -295,8 +303,7 @@ server <- function(input, output, session) {
 
 #TODO: if user inputs a photo with pre-set sliders; it needs to change to those values 
 #needs to undo crop
-    observe(
-    {
+    observe({
       input$button3
 
       updateSliderInput(session, "bright", value = 0)
@@ -344,27 +351,23 @@ server <- function(input, output, session) {
         dim(imageOutput())[2]
     })
 
-
   #DATA STORAGE SECTION
   #THE ABOVE SECTION IS THE IAMGE EDITOR
   formData <- reactive({
     data <- sapply(fieldsAll, function(x) input[[x]])
-    data <- c(data, dimenX = dime1(), dimenY = dime2())
+    data <- c(ID = imgID(), data, dimenX = dime1(), dimenY = dime2())
     data <- t(data)
 
     data #saves the data 
   })
 
-#this observes clicks on the the buttons 
+  #this observes any changes to the image
   observe({
-    if(is.null(input$rnd))
       saveData(formData())
     })
 
   output$download3 <- downloadHandler(
-    filename = function() { 
-      sprintf("ex_%s.csv", humanTime())
-    },
+    filename = 'ImageLog.csv',
     content = function(file) {
       write.csv(loadData(), file, row.names = FALSE)
     }
@@ -372,3 +375,33 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+#-------- LINKS THAT I'M STILL USING TO HELP ME CREATE THE SHINY GUI ----------
+#links to creating action button 
+#https://shiny.rstudio.com/articles/action-buttons.html
+
+#links to using ebimage
+#https://www.r-bloggers.com/r-image-analysis-using-ebimage/
+
+#ebimage documentation 
+#https://www.bioconductor.org/packages/devel/bioc/manuals/EBImage/man/EBImage.pdf
+
+#plotoutput options
+#https://shiny.rstudio.com/reference/shiny/latest/plotOutput.html
+
+#links to create brushing
+#https://shiny.rstudio.com/articles/plot-interaction.html
+
+#dynamic ui to fix upload button 
+#https://shiny.rstudio.com/articles/dynamic-ui.html
+
+#helps with error messages
+#https://shiny.rstudio.com/articles/validation.html
+
+#persistent data storage
+#http://shiny.rstudio.com/articles/persistent-data-storage.html
+#http://deanattali.com/2015/06/14/mimicking-google-form-shiny/#save
+
+#download button -- input
+#https://stackoverflow.com/questions/43663352/r-count-shiny-download-button-clicks
+
