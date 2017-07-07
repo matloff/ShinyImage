@@ -1,26 +1,31 @@
-library(EBImage)
 library(shiny)
+library(EBImage)
 
-#version 10 
-#image ID is now working
-#download log is now working
+#version 12
+#keep was previously not recursive even though it needed to be 
+#keep is now recursive but it requires that the original image be non-reactive
+#the original image is only nonreactive if we make it a global variable
+#but we want the user to be able to choose from sample, url, or file
+#which requires that to be recursive
 
-#keep button -- currently pops up even when brush is out of bounds + nothing is highlighted 
-    #Currently it is only hidden after you click keep 
-    #needs to be hidden when brushing feature is off or out of bounds
-    #it shows after plot2 pops up the first time 
+#the keep button no longer hides since it relied on conditions from the non-recursive keep
+#the reset function no longer works since the file inputs are different
 
-#ideas
-#undo and redo -- should be disabled if it goes past the number of undo/redoes allowed 
 
-#------- START OF CODE --------
-#sample image we are currently using 
-sample <-readImage('https://www.k9rl.com/wp-content/uploads/2016/08/Pembroke-Welsh-Corgi.jpg')
+#TODO
+#____________ 1 _______________
+#fix radio buttons -- currently the sample is nonreactive
+#radio buttons are reactive
+#the sample is able to change in a reactive context and the base image being nonreactive
+
+#____________ 2 _______________
+#reset should give user the original image 
 
 #temporary
 #currently only saving to my machine in a folder called temp
 #TODO -- fix so its more general -- downloads/temp folder
 responsesDir <- file.path("/Users/arielshin/Desktop/temp")
+
 #fields that will be downloaded 
 fieldsAll <- c("bright", "contrast", "gamma")
 
@@ -42,16 +47,17 @@ saveData <- function(data) {
         row.names = FALSE, quote = TRUE)
 }
 
-#------- UI PAGE ---------
-ui <- fluidPage(
-  shinyjs::useShinyjs(), 
+# ______________________ start of UI _____________________
+ui <- fluidPage( 
+  shinyjs::useShinyjs(),
 
-  titlePanel("Shiny Image"), 
+  titlePanel("Shiny Image"),
 
   sidebarLayout(
     sidebarPanel(
+      tags$head(tags$style(HTML('#radio{color: red}'))),
       radioButtons("radio", label = ("Sample or Upload Image"), 
-        choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Image Log" = 4), selected = 1),
+        choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3), selected = 1),
       conditionalPanel(
         condition = "input.radio == 2",
         fileInput(inputId = 'file1',
@@ -64,7 +70,7 @@ ui <- fluidPage(
             ".jpg",
             ".png",
             ".tiff"))
-        ),
+      ),
       conditionalPanel(
         condition = "input.radio == 3",
         textInput(inputId = "url1", 
@@ -72,33 +78,12 @@ ui <- fluidPage(
           placeholder = 'JPEG, PNG, and TIFF are supported',
           value = '')
       ),
-      conditionalPanel(
-        condition = "input.radio == 4",
-        fileInput(inputId = 'file2',
-          label = 'Upload Image Log CSV',
-          placeholder = 'Only CSV issupported',
-          accept = c(
-            "txt/csv", 
-            "text/comma-separated-values,text/plain", 
-            ".csv")),
-        fileInput(inputId = 'file3',
-          label = 'Upload Image used in Image Log',
-          placeholder = 'JPEG, PNG, or TIFF',
-          accept = c(
-            "image/jpeg",
-            "image/x-png",
-            "image/tiff",
-            ".jpg",
-            ".png",
-            ".tiff"))
-      ),
-
-        #supported types are jpeg, png, and tiff
       sliderInput("bright", "Increase/Decrease Brightness:", min = -1, max = 1, value = 0, step = 0.01),
       sliderInput("contrast", "Increase/Decrease Contrast:", min = 0, max = 10, value = 1, step = 0.1), 
       sliderInput("gamma", "Increase/Decrease Gamma Correction", min = 0, max = 50, value = 1, step = 0.5),
       tags$head(tags$style(HTML('#button1{background-color:red}'))),
       tags$head(tags$style(HTML('#button2{background-color:red}'))),
+      tags$head(tags$style(HTML('#button3{background-color:red}'))),
       actionButton("button1", "Undo"), 
       actionButton("button2", "Redo"), 
       actionButton("button3", "Reset"), 
@@ -106,36 +91,37 @@ ui <- fluidPage(
       textOutput("help"),
       textOutput("idReader")
     ),
-
     mainPanel(
       plotOutput("plot1",
-       click = "plot_click",
-       dblclick = "plot_dblclick",
-       hover = "plot_hover",
-       brush = "plot_brush"
-       ),
+        click = "plot_click",
+        dblclick = "plot_dblclick",
+        hover = "plot_hover",
+        brush = "plot_brush"
+      ),
 
-       downloadButton("download1", label = "Download Image"),
-       downloadButton("download3", label = "Download Image Log"),
-       
-       textOutput("txt1"),
-       plotOutput("plot2"),
-       tags$head(tags$style(HTML('#keep{background-color:yellow}'))),
-       shinyjs::hidden(
+      downloadButton("download1", label = "Download Image"),
+      downloadButton("download3", label = "Download Image Log"),
+         
+      textOutput("txt1"),
+      plotOutput("plot2"),
+      tags$head(tags$style(HTML('#keep{background-color:yellow}'))),
+      #TODO: fix hidden button
+      #when user highlights, then clicks -- brushing disappears
+      #button needs to also disappear
+      shinyjs::hidden(
         actionButton("keep", label = "Keep")
-       ),
-       #TODO fix action button 
-       verbatimTextOutput("info")
-     )
+      ),
+      verbatimTextOutput("info")
+    )
   )
 )
 
-#------ SERVER -------
+# ______________________ start of server _____________________
 server <- function(input, output, session) {
-  obj <- 1 #used as counter for the keep function
-#TO DO not working right now 
-#creates a plot that changes with slider inputs for 
-# -- gamma, contrast, and brightness
+  #imageFile is stored outside of the reactive 
+  #each time it gets modified 
+  imageFile <- readImage('http://www.pagetutor.com/common/bgcolors1536.png')
+  
   fileInput <- reactive({
 
     #if the user clicks a different radio button
@@ -151,7 +137,7 @@ server <- function(input, output, session) {
     #user clicked sample -- default
     if(input$radio == 1)
     {
-      foto0 <-readImage('https://www.k9rl.com/wp-content/uploads/2016/08/Pembroke-Welsh-Corgi.jpg')
+      foto0 <- sample
       return(foto0)
     }
 
@@ -178,63 +164,53 @@ server <- function(input, output, session) {
       foto2 <- readImage(input$url1)
       return(foto2)
     }
-
-    if (input$radio == 4)
-    {
-      foto0 <-readImage('https://www.k9rl.com/wp-content/uploads/2016/08/Pembroke-Welsh-Corgi.jpg')
-      return(foto0)
-    }
-
   })
 
-  imageOutput <- reactive({
-    updatedImage <- fileInput()
-    validate(need(!is.null(fileInput()), "Must upload a valid jpeg, png, or tiff"))
-
-    #keep function 
-    #uses a counter
-    #when the user clicks keep, it updates the obk so that they are equivalent
-    #makes it so that the updated image isn't from a previous radio button
-
-    #2 FIXES NEEDED
-    #1) WHEN USER CLICKS KEEP WITHOUT HIGHLIGHTING ANYTHING
-    #2) WHEN USER CLICKS KEEP WHEN THE BRUSHING IS OUT OF BOUNDS
-    if(input$keep == obj)
-    {
-      isolate({
-        obj <<- obj+1
-        p <- input$plot_brush
-        cropped <- updatedImage
-
-        if(is.null(input$plot_brush))
-          updatedImage2 <- updatedImage
-
-        else
-          updatedImage2 <- cropped[round(p$xmin, 1):round(p$xmax, 1),round(p$ymin, 1):round(p$ymax, 1),]  
-
-        session$resetBrush("plot_brush")
-        shinyjs::hide("keep")
-        return(updatedImage2)
-      })
-    }
-    else return(updatedImage)
+  #prompts shiny to look at recursive crop
+  observe({
+    recursiveCrop()
   })
 
-  output$plot1 <- renderPlot({
-    #if(input$keep == obj && is.null(input$plot_brush))
-    #{
-      #TODO
-      #NEED TO FIX
-      #WHEN USER CLICKS KEEP AND THE BRUSHING FEATURE IS NOT ON -- NEEDS TO DO NOTHING
-      #IT DISPLAYED ORIGINAL BEFORE BECAUSE REACTIVE
-      #RIGHT NOW IT DISPLAYS NOTHNIG
-     # display(imageOutput()[0:dime1(), 0:dime2(),]^ input$gamma * input$contrast + input$bright, method = "raster")
-    #}
-    #else 
-    display(imageOutput() ^ input$gamma * input$contrast + input$bright, method = "raster")
+  #only executes when keep is clicked 
+  recursiveCrop <- eventReactive(input$keep,{
+    imageFcn()
+    isolate({imageFile <<- cropped(imageFile)})
+    session$resetBrush("plot_brush")
+    shinyjs::hide("keep")
+        #need to find some place to show keep
+    output$plot1 <- renderPlot(display(imageFile ^ input$gamma * input$contrast + input$bright, method = "raster"))
   })
   
+  #returns image that is recursively updated
+  imageFcn <- reactive ({
+    return(imageFile)
+  })
+  
+  #function that crops the image based on the plot brush 
+  cropped <- function(image)
+  {
+    p <- input$plot_brush
+    return(image[p$xmin:p$xmax,p$ymin:p$ymax,])
+  }
 
+  output$plot1 <- renderPlot(
+    display(imageFile ^ input$gamma * input$contrast + input$bright, method = "raster")
+  )
+
+  #displays a cropped image of plot1's imageFile 
+  output$plot2 <- renderPlot({
+    p <- input$plot_brush
+    validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
+    validate(need(p$xmax <= dim(imageFile)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
+    validate(need(p$ymax <= dim(imageFile)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
+    validate(need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2"))
+    validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
+
+    display(cropped(imageFile) ^ input$gamma * input$contrast + input$bright, method = "raster")
+    shinyjs::show("keep")
+  })
+
+  #creates an ID for the image log 
   imgID <- reactive({
     if(input$radio == 1)
       id <- paste0("id1-sample")
@@ -242,51 +218,19 @@ server <- function(input, output, session) {
       id <- paste0("id2-", input$file1[[1]])
     if(input$radio == 3)
       id <- paste0("id3-", input$url1)
-    if(input$radio == 4)
-      id <- paste0("")
   return(id)
   })
 
-  #text box to see variables
-  output$help <- renderText({
-    paste0("number of keep: ", input$keep, " obj: ", obj)
-    })
-
+  #textbox for user to see what the image ID is
   output$idReader <- renderText({
     paste0("ID: ", imgID())
-    })
+  })
 
-  #text to differentiate original vs cropped version
+  #helpful text to show the user the crop function 
   output$txt1 <- renderText({
       "Cropped Version (Press Keep to save and update to cropped version)"
   })
 
-  #creates the images for the cropped version
-  #uses EBImage and brushing to give dimesions to the cropped function
-  imageOutput2 <- reactive({
-    p <- input$plot_brush
-    cropped <- imageOutput()
-    updatedImage2 <- cropped[p$xmin:p$xmax,p$ymin:p$ymax,]    
-    return(updatedImage2)
-  })
-
-  #creates plot
-  #also fixes error messages
-  output$plot2 <- renderPlot({
-
-      p <- input$plot_brush
-      validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
-
-      validate(need(p$xmax <= dim(sample)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
-      validate(need(p$ymax <= dim(sample)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
-      validate(need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2"))
-      validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
-
-      display(imageOutput2() ^ input$gamma * input$contrast + input$bright, method = "raster")
-      shinyjs::show("keep")
-  })
-
-#updates slider with new file input from user or change in radio buttons
   observe({
     #if user clicks a new radio button, uploads new file, or url
     #the sliders will change
@@ -301,25 +245,19 @@ server <- function(input, output, session) {
     session$resetBrush("plot_brush")
   })
 
-#TODO: if user inputs a photo with pre-set sliders; it needs to change to those values 
-#needs to undo crop
-    observe({
-      input$button3
+  #same as above observe 
+  #might modify, so it is kept separate
+  observe({
+    #if the user clicks reset, then everything resets
+    input$button3
 
-      updateSliderInput(session, "bright", value = 0)
-      updateSliderInput(session, "contrast", value = 1)
-      updateSliderInput(session, "gamma", value = 1)
-      session$resetBrush("plot_brush")
-    })
-
-
-#TODO: if user uploads a .png file, should return same type of file
-#currently only returns jpeg because all three radio buttons dont have an image type
-  output$download1 <- downloadHandler('temp.jpeg', function(file) {
-    writeImage(imageOutput()^ input$gamma * input$contrast + input$bright, file)
+    updateSliderInput(session, "bright", value = 0)
+    updateSliderInput(session, "contrast", value = 1)
+    updateSliderInput(session, "gamma", value = 1)
+    session$resetBrush("plot_brush")
   })
 
-#gives information about brushing 
+  #creates the textbox below plot2 about the plot_brush details and etc
   output$info <- renderText({
     xy_str <- function(e) {
       if(is.null(e)) return("NULL\n")
@@ -339,17 +277,30 @@ server <- function(input, output, session) {
     )
   })
 
-    output$dimetext <- renderText({
-      paste0("x axis: ", dime1(), " y axis: ", dime2())
-    })
 
-    dime1 <- reactive({
-        dim(imageOutput())[1]
-      })
+  #_________________DOWNLOAD ____________________
+  #TODO: if user uploads a .png file, should return same type of file
+  #currently only returns jpeg because all three radio buttons dont have an image type
 
-    dime2 <- reactive({
-        dim(imageOutput())[2]
-    })
+  #allows user to download plot1 - imageFile
+  output$download1 <- downloadHandler('temp.jpeg', function(file) {
+    writeImage(imageFile ^ input$gamma * input$contrast + input$bright, file)
+  })
+
+  #creates helpful text on sidebar about the dimensions 
+  output$dimetext <- renderText({
+    paste0("x axis: ", dime1(), " y axis: ", dime2())
+  })
+
+  #creates x dimensions for image log
+  dime1 <- reactive({
+    dim(imageFile)[1]
+  })
+
+  #creates y dimensions for image log
+  dime2 <- reactive({
+    dim(imageFile)[2]
+  })  
 
   #DATA STORAGE SECTION
   #THE ABOVE SECTION IS THE IAMGE EDITOR
@@ -363,9 +314,10 @@ server <- function(input, output, session) {
 
   #this observes any changes to the image
   observe({
-      saveData(formData())
-    })
+    saveData(formData())
+  })
 
+  #download button for image log
   output$download3 <- downloadHandler(
     filename = 'ImageLog.csv',
     content = function(file) {
@@ -375,6 +327,8 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+
 
 #-------- LINKS THAT I'M STILL USING TO HELP ME CREATE THE SHINY GUI ----------
 #links to creating action button 
@@ -405,3 +359,9 @@ shinyApp(ui, server)
 #download button -- input
 #https://stackoverflow.com/questions/43663352/r-count-shiny-download-button-clicks
 
+#themes
+#https://shiny.rstudio.com/gallery/shiny-theme-selector.html
+
+#recursion
+#https://stackoverflow.com/questions/37128528/self-referencing-reactive-variables-in-shiny-r
+#https://groups.google.com/forum/#!topic/shiny-discuss/8ouy0eS15Jc
