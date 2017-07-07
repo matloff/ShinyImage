@@ -1,6 +1,7 @@
 library(shiny)
 library(EBImage)
-
+library(shinyjs)
+library(dplyr)
 #version 12
 #keep was previously not recursive even though it needed to be 
 #keep is now recursive but it requires that the original image be non-reactive
@@ -24,13 +25,10 @@ library(EBImage)
 #temporary
 #currently only saving to my machine in a folder called temp
 #TODO -- fix so its more general -- downloads/temp folder
-responsesDir <- file.path("/Users/arielshin/Desktop/temp")
+responsesDir <- file.path("temp")
 
 #fields that will be downloaded 
 fieldsAll <- c("bright", "contrast", "gamma")
-
-#humantime -- more human friendly time
-humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
 
 loadData <- function() {
   files <- list.files(file.path(responsesDir), full.names = TRUE)
@@ -40,11 +38,25 @@ loadData <- function() {
 }
 
 saveData <- function(data) {
-  fileName <- sprintf("%s_%s.csv", 
-            humanTime(),
-            digest::digest(data))
+  fileName <- 'ImageLog.csv'
   write.csv(x = data, file = file.path(responsesDir, fileName), 
         row.names = FALSE, quote = TRUE)
+}
+
+if (!require("shiny")) {
+	cat("shiny is not installed. Please install it first.")
+}
+
+if (!require("EBImage")) {
+	cat("EBImage is not installed. Please install it first.")
+}
+
+if (!require("shinyjs")) {
+	cat("shinyjs is not installed. Please install it first.")
+}
+
+if (!require("dplyr")) {
+	cat("shinyjs is not installed. Please install it first.")
 }
 
 # ______________________ start of UI _____________________
