@@ -6,10 +6,10 @@ library(dplyr)
 #version 14
 #download image is properly working if there is a file called tempdir 
 #in the directory where the shiny app is running
+#keep is now fully working
 
 #TODO
 #UNDO, REDO 
-
 
 #temporary
 #currently stores responses in a folder in the current working directory
@@ -119,10 +119,6 @@ ui <- fluidPage(
          
       textOutput("txt1"),
       plotOutput("plot2"),
-      tags$head(tags$style(HTML('#keep{background-color:yellow}'))),
-      #TODO: fix hidden button
-      #when user highlights, then clicks -- brushing disappears
-      #button needs to also disappear
       shinyjs::hidden(
         actionButton("keep", label = "Keep")
       ),
@@ -201,8 +197,15 @@ server <- function(input, output, session) {
     isolate({imageFile$img_origin <<- cropped(imageFile$img_origin)})
     session$resetBrush("plot_brush")
     shinyjs::hide("keep")
-        #need to find some place to show keep
     output$plot1 <- renderPlot(display(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, method = "raster"))
+  })
+  
+  #hides the keep button in the instance in which the user highlighted the plot
+  #then clicks on the side so that the brush plot disappears
+  #if user clicks keep without a valid brush, there will be errors
+  #so we need to hide the button
+  observeEvent(is.null(input$plot_brush), {
+      shinyjs::hide("keep")
   })
   
   #returns image that is recursively updated
@@ -252,7 +255,7 @@ server <- function(input, output, session) {
 
   #helpful text to show the user the crop function 
   output$txt1 <- renderText({
-      "Cropped Version (Press Keep to save and update to cropped version)"
+      "Click and drag where you would like to crop the photo. To save the cropped version, press keep."
   })
 
   observe({
