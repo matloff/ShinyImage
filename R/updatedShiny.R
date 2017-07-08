@@ -124,16 +124,19 @@ ui <- fluidPage(
           tags$style(type='text/css', "#download1 { display: block; width:100%; margin-left: auto; margin-right:auto;}"),
           tags$style(type='text/css', "#download3 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
           '<br/>',
-          h4('Preview Crop', align = "center"),
-          shinyjs::hidden(
-            actionButton("keep", label = "Keep")
-          ),
 
+          h4('Preview Crop', align = "center"),
           h6('Click and drag where you would like to crop the photo. To save the cropped version, press keep', align = "center"),
+          '<br/>',
           #textOutput("txt1"),
           plotOutput("plot2"),
           tags$style(type='text/css', "#keep { display:block; width:10%; margin-left: auto; margin-right:auto;}"),
           '<br/>',
+          shinyjs::hidden(
+            actionButton("keep", label = "Keep")
+          ),
+          '<br/>',
+
           verbatimTextOutput("info")
         )
       )
