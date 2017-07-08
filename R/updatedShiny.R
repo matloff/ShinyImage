@@ -3,20 +3,28 @@ library(EBImage)
 library(shinyjs)
 library(dplyr)
 
-#version 13
-#reset and image selection are now working with the recursive keep button 
+#version 14
+#download image is properly working if there is a file called tempdir 
+#in the directory where the shiny app is running
 
 #TODO
-#download image log 
+#UNDO, REDO 
 
 #temporary
-#currently only saving to my machine in a folder called temp
-#TODO -- fix so its more general -- downloads/temp folder
-responsesDir <- file.path("temp")
+#currently stores responses in a folder in the current working directory
+#titled tempdir
+temp <- getwd()
+responsesDir <- file.path(paste0(temp, "/tempdir"))
 
 #fields that will be downloaded 
 fieldsAll <- c("bright", "contrast", "gamma")
 
+#helps create unique names to save the data 
+humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
+
+#lists all the files that were previously saved in tempdir
+#bids all the rows
+#creates and saves the data
 loadData <- function() {
   files <- list.files(file.path(responsesDir), full.names = TRUE)
   data <- lapply(files, read.csv, stringsAsFactors = FALSE)
@@ -24,8 +32,12 @@ loadData <- function() {
   data
 }
 
+#saves each change made to the photo 
+#each change is a unique file 
 saveData <- function(data) {
-  fileName <- 'ImageLog.csv'
+  fileName <- sprintf("%s_%s.csv", 
+            humanTime(),
+            digest::digest(data))
   write.csv(x = data, file = file.path(responsesDir, fileName), 
         row.names = FALSE, quote = TRUE)
 }
@@ -38,10 +50,13 @@ if (!require("EBImage")) {
 	cat("EBImage is not installed. Please install it first.")
 }
 
+#needed to hide and show the keep button 
+#if clicked accidentally, it causes errors
 if (!require("shinyjs")) {
 	cat("shinyjs is not installed. Please install it first.")
 }
 
+#used to bind all the rows
 if (!require("dplyr")) {
 	cat("shinyjs is not installed. Please install it first.")
 }
@@ -95,7 +110,6 @@ ui <- fluidPage(
         hover = "plot_hover",
         brush = "plot_brush"
       ),
-
       downloadButton("download1", label = "Download Image"),
       downloadButton("download3", label = "Download Image Log"),
          
@@ -132,6 +146,9 @@ server <- function(input, output, session) {
     imageFile$img_origin <- renameUpload(input$file1)
   })
 
+  #when user uploads file
+  #the datapath is different from the one needed to properly recognize photo
+  #so this function renames the file 
   renameUpload <- function(inFile) {
     if(is.null(inFile))
       return(NULL)
@@ -196,9 +213,9 @@ server <- function(input, output, session) {
     return(image[p$xmin:p$xmax,p$ymin:p$ymax,])
   }
 
-  output$plot1 <- renderPlot(
+  output$plot1 <- renderPlot({
     display(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, method = "raster")
-  )
+  })
 
   #displays a cropped image of plot1's imageFile 
   output$plot2 <- renderPlot({
@@ -303,22 +320,23 @@ server <- function(input, output, session) {
     data #saves the data 
   })
 
-  #this observes any changes to the image
+  #this observes any changes to the image and saves 
   observe({
     saveData(formData())
   })
 
   #download button for image log
+  #creates a file for the user to see the image log 
   output$download3 <- downloadHandler(
     filename = 'ImageLog.csv',
     content = function(file) {
       write.csv(loadData(), file, row.names = FALSE)
     }
   )
+
 }
 
 shinyApp(ui, server)
-
 
 
 #-------- LINKS THAT I'M STILL USING TO HELP ME CREATE THE SHINY GUI ----------
@@ -356,3 +374,4 @@ shinyApp(ui, server)
 #recursion
 #https://stackoverflow.com/questions/37128528/self-referencing-reactive-variables-in-shiny-r
 #https://groups.google.com/forum/#!topic/shiny-discuss/8ouy0eS15Jc
+#https://stackoverflow.com/questions/29716868/r-shiny-how-to-get-an-reactive-data-frame-updated-each-time-pressing-an-actionb
