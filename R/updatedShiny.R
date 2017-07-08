@@ -196,7 +196,7 @@ server <- function(input, output, session) {
     imageFcn()
     isolate({imageFile$img_origin <<- cropped(imageFile$img_origin)})
     session$resetBrush("plot_brush")
-    shinyjs::hide("keep")
+    #shinyjs::hide("keep")
     output$plot1 <- renderPlot(display(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, method = "raster"))
   })
   
