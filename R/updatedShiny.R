@@ -10,11 +10,15 @@ library(dplyr)
 #TODO
 #UNDO, REDO 
 
+
 #temporary
 #currently stores responses in a folder in the current working directory
 #titled tempdir
 temp <- getwd()
 responsesDir <- file.path(paste0(temp, "/tempdir"))
+
+#creates an error message if user does not have tempdir directory
+validate((need(file.exists("tempdir"), "Please create a directory named tempdir in your current working directory to save Image Log data")))
 
 #fields that will be downloaded 
 fieldsAll <- c("bright", "contrast", "gamma")
