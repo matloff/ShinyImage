@@ -108,21 +108,35 @@ ui <- fluidPage(
       textOutput("idReader")
     ),
     mainPanel(
-      plotOutput("plot1",
-        click = "plot_click",
-        dblclick = "plot_dblclick",
-        hover = "plot_hover",
-        brush = "plot_brush"
-      ),
-      downloadButton("download1", label = "Download Image"),
-      downloadButton("download3", label = "Download Image Log"),
-         
-      textOutput("txt1"),
-      plotOutput("plot2"),
-      shinyjs::hidden(
-        actionButton("keep", label = "Keep")
-      ),
-      verbatimTextOutput("info")
+      HTML(
+        paste(
+          #h4('Main Image', align = "center"),
+          plotOutput("plot1",
+            click = "plot_click",
+            dblclick = "plot_dblclick",
+            hover = "plot_hover",
+            brush = "plot_brush"
+          ),
+          '<br/>',
+          column(6, downloadButton("download1", label = "Download Image")),
+          column(6, downloadButton("download3", label = "Download Image Log")),
+          '<br/>',
+          tags$style(type='text/css', "#download1 { display: block; width:100%; margin-left: auto; margin-right:auto;}"),
+          tags$style(type='text/css', "#download3 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
+          '<br/>',
+          h4('Preview Crop', align = "center"),
+          shinyjs::hidden(
+            actionButton("keep", label = "Keep")
+          ),
+
+          h6('Click and drag where you would like to crop the photo. To save the cropped version, press keep', align = "center"),
+          #textOutput("txt1"),
+          plotOutput("plot2"),
+          tags$style(type='text/css', "#keep { display:block; width:10%; margin-left: auto; margin-right:auto;}"),
+          '<br/>',
+          verbatimTextOutput("info")
+        )
+      )
     )
   )
 )
@@ -254,9 +268,9 @@ server <- function(input, output, session) {
   })
 
   #helpful text to show the user the crop function 
-  output$txt1 <- renderText({
-      "Click and drag where you would like to crop the photo. To save the cropped version, press keep."
-  })
+  #output$txt1 <- renderText({
+  #    "Click and drag where you would like to crop the photo. To save the cropped version, press keep."
+  #})
 
   observe({
     #if user clicks a new radio button, uploads new file, or url
