@@ -25,38 +25,6 @@ source('imagehistory.R')
 #currently stores responses in a folder in the current working directory
 #titled tempdir
 
-temp <- getwd()
-responsesDir <- file.path(paste0(temp, "/tempdir"))
-
-#creates an error message if user does not have tempdir directory
-validate((need(file.exists("tempdir"), "Please create a directory named tempdir in your current working directory to save Image Log data")))
-
-#fields that will be downloaded 
-fieldsAll <- c("bright", "contrast", "gamma")
-
-#helps create unique names to save the data 
-humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
-
-#lists all the files that were previously saved in tempdir
-#bids all the rows
-#creates and saves the data
-loadData <- function() {
-  files <- list.files(file.path(responsesDir), full.names = TRUE)
-  data <- lapply(files, read.csv, stringsAsFactors = FALSE)
-  data <- dplyr::bind_rows(data)
-  data
-}
-
-#saves each change made to the photo 
-#each change is a unique file 
-saveData <- function(data) {
-  fileName <- sprintf("%s_%s.csv", 
-            humanTime(),
-            digest::digest(data))
-  write.csv(x = data, file = file.path(responsesDir, fileName), 
-        row.names = FALSE, quote = TRUE)
-}
-
 if (!require("shiny")) {
 	cat("shiny is not installed. Please install it first.")
 }
@@ -68,11 +36,6 @@ if (!require("EBImage")) {
 #needed to hide and show the keep button 
 #if clicked accidentally, it causes errors
 if (!require("shinyjs")) {
-	cat("shinyjs is not installed. Please install it first.")
-}
-
-#used to bind all the rows
-if (!require("dplyr")) {
 	cat("shinyjs is not installed. Please install it first.")
 }
 
@@ -477,30 +440,6 @@ server <- function(input, output, session) {
   dime2 <- reactive({
     dim(imageFile$img_origin)[2]
   })  
-
-  #DATA STORAGE SECTION
-  #THE ABOVE SECTION IS THE IAMGE EDITOR
-  formData <- reactive({
-    data <- sapply(fieldsAll, function(x) input[[x]])
-    data <- c(ID = imgID(), data, dimenX = dime1(), dimenY = dime2())
-    data <- t(data)
-
-    data #saves the data 
-  })
-
-  #this observes any changes to the image and saves 
-  observe({
-    saveData(formData())
-  })
-
-  #download button for image log
-  #creates a file for the user to see the image log 
-  output$download3 <- downloadHandler(
-    filename = 'ImageLog.csv',
-    content = function(file) {
-      write.csv(loadData(), file, row.names = FALSE)
-    }
-  )
 
 #*******UPDATE*********
   observeEvent(input$download4, {
