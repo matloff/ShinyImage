@@ -7,13 +7,14 @@ validate((need(file.exists("imagehistory.R"), "Please input imagehistory.R into 
 source('imagehistory.R')
 
 #version 15
-#purpose of this version is to integrate it with imagehistory.R
+#purpose of this version is to allow user to view image log of shinyimg object
 
 #sample, user inputs of url or image should create a new shinyimg object
 #any observe event should be recorded as a shinyimg 
 
 #TODO
 #fix contrast -- currently contrast is not in sync with shiny img
+  #brightness, contrast, and gamma need to be on a scale of -10 to 10
 #add gamma correction
 #fix successive cropping -- cropping a cropped photo gives a different location 
 #fix slider buttons after undo and redo -- if brightness is removed/contrast is removed -- the sliders should correlate
@@ -81,98 +82,121 @@ ui <- fluidPage(
 
   titlePanel("Shiny Image"),
 
-  sidebarLayout(
-    sidebarPanel(
-      radioButtons("radio", label = ("Sample or Upload Image"), 
-        choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Image Log" = 4), selected = 1),
-      conditionalPanel(
-        condition = "input.radio == 2",
-        fileInput(inputId = 'file1',
-          label = 'Upload Image',
-          placeholder = 'JPEG, PNG, and TIFF are supported',
-          accept = c(
-            "image/jpeg",
-            "image/x-png",
-            "image/tiff",
-            ".jpg",
-            ".png",
-            ".tiff"))
-      ),
-      conditionalPanel(
-        condition = "input.radio == 3",
-        textInput(inputId = "url1", 
-          label = 'Upload URL', 
-          placeholder = 'JPEG, PNG, and TIFF are supported',
-          value = '')
-      ),
-      #********UPDATE*******
-      conditionalPanel(
-      	condition = "input.radio == 4", 
-      	fileInput(inputId = 'file2', 
-      		label = 'Upload .si file', 
-      		placeholder = "Must be a ShinyImg Object", 
-      		accept = c(
-      			"file/si", 
-      			".si"))
-      ),
-      sliderInput("bright", "Increase/Decrease Brightness:", min = -1, max = 1, value = 0, step = 0.01),
-      sliderInput("contrast", "Increase/Decrease Contrast:", min = 0, max = 10, value = 1, step = 0.1), 
-      sliderInput("gamma", "Increase/Decrease Gamma Correction", min = 0, max = 50, value = 1, step = 0.5),
-      tags$head(tags$style(HTML('#button1{background-color:red}'))),
-      tags$head(tags$style(HTML('#button2{background-color:red}'))),
-      actionButton("button1", "Undo"), 
-      actionButton("button2", "Redo"), 
-      actionButton("button3", "Reset"), 
-      textOutput("dimetext"), #dimensions of the picture 
-      textOutput("help"),
-      textOutput("idReader")
-    ),
-    mainPanel(
-      HTML(
-        paste(
-          #h4('Main Image', align = "center"),
-          plotOutput("plot1",
-            click = "plot_click",
-            dblclick = "plot_dblclick",
-            hover = "plot_hover",
-            brush = "plot_brush"
+  tabsetPanel(
+    tabPanel("Image Editor",
+
+      sidebarLayout(
+        sidebarPanel(
+          radioButtons("radio", label = ("Sample or Upload Image"), 
+            choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Image Log" = 4), selected = 1),
+          conditionalPanel(
+            condition = "input.radio == 2",
+            fileInput(inputId = 'file1',
+              label = 'Upload Image',
+              placeholder = 'JPEG, PNG, and TIFF are supported',
+              accept = c(
+                "image/jpeg",
+                "image/x-png",
+                "image/tiff",
+                ".jpg",
+                ".png",
+                ".tiff"))
           ),
-          h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
-          plotOutput("plot3"),
-          '<br/>',
-          column(6, downloadButton("download1", label = "Download Image")),
-          #column(6, downloadButton("download3", label = "Download Image Log")),
-          #*******UPDATE******
-          column(6, actionButton("download4", label = "Download Image Log")),
-          '<br/>',
-          tags$style(type='text/css', "#download1 { display: block; width:100%; margin-left: auto; margin-right:auto;}"),
-          #tags$style(type='text/css', "#download3 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
-          #*********UPDATE********
-          tags$style(type='text/css', "#download4 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
-
-          '<br/>',
-
-          h4('Preview Crop', align = "center"),
-          h6('Click and drag where you would like to crop the photo. To save the cropped version, press keep', align = "center"),
-          '<br/>',
-          #textOutput("txt1"),
-          plotOutput("plot2"),
-          tags$style(type='text/css', "#keep { display:block; width:10%; margin-left: auto; margin-right:auto;}"),
-          '<br/>',
-          shinyjs::hidden(
-            actionButton("keep", label = "Keep")
+          conditionalPanel(
+            condition = "input.radio == 3",
+            textInput(inputId = "url1", 
+              label = 'Upload URL', 
+              placeholder = 'JPEG, PNG, and TIFF are supported',
+              value = '')
           ),
-          '<br/>',
+          #********UPDATE*******
+          conditionalPanel(
+          	condition = "input.radio == 4", 
+          	fileInput(inputId = 'file2', 
+          		label = 'Upload .si file', 
+          		placeholder = "Must be a ShinyImg Object", 
+          		accept = c(
+          			"file/si", 
+          			".si"))
+          ),
+          sliderInput("bright", "Increase/Decrease Brightness:", min = -1, max = 1, value = 0, step = 0.01),
+          sliderInput("contrast", "Increase/Decrease Contrast:", min = 0, max = 10, value = 1, step = 0.1), 
+          sliderInput("gamma", "Increase/Decrease Gamma Correction", min = 0, max = 50, value = 1, step = 0.5),
+          tags$head(tags$style(HTML('#button1{background-color:red}'))),
+          tags$head(tags$style(HTML('#button2{background-color:red}'))),
+          actionButton("button1", "Undo"), 
+          actionButton("button2", "Redo"), 
+          actionButton("button3", "Reset"), 
+          textOutput("dimetext"), #dimensions of the picture 
+          textOutput("help"),
+          textOutput("idReader")
+        ),
+        mainPanel(
+          HTML(
+            paste(
+              h3('Image Editor', align = "center"),
+              plotOutput("plot1",
+                click = "plot_click",
+                dblclick = "plot_dblclick",
+                hover = "plot_hover",
+                brush = "plot_brush"
+              ),
+              h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
+              plotOutput("plot3"),
+              '<br/>',
+              column(6, downloadButton("download1", label = "Download Image")),
+              #column(6, downloadButton("download3", label = "Download Image Log")),
+              #*******UPDATE******
+              column(6, actionButton("download4", label = "Download Image Log")),
+              '<br/>',
+              tags$style(type='text/css', "#download1 { display: block; width:100%; margin-left: auto; margin-right:auto;}"),
+              #tags$style(type='text/css', "#download3 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
+              #*********UPDATE********
+              tags$style(type='text/css', "#download4 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
 
-          verbatimTextOutput("info")
+              '<br/>',
+
+              h4('Preview Crop', align = "center"),
+              h6('Click and drag where you would like to crop the photo. To save the cropped version, press keep', align = "center"),
+              '<br/>',
+              #textOutput("txt1"),
+              plotOutput("plot2"),
+              tags$style(type='text/css', "#keep { display:block; width:10%; margin-left: auto; margin-right:auto;}"),
+              '<br/>',
+              shinyjs::hidden(
+                actionButton("keep", label = "Keep")
+              ),
+              '<br/>',
+
+              verbatimTextOutput("info")
+            )
+          )
         )
       )
-    )
-  )
+    ), 
+    #*****UPGRADE******
+    tabPanel("View Image Log", 
+      sidebarLayout(
+        sidebarPanel(
+          fileInput(inputId = 'file3', 
+          label = 'Upload .si file', 
+          placeholder = "Must be a ShinyImg Object", 
+          accept = c(
+            "file/si", 
+            ".si"))
+        ), 
+        mainPanel(
+          h3("Image Log"), 
+          verbatimTextOutput("ImageLog")
+        )
+      )
+    ) #end of tabpanel 2
+  ) 
 )
 
 # ______________________ start of server _____________________
 server <- function(input, output, session) {
+  options(shiny.maxRequestSize=30*1024^2) #file can be up to 30 mb; default is 5 mb
   imageFile <- reactiveValues(img_origin = NULL)
   #**********UPGRADE**********
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL)
@@ -487,6 +511,14 @@ server <- function(input, output, session) {
   		"Check your current directory for workplace.si for Image History!"))
   })
 
+#--------------SECOND PANEL: shows user image log-------------
+#*******UPDATE************
+  observeEvent(input$file3, {
+    shinyImageFile$shiny_img_origin <- shinyload(renameUpload(input$file2))
+    output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin$img_history})
+  })
+
+  #TODO: include image log of current image
 }
 
 shinyApp(ui, server)
