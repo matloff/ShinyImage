@@ -3,17 +3,27 @@ library(EBImage)
 library(shinyjs)
 library(dplyr)
 
-#version 14
-#download image is properly working if there is a file called tempdir 
-#in the directory where the shiny app is running
-#keep is now fully working
+validate((need(file.exists("imagehistory.R"), "Please input imagehistory.R into the same directory that contains updatedShiny.R")))
+source('imagehistory.R')
+
+#version 15
+#purpose of this version is to integrate it with imagehistory.R
+
+#sample, user inputs of url or image should create a new shinyimg object
+#any observe event should be recorded as a shinyimg 
 
 #TODO
-#UNDO, REDO 
+#fix contrast -- currently contrast is not in sync with shiny img
+#add gamma correction
+#fix successive cropping -- cropping a cropped photo gives a different location 
+#fix slider buttons after undo and redo -- if brightness is removed/contrast is removed -- the sliders should correlate
+#fix slider buttons after image log has been uploaded
+#save plot3 photo
 
 #temporary
 #currently stores responses in a folder in the current working directory
 #titled tempdir
+
 temp <- getwd()
 responsesDir <- file.path(paste0(temp, "/tempdir"))
 
@@ -74,7 +84,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       radioButtons("radio", label = ("Sample or Upload Image"), 
-        choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3), selected = 1),
+        choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Image Log" = 4), selected = 1),
       conditionalPanel(
         condition = "input.radio == 2",
         fileInput(inputId = 'file1',
@@ -94,6 +104,16 @@ ui <- fluidPage(
           label = 'Upload URL', 
           placeholder = 'JPEG, PNG, and TIFF are supported',
           value = '')
+      ),
+      #********UPDATE*******
+      conditionalPanel(
+      	condition = "input.radio == 4", 
+      	fileInput(inputId = 'file2', 
+      		label = 'Upload .si file', 
+      		placeholder = "Must be a ShinyImg Object", 
+      		accept = c(
+      			"file/si", 
+      			".si"))
       ),
       sliderInput("bright", "Increase/Decrease Brightness:", min = -1, max = 1, value = 0, step = 0.01),
       sliderInput("contrast", "Increase/Decrease Contrast:", min = 0, max = 10, value = 1, step = 0.1), 
@@ -117,12 +137,19 @@ ui <- fluidPage(
             hover = "plot_hover",
             brush = "plot_brush"
           ),
+          h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
+          plotOutput("plot3"),
           '<br/>',
           column(6, downloadButton("download1", label = "Download Image")),
-          column(6, downloadButton("download3", label = "Download Image Log")),
+          #column(6, downloadButton("download3", label = "Download Image Log")),
+          #*******UPDATE******
+          column(6, actionButton("download4", label = "Download Image Log")),
           '<br/>',
           tags$style(type='text/css', "#download1 { display: block; width:100%; margin-left: auto; margin-right:auto;}"),
-          tags$style(type='text/css', "#download3 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
+          #tags$style(type='text/css', "#download3 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
+          #*********UPDATE********
+          tags$style(type='text/css', "#download4 { display:block; width:100%; margin-left: auto; margin-right:auto;}"),
+
           '<br/>',
 
           h4('Preview Crop', align = "center"),
@@ -147,6 +174,12 @@ ui <- fluidPage(
 # ______________________ start of server _____________________
 server <- function(input, output, session) {
   imageFile <- reactiveValues(img_origin = NULL)
+  #**********UPGRADE**********
+  shinyImageFile <- reactiveValues(shiny_img_origin = NULL)
+
+  current_image <- reactive({
+    current_image <- shinyImageFile$shiny_img_origin$current_image
+  })
 
   #currently the last valid file is displayed till either of the observeEvent conditions are met
   #e.g. user needs to click radio1, input a new file, or input a new URl
@@ -154,13 +187,29 @@ server <- function(input, output, session) {
   #meaning that the brightness, contrast, gamma correction, and crop will not save
 
   #if they click radio button1 (sample), they will get the imageFile will be the color chart
-  observeEvent(input$radio == 1, {
-    imageFile$img_origin <- readImage('http://www.pagetutor.com/common/bgcolors1536.png')
+  #TODO -- if other radio buttons are clicked; display nothing
+  #currently everything is displayed
+  observe({
+  	if(input$radio == 1)
+  	{
+    	imageFile$img_origin <- readImage('http://www.pagetutor.com/common/bgcolors1536.png')
+    	 #**********UPGRADE**********
+    	shinyImageFile$shiny_img_origin <- shinyimg$new('http://www.pagetutor.com/common/bgcolors1536.png')
+	}
+  })
+
+#********UPGRADE**********
+  observeEvent(input$file2, {
+  	shinyImageFile$shiny_img_origin <- shinyload(renameUpload(input$file2))
+  	output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+  	#need to update sliders as well
   })
 
   #if they enter a new file, their file will become the new imageFile
   observeEvent(input$file1, {
-    imageFile$img_origin <- renameUpload(input$file1)
+    imageFile$img_origin <- readImage(renameUpload(input$file1))
+    #**********UPGRADE**********
+    shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
   })
 
   #when user uploads file
@@ -175,7 +224,7 @@ server <- function(input, output, session) {
     file.rename(from = oldNames, to = newNames)
     inFile$datapath <- newNames
 
-    return(readImage(inFile$datapath))
+    return(inFile$datapath)
   }
 
   #if they enter a new url, their url will become the new new imageFile
@@ -183,7 +232,12 @@ server <- function(input, output, session) {
     validate(need(input$url1 != "", "Must type in a valid jpeg, png, or tiff"))
     if (is.null(input$url1))
       imageFile$img_origin <- NULL
-    else imageFile$img_origin <- readImage(input$url1)
+    else 
+    {
+    	imageFile$img_origin <- readImage(input$url1)
+    	#**********UPGRADE**********
+    	shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
+    }
   })
 
   #if user clicks button3 (reset), then we will make imageFile become the original file 
@@ -191,11 +245,23 @@ server <- function(input, output, session) {
   #and resets plot_brush 
   observeEvent(input$button3, {
     if(input$radio == 1)
-      imageFile$img_origin <- readImage('http://www.pagetutor.com/common/bgcolors1536.png')
+    {
+      imageFile$img_origin <- readImage('http://www.pagetutor.com/common/bgcolors1536.png')   
+      #**********UPGRADE**********
+      shinyImageFile$shiny_img_origin <- shinyimg$new('http://www.pagetutor.com/common/bgcolors1536.png')   
+    }
     if(input$radio == 2)
-      imageFile$img_origin <- renameUpload(input$file1)
+    {
+      imageFile$img_origin <- readImage(renameUpload(input$file1))
+      #**********UPGRADE**********
+      shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
+    }
     if(input$radio == 3)
+    {
       imageFile$img_origin <- readImage(input$url1)
+      #**********UPGRADE**********
+      shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
+    }
 
     updateSliderInput(session, "bright", value = 0)
     updateSliderInput(session, "contrast", value = 1)
@@ -211,10 +277,15 @@ server <- function(input, output, session) {
   #only executes when keep is clicked 
   recursiveCrop <- eventReactive(input$keep,{
     imageFcn()
-    isolate({imageFile$img_origin <<- cropped(imageFile$img_origin)})
+    isolate({
+    	imageFile$img_origin <<- cropped(imageFile$img_origin)
+    	p <- input$plot_brush #**********UPGRADE**********
+    	shinyImageFile$shiny_img_origin$cropxy(p$xmin,p$xmax,p$ymin,p$ymax) #**********UPGRADE**********
+    })
     session$resetBrush("plot_brush")
     #shinyjs::hide("keep")
     output$plot1 <- renderPlot(display(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, method = "raster"))
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render()) #**********UPGRADE**********
   })
   
   #hides the keep button in the instance in which the user highlighted the plot
@@ -254,6 +325,51 @@ server <- function(input, output, session) {
     shinyjs::show("keep")
   })
 
+  #**********UPGRADE**********
+  output$plot3 <- renderPlot({
+  	shinyImageFile$shiny_img_origin$render()
+  })
+
+  #**********UPGRADE**********
+  observeEvent(input$bright, {
+    shinyImageFile$shiny_img_origin$set_brightness(input$bright)
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+  })
+
+  #**********UPGRADE**********
+  #contrast numbers are different
+  #contrast is not using the cropped image; it uses the original image 
+  observeEvent(input$contrast, {
+    shinyImageFile$shiny_img_origin$set_brightness(input$contrast-1)
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+  })
+
+  #**********UPGRADE**********
+  #undo button
+  observeEvent(input$button1, {
+  	shinyImageFile$shiny_img_origin$undo()
+
+  	#slider inputs are not changing correctly becuase image history isn't affected by undo/redo
+  	updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
+    updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
+    updateSliderInput(session, "gamma", value = 1)
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+
+  })
+
+  #**********UPGRADE**********
+  #redo button 
+  observeEvent(input$button2, {
+  	shinyImageFile$shiny_img_origin$redo()
+
+  	#slider inputs are not changing correctly becuase image history isn't affected by undo/redo
+  	updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
+    updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
+    updateSliderInput(session, "gamma", value = 1)
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+
+  })
+
   #creates an ID for the image log 
   imgID <- reactive({
     if(input$radio == 1)
@@ -262,6 +378,8 @@ server <- function(input, output, session) {
       id <- paste0("id2-", input$file1[[1]])
     if(input$radio == 3)
       id <- paste0("id3-", input$url1)
+    if(input$radio == 4)
+      id <- paste("id4-prevSaved")
   return(id)
   })
 
@@ -287,6 +405,9 @@ server <- function(input, output, session) {
     updateSliderInput(session, "contrast", value = 1)
     updateSliderInput(session, "gamma", value = 1)
     session$resetBrush("plot_brush")
+
+    #assuming this wouldn't be an issue for the shinyimg object
+    #since the original image is the default
   })
 
   #creates the textbox below plot2 about the plot_brush details and etc
@@ -308,7 +429,6 @@ server <- function(input, output, session) {
       "brush: ", xy_range_str(input$plot_brush)
     )
   })
-
 
   #_________________DOWNLOAD ____________________
   #TODO: if user uploads a .png file, should return same type of file
@@ -357,6 +477,15 @@ server <- function(input, output, session) {
       write.csv(loadData(), file, row.names = FALSE)
     }
   )
+
+#*******UPDATE*********
+  observeEvent(input$download4, {
+  	shinyImageFile$shiny_img_origin$save()
+  	#creates a pop up window 
+  	showModal(modalDialog(
+  		title = "Important message", 
+  		"Check your current directory for workplace.si for Image History!"))
+  })
 
 }
 
