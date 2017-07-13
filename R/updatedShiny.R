@@ -1,7 +1,6 @@
 library(shiny)
 library(EBImage)
 library(shinyjs)
-library(dplyr)
 
 validate((need(file.exists("imagehistory.R"), "Please input imagehistory.R into the same directory that contains updatedShiny.R")))
 source('imagehistory.R')
@@ -21,9 +20,9 @@ source('imagehistory.R')
 #fix slider buttons after image log has been uploaded
 #save plot3 photo
 
-#temporary
-#currently stores responses in a folder in the current working directory
-#titled tempdir
+#sample, upload image, upload link, reset -- work for both plot1 & plot3                                                     
+#upload image log, undo, reset, download image log -- works for only plot3                                                   
+#download image, crop image -- works for only plot1 
 
 if (!require("shiny")) {
 	cat("shiny is not installed. Please install it first.")
@@ -481,9 +480,9 @@ server <- function(input, output, session) {
   })
 
   #TODO: include image log of current image
-}
 #//////// END OF CODE FOR IMAGE LOG VIEWER /////////////
 
+} #end of server
 shinyApp(ui, server)
 
 
