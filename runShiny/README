@@ -1,0 +1,10 @@
+INSTRUCTIONS TO RUN SHINY APP: 
+> setwd('runShiny')
+> source('runShiny.R')
+
+#browser should pop up!
+
+Folder contains:
+  Old Imagehistory.R that runs but doesn't have all the features as the one currently on github
+  app15a.R -- shiny app that integrates shinyimg object
+  runShiny.R -- runs the app 
