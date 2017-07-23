@@ -5,22 +5,19 @@ library(shinyjs)
 validate((need(file.exists("imagehistory.R"), "Please input imagehistory.R into the same directory that contains updatedShiny.R")))
 source('imagehistory.R')
 
-#version 15
-#purpose of this version is to allow user to view image log of shinyimg object
+#version 17
+#uses app16 as the base
+#purpose of this version is to synchronize shinyimg and img
+#added rotation, blurring, and color mode
 
 #sample, user inputs of url or image should create a new shinyimg object
 #any observe event should be recorded as a shinyimg 
 
 #TODO
-#fix contrast -- currently contrast is not in sync with shiny img
-  #brightness, contrast, and gamma need to be on a scale of -10 to 10
-#add gamma correction
-#fix successive cropping -- cropping a cropped photo gives a different location 
 #fix slider buttons after undo and redo -- if brightness is removed/contrast is removed -- the sliders should correlate
 #fix slider buttons after image log has been uploaded
 #save plot3 photo
-
-#sample, upload image, upload link, reset -- work for both plot1 & plot3                                                     
+                                                  
 #upload image log, undo, reset, download image log -- works for only plot3                                                   
 #download image, crop image -- works for only plot1 
 
@@ -81,9 +78,12 @@ ui <- fluidPage(
           			"file/si", 
           			".si"))
           ),
-          sliderInput("bright", "Increase/Decrease Brightness:", min = -1, max = 1, value = 0, step = 0.01),
-          sliderInput("contrast", "Increase/Decrease Contrast:", min = 0, max = 10, value = 1, step = 0.1), 
+          radioButtons("color", label = ("Color Mode"), choices = list("Color" = 1, "Greyscale" = 2), selected = 1),
+          sliderInput("bright", "Increase/Decrease Brightness:", min = -10, max = 10, value = 0, step = 0.1),
+          sliderInput("contrast", "Increase/Decrease Contrast:", min = -10, max = 10, value = 0, step = 0.1), 
           sliderInput("gamma", "Increase/Decrease Gamma Correction", min = 0, max = 50, value = 1, step = 0.5),
+          sliderInput("rotation", "Rotate Image", min = 0, max = 360, value = 0, step = 1),
+          sliderInput("blurring", "Blur Image", min = 0, max = 20, value = 0, step = 1),
           tags$head(tags$style(HTML('#button1{background-color:red}'))),
           tags$head(tags$style(HTML('#button2{background-color:red}'))),
           actionButton("button1", "Undo"), 
@@ -103,9 +103,10 @@ ui <- fluidPage(
                 hover = "plot_hover",
                 brush = "plot_brush"
               ),
-              h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
-              plotOutput("plot3"),
               '<br/>',
+              #h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
+              #plotOutput("plot3"),
+              #'<br/>',
               column(6, downloadButton("download1", label = "Download Image")),
               #column(6, downloadButton("download3", label = "Download Image Log")),
               #*******UPDATE******
@@ -159,7 +160,16 @@ ui <- fluidPage(
 # ______________________ start of server _____________________
 server <- function(input, output, session) {
   options(shiny.maxRequestSize=30*1024^2) #file can be up to 30 mb; default is 5 mb
-  imageFile <- reactiveValues(img_origin = NULL)
+
+  #defining values for those that aren't included in shiny img
+  imageFile <- reactiveValues(
+    img_origin = NULL, 
+    current = NULL, 
+    bright = 0, 
+    contrast = 0, 
+    gamma = 1, 
+    rotation = 0, 
+    blurring = 0)
   #**********UPGRADE**********
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL)
 
@@ -171,13 +181,14 @@ server <- function(input, output, session) {
   #if they click radio button1 (sample), they will get the imageFile will be the color chart
   #TODO -- if other radio buttons are clicked; display nothing
   #currently everything is displayed
+
   observe({
   	if(input$radio == 1)
   	{
-    	imageFile$img_origin <- readImage('http://www.pagetutor.com/common/bgcolors1536.png')
+    	imageFile$img_origin <- readImage('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')
     	 #**********UPGRADE**********
-    	shinyImageFile$shiny_img_origin <- shinyimg$new('http://www.pagetutor.com/common/bgcolors1536.png')
-	 }
+    	shinyImageFile$shiny_img_origin <- shinyimg$new('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')
+	  }
   })
 
 #********UPGRADE**********
@@ -203,6 +214,8 @@ server <- function(input, output, session) {
     imageFile$img_origin <- readImage(renameUpload(input$file1))
     #**********UPGRADE**********
     shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
+    output$plot1 <- renderPlot(display(imageFile$img_origin, method = "raster"))
+
   })
 
   #if they enter a new url, their url will become the new new imageFile
@@ -216,6 +229,8 @@ server <- function(input, output, session) {
     	#**********UPGRADE**********
     	shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
     }
+    output$plot1 <- renderPlot(display(imageFile$img_origin, method = "raster"))
+
   })
 
   #if user uploads an image log, they will see the picture with previous settings
@@ -238,13 +253,15 @@ server <- function(input, output, session) {
   recursiveCrop <- eventReactive(input$keep,{
     imageFcn()
     isolate({
-    	imageFile$img_origin <<- cropped(imageFile$img_origin)
+    	imageFile$img_origin <<- cropped(imageFile$current)
     	p <- input$plot_brush #**********UPGRADE**********
     	shinyImageFile$shiny_img_origin$cropxy(p$xmin,p$xmax,p$ymin,p$ymax) #**********UPGRADE**********
     })
     session$resetBrush("plot_brush")
     #shinyjs::hide("keep")
-    output$plot1 <- renderPlot(display(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, method = "raster"))
+    updateSliderInput(session, "rotation", value = 0)
+    output$plot1 <- renderPlot(display(imageFile$img_origin, method = "raster"))
+
     output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render()) #**********UPGRADE**********
   })
   
@@ -258,30 +275,37 @@ server <- function(input, output, session) {
   
   #returns image that is recursively updated
   imageFcn <- reactive ({
-    return(imageFile$img_origin)
+    return(imageFile$current)
   })
   
   #function that crops the image based on the plot brush 
   cropped <- function(image)
   {
     p <- input$plot_brush
+    validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
+    validate(need(p$xmax <= dim(image)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
+    validate(need(p$ymax <= dim(image)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
+    validate(need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2"))
+    validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
+
     return(image[p$xmin:p$xmax,p$ymin:p$ymax,])
   }
 
   output$plot1 <- renderPlot({
-    display(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, method = "raster")
+    display(imageFile$current, method = "raster")
   })
 
   #displays a cropped image of plot1's imageFile 
   output$plot2 <- renderPlot({
     p <- input$plot_brush
     validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
-    validate(need(p$xmax <= dim(imageFile$img_origin)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
-    validate(need(p$ymax <= dim(imageFile$img_origin)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
+    validate(need(p$xmax <= dim(imageFile$current)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
+    validate(need(p$ymax <= dim(imageFile$current)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
     validate(need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2"))
     validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
 
-    display(cropped(imageFile$img_origin) ^ input$gamma * input$contrast + input$bright, method = "raster")
+    display(cropped(imageFile$current), method = "raster")
+
     shinyjs::show("keep")
   })
 
@@ -291,18 +315,64 @@ server <- function(input, output, session) {
   })
 
   #**********UPGRADE**********
-  observeEvent(input$bright, {
-    shinyImageFile$shiny_img_origin$set_brightness(input$bright)
-    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+
+  observe({
+    #blur image --> rotate --> color correct --> render image with a filter
+    if (input$blurring > 0) 
+      blurredImage <- gblur(imageFile$img_origin, sigma = input$blurring)
+
+    if (input$blurring == 0)
+      blurredImage <- imageFile$img_origin
+    
+    #rotate blurred image
+    rotatedImage <- rotate(blurredImage, input$rotation)
+
+    #color correct rotated blurred image
+    correctedImage <- rotatedImage ^ input$gamma * (1 + (input$contrast / 10)) + (input$bright / 10)
+
+    #change how the image is rendered at the end
+    if (input$color == 2)
+      colorMode(correctedImage) <- Grayscale
+    else 
+      colorMode(correctedImage) <- Color
+
+    imageFile$current <- correctedImage
+
+    output$plot1 <- renderPlot(display(imageFile$current, method = "raster"))
   })
 
-  #**********UPGRADE**********
-  #contrast numbers are different
-  #contrast is not using the cropped image; it uses the original image 
-  observeEvent(input$contrast, {
-    shinyImageFile$shiny_img_origin$set_brightness(input$contrast-1)
+  #need these observeEvents for future uses of undo/redo
+  observeEvent(input$bright, {
+    #shiny img -- will be able to change the object 
+    shinyImageFile$shiny_img_origin$set_brightness(input$bright / 10)
     output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+
+    #regular img
+    imageFile$bright <- input$bright / 10
   })
+
+  observeEvent(input$contrast, {
+    #shiny img
+    actualContrast = 1 + (input$contrast / 10)
+    shinyImageFile$shiny_img_origin$set_contrast(actualContrast)
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+
+    #regular img
+    imageFile$contrast <- 1 + (input$contrast / 10)
+  })
+
+  observeEvent(input$gamma, {
+    imageFile$gamma <- input$gamma 
+  })
+
+  observeEvent(input$rotation, {
+    imageFile$rotation <- input$rotation 
+  })
+
+  observeEvent(input$blurring, {
+    imageFile$blurring <- input$blurring 
+  })
+
 
 #//////// END OF CODE FOR CROPPING AND PLOTS /////////////
 
@@ -314,9 +384,9 @@ server <- function(input, output, session) {
   observeEvent(input$button3, {
     if(input$radio == 1)
     {
-      imageFile$img_origin <- readImage('http://www.pagetutor.com/common/bgcolors1536.png')   
+      imageFile$img_origin <- readImage('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')   
       #**********UPGRADE**********
-      shinyImageFile$shiny_img_origin <- shinyimg$new('http://www.pagetutor.com/common/bgcolors1536.png')   
+      shinyImageFile$shiny_img_origin <- shinyimg$new('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')   
     }
     if(input$radio == 2)
     {
@@ -331,9 +401,18 @@ server <- function(input, output, session) {
       shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
     }
 
+    imageFile$bright = 0
+    imageFile$contrast = 0
+    imageFile$gamma = 1
+    imageFile$rotation = 0 
+    imageFile$blurring = 0 
+
     updateSliderInput(session, "bright", value = 0)
-    updateSliderInput(session, "contrast", value = 1)
+    updateSliderInput(session, "contrast", value = 0)
     updateSliderInput(session, "gamma", value = 1)
+    updateSliderInput(session, "rotation", value = 0)
+    updateSliderInput(session, "blurring", value = 0)
+    updateRadioButtons(session, "color", selected = 1)
     session$resetBrush("plot_brush")
   })
 
@@ -346,8 +425,11 @@ server <- function(input, output, session) {
     input$radio
     
     updateSliderInput(session, "bright", value = 0)
-    updateSliderInput(session, "contrast", value = 1)
+    updateSliderInput(session, "contrast", value = 0)
     updateSliderInput(session, "gamma", value = 1)
+    updateSliderInput(session, "rotation", value = 0)
+    updateSliderInput(session, "blurring", value = 0)
+    updateRadioButtons(session, "color", selected = 1)
     session$resetBrush("plot_brush")
 
     #assuming this wouldn't be an issue for the shinyimg object
@@ -364,9 +446,9 @@ server <- function(input, output, session) {
   	shinyImageFile$shiny_img_origin$undo()
 
   	#slider inputs are not changing correctly becuase image history isn't affected by undo/redo
-  	updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
-    updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
-    updateSliderInput(session, "gamma", value = 1)
+  	#updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
+    #updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
+    #updateSliderInput(session, "gamma", value = 1)
     output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
 
   })
@@ -377,12 +459,28 @@ server <- function(input, output, session) {
   	shinyImageFile$shiny_img_origin$redo()
 
   	#slider inputs are not changing correctly becuase image history isn't affected by undo/redo
-  	updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
-    updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
-    updateSliderInput(session, "gamma", value = 1)
+  	#updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
+    #updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
+    #updateSliderInput(session, "gamma", value = 1)
     output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
 
   })
+
+  #can use observe shinyImageFile$brightnes... to find how to change the sliderinputs 
+
+  #observe({
+    #can update sliderinput using shiny img or regular img 
+    #updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$brightness * 10)
+    #updateSliderInput(session, "contrast", value = (1 - shinyImageFile$shiny_img_origin$contrast) * 10)
+    #updateSliderInput(session, "bright", value = imageFile$bright * 10)
+    #updateSliderInput(session, "contrast", value = (imageFile$contrast - 1) * 10)
+    #updateSliderInput(session, "gamma", value = imageFile$gamma)
+    #updateSliderInput(session, "rotation", value = imageFile$rotation)
+    #updateSliderInput(session, "blurring", value = imageFile$blurring)
+  #})
+
+  #DO UNDO/REDO 
+
 
 #//////// END OF CODE FOR UNDO AND REDO /////////////
 
@@ -441,7 +539,9 @@ server <- function(input, output, session) {
 
   #allows user to download plot1 - imageFile
   output$download1 <- downloadHandler('temp.jpeg', function(file) {
-    writeImage(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, file)
+    #writeImage(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, file)
+    writeImage(imageFile$current, file)
+
   })
 
   #creates helpful text on sidebar about the dimensions 
