@@ -135,7 +135,7 @@ shinyimg <- R6Class("shinyimg",
                         # Variable to store the current image to display
                         private$current_image = NULL
                         # Option to have the output automatically rendered
-                        private$autodisplay = 0
+                        private$autodisplay = 1
                         # The filename used for the autosave in 
                         # case of crashes
                         private$autosave_filename = "workspace.si"
@@ -302,28 +302,28 @@ shinyimg <- R6Class("shinyimg",
                       # but a variable brightness function should be added.
                       add_brightness = function() {
                         # Adds 0.1 brightness.
-                        mutator(1, 0.1)
+                        private$mutator(1, 0.1)
                       },
                       
                       # Adjusts brightness by -0.1. This is a good decrement
                       # but a variable brightness function should be added.
                       remove_brightness = function() {
                         # removes 0.1 brightness.
-                        mutator(1, -0.1)
+                        private$mutator(1, -0.1)
                       },
                       
                       # Adjusts contrast by 0.1. This is a good increment
                       # but a variable contrast function should be added.
                       add_contrast = function() {
                         # Adds 0.1 contrast.
-                        mutator(3, 0.1)
+                        private$mutator(3, 0.1)
                       },
                       
                       # Adjusts contrast by -0.1. This is a good increment
                       # but a variable contrast function should be added.
                       remove_contrast = function() {
                         # removes 0.1 contrast.
-                        mutator(3, -0.1)
+                        private$mutator(3, -0.1)
                       },
                       
                       # Adjusts brightness by the argument. Mainly used
@@ -331,7 +331,7 @@ shinyimg <- R6Class("shinyimg",
                       # TODO: Document the usage of this function.
                       set_brightness = function(brightness) {
                         # Sets brightness.
-                        mutator(2, brightness)
+                        private$mutator(2, brightness)
                       },
                       
                       # Adjusts contrast by the argument. Mainly used
@@ -339,7 +339,7 @@ shinyimg <- R6Class("shinyimg",
                       # TODO: Document the usage of this function.
                       set_contrast = function(contrast) {
                         # Sets brightness.
-                        mutator(4, contrast)
+                        private$mutator(4, contrast)
                       },
                       
                       # The command line cropper uses locator to have the
