@@ -5,21 +5,8 @@ library(shinyjs)
 validate((need(file.exists("imagehistory.R"), "Please input imagehistory.R into the same directory that contains updatedShiny.R")))
 source('imagehistory.R')
 
-#version 17
-#uses app16 as the base
-#purpose of this version is to synchronize shinyimg and img
-#added rotation, blurring, and color mode
-
-#sample, user inputs of url or image should create a new shinyimg object
-#any observe event should be recorded as a shinyimg 
-
-#TODO
-#fix slider buttons after undo and redo -- if brightness is removed/contrast is removed -- the sliders should correlate
-#fix slider buttons after image log has been uploaded
-#save plot3 photo
-                                                  
-#upload image log, undo, reset, download image log -- works for only plot3                                                   
-#download image, crop image -- works for only plot1 
+#version 18
+#synchronizes shinyimg and img
 
 if (!require("shiny")) {
 	cat("shiny is not installed. Please install it first.")
@@ -104,9 +91,9 @@ ui <- fluidPage(
                 brush = "plot_brush"
               ),
               '<br/>',
-              #h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
-              #plotOutput("plot3"),
-              #'<br/>',
+              h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
+              plotOutput("plot3"),
+              '<br/>',
               column(6, downloadButton("download1", label = "Download Image")),
               #column(6, downloadButton("download3", label = "Download Image Log")),
               #*******UPDATE******
@@ -187,7 +174,8 @@ server <- function(input, output, session) {
   	{
     	imageFile$img_origin <- readImage('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')
     	 #**********UPGRADE**********
-    	shinyImageFile$shiny_img_origin <- shinyimg$new('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')
+
+    	output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyimg$new('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg'))
 	  }
   })
 
@@ -213,7 +201,7 @@ server <- function(input, output, session) {
   observeEvent(input$file1, {
     imageFile$img_origin <- readImage(renameUpload(input$file1))
     #**********UPGRADE**********
-    shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1)))
     output$plot1 <- renderPlot(display(imageFile$img_origin, method = "raster"))
 
   })
@@ -227,7 +215,7 @@ server <- function(input, output, session) {
     {
     	imageFile$img_origin <- readImage(input$url1)
     	#**********UPGRADE**********
-    	shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
+    	output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1))
     }
     output$plot1 <- renderPlot(display(imageFile$img_origin, method = "raster"))
 
@@ -236,8 +224,8 @@ server <- function(input, output, session) {
   #if user uploads an image log, they will see the picture with previous settings
   #TODO: sliders need to update as well 
   observeEvent(input$file2, {
-    shinyImageFile$shiny_img_origin <- shinyload(renameUpload(input$file2))
-    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyload(renameUpload(input$file2)))
+    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
   })
 
 #//////// END OF CODE FOR RADIO BUTTONS /////////////
@@ -255,14 +243,14 @@ server <- function(input, output, session) {
     isolate({
     	imageFile$img_origin <<- cropped(imageFile$current)
     	p <- input$plot_brush #**********UPGRADE**********
-    	shinyImageFile$shiny_img_origin$cropxy(p$xmin,p$xmax,p$ymin,p$ymax) #**********UPGRADE**********
+    	output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$cropxy(p$xmin,p$xmax,p$ymin,p$ymax)) #**********UPGRADE**********
     })
     session$resetBrush("plot_brush")
     #shinyjs::hide("keep")
     updateSliderInput(session, "rotation", value = 0)
     output$plot1 <- renderPlot(display(imageFile$img_origin, method = "raster"))
 
-    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render()) #**********UPGRADE**********
+    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render()) #**********UPGRADE**********
   })
   
   #hides the keep button in the instance in which the user highlighted the plot
@@ -344,8 +332,8 @@ server <- function(input, output, session) {
   #need these observeEvents for future uses of undo/redo
   observeEvent(input$bright, {
     #shiny img -- will be able to change the object 
-    shinyImageFile$shiny_img_origin$set_brightness(input$bright / 10)
-    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$set_brightness(input$bright / 10))
+    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
 
     #regular img
     imageFile$bright <- input$bright / 10
@@ -354,8 +342,8 @@ server <- function(input, output, session) {
   observeEvent(input$contrast, {
     #shiny img
     actualContrast = 1 + (input$contrast / 10)
-    shinyImageFile$shiny_img_origin$set_contrast(actualContrast)
-    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$set_contrast(actualContrast))
+    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
 
     #regular img
     imageFile$contrast <- 1 + (input$contrast / 10)
@@ -386,19 +374,19 @@ server <- function(input, output, session) {
     {
       imageFile$img_origin <- readImage('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')   
       #**********UPGRADE**********
-      shinyImageFile$shiny_img_origin <- shinyimg$new('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')   
+      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyimg$new('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg'))   
     }
     if(input$radio == 2)
     {
       imageFile$img_origin <- readImage(renameUpload(input$file1))
       #**********UPGRADE**********
-      shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
+      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1)))
     }
     if(input$radio == 3)
     {
       imageFile$img_origin <- readImage(input$url1)
       #**********UPGRADE**********
-      shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
+      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1))
     }
 
     imageFile$bright = 0
@@ -443,26 +431,42 @@ server <- function(input, output, session) {
   #**********UPGRADE**********
   #undo button
   observeEvent(input$button1, {
-  	shinyImageFile$shiny_img_origin$undo()
 
   	#slider inputs are not changing correctly becuase image history isn't affected by undo/redo
   	#updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
     #updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
     #updateSliderInput(session, "gamma", value = 1)
-    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+    output$plot3 <- renderPlot(
+   if (!is.null(shinyImageFile$shiny_img_origin$undo())) {
+    showModal(modalDialog(
+      title = "Important message", 
+      "No more actions to undo!"))
+    }
+    )
+    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$undo())
 
+    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
   })
 
   #**********UPGRADE**********
   #redo button 
   observeEvent(input$button2, {
-  	shinyImageFile$shiny_img_origin$redo()
+    output$plot3 <- renderPlot(
+    if (!is.null(shinyImageFile$shiny_img_origin$redo())) {
+    showModal(modalDialog(
+      title = "Important message", 
+      "No more actions to redo!"))
+    }
+    )
+
+  	#output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$redo())
+
 
   	#slider inputs are not changing correctly becuase image history isn't affected by undo/redo
   	#updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
     #updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
     #updateSliderInput(session, "gamma", value = 1)
-    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
 
   })
 
