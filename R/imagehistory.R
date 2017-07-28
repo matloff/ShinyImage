@@ -561,7 +561,7 @@ shinyimg <- R6Class("shinyimg",
                         private$xy1 = c(args[4], args[5])
                         private$xy2 = c(args[6], args[7])
                         private$xoffset = args[8][1]
-                        private$yoffset = args[8][1]
+                        private$yoffset = args[8][2]
                         
                         # args[2] is contrast, but we use local_img as
                         # the source image.
