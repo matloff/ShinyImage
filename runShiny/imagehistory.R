@@ -28,15 +28,24 @@ siaction <- R6Class("siaction",
                     lock_objects = FALSE,
                     public = list(
                       # Initialize all the values of this action
-                      initialize = function(brightness, contrast, gamma, crop) {
+                      initialize = function(brightness, contrast, gamma, crop, blur, rotate, grayscale) {
                         private$brightness <- brightness
                         private$contrast <- contrast
                         private$gamma <- gamma
                         private$crop <- crop
+                        private$blur <- blur
+                        private$rotate <- rotate
+                        private$grayscale <- grayscale
                       },
                       # Get the c()'d properties of this particular action
                       get_action = function() {
-                        return (c(private$brightness, private$contrast, private$gamma, private$crop))
+                        return (c(private$brightness, 
+                                  private$contrast, 
+                                  private$crop, 
+                                  private$gamma, 
+                                  private$blur, 
+                                  private$rotate, 
+                                  private$grayscale))
                       }
                     ),
                     private = list(
@@ -44,7 +53,10 @@ siaction <- R6Class("siaction",
                       brightness = 0,
                       contrast = 0,
                       gamma = 0,
-                      crop = NULL
+                      crop = NULL, 
+                      blur = 0,
+                      rotate = 0, 
+                      grayscale = 0
                     )
 )
 
@@ -118,8 +130,13 @@ shinyimg <- R6Class("shinyimg",
                         private$brightness = 0
                         # Default Contrast
                         private$contrast = 1
+                        #Default Gamma ADDED
+                        private$gamma = 1
                         # CURRENT Number of actions. Can be less than the
                         # Actual number of actions due to undos.
+                        private$blur = 0
+                        private$rotate = 0
+                        private$grayscale = 0
                         private$actions = 0
                         # Crop coordinates
                         private$xy1 = c(0, 0)
@@ -163,7 +180,7 @@ shinyimg <- R6Class("shinyimg",
                         # Generated action matrix done in O(1) time.
                         action_matrix <- matrix(NA, 
                                                 nrow=length(private$img_history), 
-                                                ncol=7)
+                                                ncol=9)
                         # Fill in the history data
                         i = 1
                         for (item in private$img_history) {
@@ -172,9 +189,11 @@ shinyimg <- R6Class("shinyimg",
                           action_matrix[i, ] <- c(history[1], history[2], 
                                                   history[3], history[4], 
                                                   history[5], history[6], 
-                                                  history[7])
+                                                  history[7], history[8], 
+                                                  history[9])
                           i = i + 1
                         }
+
                         # Save the current action number
                         actions <- private$actions
                         # Save the current image as well
@@ -205,9 +224,13 @@ shinyimg <- R6Class("shinyimg",
                                              action_matrix[i, 4],
                                              action_matrix[i, 5],
                                              action_matrix[i, 6],
-                                             action_matrix[i, 7]
+                                             action_matrix[i, 7], 
+                                             action_matrix[i, 8], 
+                                             action_matrix[i, 9], 
+
                           )
                         }
+
                         private$actions <- actions
                         
                         # Apply the latest action
@@ -325,7 +348,31 @@ shinyimg <- R6Class("shinyimg",
                         # removes 0.1 contrast.
                         private$mutator(3, -0.1)
                       },
+
+                      add_gamma = function() {
+                        private$mutator(5, 0.5)
+                      },
                       
+                      remove_gamma = function() {
+                        private$mutator(5, -0.5)
+                      },
+
+                      add_blur = function() {
+                        private$mutator(7, 1)
+                      }, 
+
+                      remove_blur = function() {
+                        private$mutator(7, -1)
+                      }, 
+
+                      add_rotate = function() {
+                        private$mutator(9, 1)
+                      }, 
+
+                      remove_rotate = function() {
+                        private$mutator(9, -1)
+                      },
+
                       # Adjusts brightness by the argument. Mainly used
                       # by the Shiny app.
                       # TODO: Document the usage of this function.
@@ -340,6 +387,22 @@ shinyimg <- R6Class("shinyimg",
                       set_contrast = function(contrast) {
                         # Sets brightness.
                         private$mutator(4, contrast)
+                      },
+
+                      set_gamma = function(gamma) {
+                        private$mutator(6, gamma)
+                      },
+
+                      set_blur = function(blur) {
+                        private$mutator(8, blur)
+                      }, 
+
+                      set_rotate = function(rotate) {
+                        private$mutator(10, rotate)
+                      },
+
+                      set_grayscale = function(grayscale) {
+                        private$mutator(11, grayscale)
                       },
                     
                       # The command line cropper uses locator to have the
@@ -398,9 +461,6 @@ shinyimg <- R6Class("shinyimg",
                         private$xy2 = c(private$xoffset + xdiff, 
                                         private$yoffset + ydiff)
                         private$add_action()
-
-
-
                       },
                       # Returns the size of the current image.
                       # Needed for Shiny to determine the max values of
@@ -419,6 +479,30 @@ shinyimg <- R6Class("shinyimg",
                       # Gets the raw matrix slices of the current image
                       get_raw = function() {
                         return (imageData(private$current_img))
+                      }, 
+                      get_brightness = function() {
+                        return(private$brightness)
+                      }, 
+                      get_contrast = function() {
+                        return(private$contrast)
+                      }, 
+                      get_imghistory = function() { 
+                        return(private$img_history)
+                      }, 
+                      get_gamma = function() {
+                        return(private$gamma)
+                      }, 
+                      get_blur = function() {
+                        return(private$blur)
+                      }, 
+                      get_rotate = function() {
+                        return(private$rotate)
+                      }, 
+                      get_grayscale = function() {
+                        return(private$grayscale)
+                      }, 
+                      savejpg = function(file) {
+                        writeImage(private$current_image, file)
                       }
                       #Uses a matrix as the image. Can be used to reintegrate
                       # a get_raw generated matrix.
@@ -436,6 +520,10 @@ shinyimg <- R6Class("shinyimg",
                       contrast = 1,
                       # CURRENT Number of actions. Can be less than the
                       # Actual number of actions due to undos.
+                      gamma = 1,
+                      blur = 0, 
+                      rotate = 0,
+                      grayscale = 0, 
                       actions = 0,
                       # Crop coordinates
                       xy1 = c(0, 0),
@@ -480,9 +568,33 @@ shinyimg <- R6Class("shinyimg",
                                  private$contrast + amount,
                                
                                #  ActionID 4, contrast setting
-                               private$contrast <- amount
-                        )
-                        
+                               private$contrast <- amount,
+
+                               # ActionID 5, gamm adjustment
+                               private$gamma <- 
+                                 private$gamma + amount, 
+
+                               # ActionID 6, gamma setting
+                               private$gamma <- amount,
+
+                               # Action ID 7, blur adjustment
+                               private$blur <- 
+                                 private$blur + amount, 
+
+                               # Action ID 8, blur setting
+                               private$blur <- amount,
+
+                               # Action ID 9, rotate adjustment
+                               private$rotate <- 
+                                 private$rotate + amount, 
+
+                               # Action ID 10, rotate setting
+                               private$rotate <- amount,
+
+                               # Action ID 11, grayscale setting
+                               private$grayscale <- amount
+
+                        )                        
                         private$add_action()
                       },
                       
@@ -491,11 +603,14 @@ shinyimg <- R6Class("shinyimg",
                       # bottom right x, bottom right y respectively. 
                       add_action = function(bright = private$brightness, 
                                             cont = private$contrast, 
-                                            gam = 0, 
+                                            gam = private$gamma, 
                                             crop1x = private$xy1[1],
                                             crop1y = private$xy1[2], 
                                             crop2x = private$xy2[1], 
-                                            crop2y = private$xy2[2]
+                                            crop2y = private$xy2[2], 
+                                            blurring = private$blur,
+                                            rotation = private$rotate, 
+                                            colorMode = private$grayscale
                       ) {
                         
                         # If we are not at the most recent image, we need 
@@ -515,7 +630,10 @@ shinyimg <- R6Class("shinyimg",
                                                               c(
                                                                 c(crop1x,crop1y), 
                                                                 c(crop2x, crop2y)
-                                                              )))
+                                                              ), 
+                                                              blurring, 
+                                                              rotation, 
+                                                              colorMode))
                         # Add one to the action counter because we just 
                         # added an action to the action list
                         private$actions <- private$actions + 1
@@ -540,15 +658,45 @@ shinyimg <- R6Class("shinyimg",
                         # the source image.
                         private$current_image <- 
                           private$local_img * args[2]
+
                         # args[1] is brightness
                         private$current_image <- 
                           private$current_image + args[1]
                         
-                        # args[4] through args[7] are ABSOLUTE 
+                        # args[3] through args[6] are ABSOLUTE 
                         # crop locations.
                         private$current_image <- private$current_image[
-                          args[4]:args[6], args[5]:args[7], 
+                          args[3]:args[5], args[4]:args[6],
                           ]
+
+                        # args[7] is gamma
+                        private$current_image <- 
+                          private$current_image ^ args[7]
+
+                          #args[8] is blurring
+                        if (args[8] > 0)
+                        {
+                          private$current_image <- 
+                            gblur(private$current_image, sigma = args[8])
+                        }
+
+                        #need to fix blur back to original image
+                        if (args[8] <= 0)
+                        {
+                          private$current_image <- 
+                            gblur(private$current_image, sigma = .0001)
+                        }
+
+                        #args[9] is rotation
+                        private$current_image <- rotate(private$current_image, args[9])
+
+                        #args[10] is grayscale
+                        if (args[10] == 0)
+                        {
+                          private$current_image <- channel(private$current_image, "rgb")
+                        }
+                        else
+                          private$current_image <- channel(private$current_image, "gray")
                       },
                       # The matr argument imports a matrix as the image.
                       # The remaining two arguments are supplied by the 

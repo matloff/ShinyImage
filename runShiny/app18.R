@@ -84,15 +84,14 @@ ui <- fluidPage(
           HTML(
             paste(
               h3('Image Editor', align = "center"),
-              plotOutput("plot1",
+              plotOutput("plot1"),
+              '<br/>',
+              h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
+              plotOutput("plot3",
                 click = "plot_click",
                 dblclick = "plot_dblclick",
                 hover = "plot_hover",
-                brush = "plot_brush"
-              ),
-              '<br/>',
-              h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
-              plotOutput("plot3"),
+                brush = "plot_brush"),
               '<br/>',
               column(6, downloadButton("download1", label = "Download Image")),
               #column(6, downloadButton("download3", label = "Download Image Log")),
@@ -203,7 +202,6 @@ server <- function(input, output, session) {
     #**********UPGRADE**********
     output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1)))
     output$plot1 <- renderPlot(display(imageFile$img_origin, method = "raster"))
-
   })
 
   #if they enter a new url, their url will become the new new imageFile
@@ -224,7 +222,10 @@ server <- function(input, output, session) {
   #if user uploads an image log, they will see the picture with previous settings
   #TODO: sliders need to update as well 
   observeEvent(input$file2, {
-    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin <- shinyload(renameUpload(input$file2)))
+    output$plot3 <- renderPlot(
+      shinyImageFile$shiny_img_origin 
+      <- shinyimg$new(NULL, shinyload(renameUpload(input$file2)))
+    )
     #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
   })
 
@@ -279,6 +280,19 @@ server <- function(input, output, session) {
     return(image[p$xmin:p$xmax,p$ymin:p$ymax,])
   }
 
+  croppedShiny <- function(image)
+  {
+    p <- input$plot_brush
+    validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
+    validate(need(p$xmax <= shinyImageFile$shiny_img_origin$size()[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
+    validate(need(p$ymax <= shinyImageFile$shiny_img_origin$size()[2], "Highlighted portion is out of bounds on the x-axis of your image 1"))
+    validate(need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2"))
+    validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
+ 
+    preview <- shinyImageFile$shiny_img_origin$copy()
+    return(preview$cropxy(p$xmin,p$xmax,p$ymin,p$ymax))
+  }
+
   output$plot1 <- renderPlot({
     display(imageFile$current, method = "raster")
   })
@@ -287,12 +301,15 @@ server <- function(input, output, session) {
   output$plot2 <- renderPlot({
     p <- input$plot_brush
     validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
-    validate(need(p$xmax <= dim(imageFile$current)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
-    validate(need(p$ymax <= dim(imageFile$current)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
+    #validate(need(p$xmax <= dim(imageFile$current)[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
+    validate(need(p$xmax <= shinyImageFile$shiny_img_origin$size()[1], "Highlighted portion is out of bounds on the x-axis of your image 1"))
+    #validate(need(p$ymax <= dim(imageFile$current)[2], "Highlighted portion is out of bounds on the y-axis of your image 1"))
+    validate(need(p$ymax <= shinyImageFile$shiny_img_origin$size()[2], "Highlighted portion is out of bounds on the x-axis of your image 1"))
     validate(need(p$xmin >= 0, "Highlighted portion is out of bounds on the x-axis of your image 2"))
     validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
 
-    display(cropped(imageFile$current), method = "raster")
+    #display(cropped(imageFile$current), method = "raster")
+    croppedShiny(shinyImageFile$shiny_img_origin)
 
     shinyjs::show("keep")
   })
@@ -350,15 +367,28 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$gamma, {
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$set_gamma(input$gamma))
+
     imageFile$gamma <- input$gamma 
   })
 
   observeEvent(input$rotation, {
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$set_rotate(input$rotation))
     imageFile$rotation <- input$rotation 
   })
 
   observeEvent(input$blurring, {
+    output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$set_blur(input$blurring))
+
     imageFile$blurring <- input$blurring 
+  })
+
+  observeEvent(input$color, {
+    if (input$color == 2)
+      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$set_grayscale(1))
+    else
+      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$set_grayscale(0))
+
   })
 
 
@@ -432,20 +462,19 @@ server <- function(input, output, session) {
   #undo button
   observeEvent(input$button1, {
 
-  	#slider inputs are not changing correctly becuase image history isn't affected by undo/redo
-  	#updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
-    #updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
+
     #updateSliderInput(session, "gamma", value = 1)
     output$plot3 <- renderPlot(
    if (!is.null(shinyImageFile$shiny_img_origin$undo())) {
-    showModal(modalDialog(
-      title = "Important message", 
-      "No more actions to undo!"))
-    }
+      showModal(modalDialog(
+        title = "Important message", 
+        "No more actions to undo!"))
+      }
     )
-    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$undo())
 
-    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+    #values are wrong
+    updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
+    updateSliderInput(session, "contrast", value = shinyImageFile$shiny_img_origin$get_contrast() - 1)
   })
 
   #**********UPGRADE**********
@@ -453,20 +482,15 @@ server <- function(input, output, session) {
   observeEvent(input$button2, {
     output$plot3 <- renderPlot(
     if (!is.null(shinyImageFile$shiny_img_origin$redo())) {
-    showModal(modalDialog(
-      title = "Important message", 
-      "No more actions to redo!"))
-    }
+      showModal(modalDialog(
+        title = "Important message", 
+        "No more actions to redo!"))
+      }
     )
 
-  	#output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$redo())
-
-
-  	#slider inputs are not changing correctly becuase image history isn't affected by undo/redo
-  	#updateSliderInput(session, "bright", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$brightness)
-    #updateSliderInput(session, "contrast", value = tail(shinyImageFile$shiny_img_origin$img_history, n = 1)[[1]]$contrast)
-    #updateSliderInput(session, "gamma", value = 1)
-    #output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+    #values are wrong
+    updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness())
+    updateSliderInput(session, "contrast", value = shinyImageFile$shiny_img_origin$get_contrast() - 1)
 
   })
 
@@ -543,14 +567,13 @@ server <- function(input, output, session) {
 
   #allows user to download plot1 - imageFile
   output$download1 <- downloadHandler('temp.jpeg', function(file) {
-    #writeImage(imageFile$img_origin ^ input$gamma * input$contrast + input$bright, file)
-    writeImage(imageFile$current, file)
-
+    #writeImage(imageFile$current, file)
+    shinyImageFile$shiny_img_origin$savejpg(file)
   })
 
-  #creates helpful text on sidebar about the dimensions 
+
   output$dimetext <- renderText({
-    paste0("x axis: ", dime1(), " y axis: ", dime2())
+    paste0("undo: ",input$button1," redo: ",input$button2, "gamma: ", shinyImageFile$shiny_img_origin$get_gamma())
   })
 
   #creates x dimensions for image log
@@ -580,7 +603,7 @@ server <- function(input, output, session) {
 #*******UPDATE************
   observeEvent(input$file3, {
     shinyImageFile$shiny_img_origin <- shinyload(renameUpload(input$file2))
-    output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin$img_history})
+    output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin$get_imghistory})
   })
 
   #TODO: include image log of current image
