@@ -15,7 +15,7 @@ package:
 <UL>
 
 <li> 
-<b>ffwtools</b>:  Instead from CRAN, except for Linux; for the latter,
+<b>ffwtools</b>:  Install from CRAN, except for Linux; for the latter,
   sse 
 <a href="#Linux">these special instructions.</a> 
 </li> </p> 
@@ -149,21 +149,30 @@ install.packages(c('shiny','shinydashboard'))
 </pre>
 
 <p>
-where <b>y</b> is your desired installation directory for <b>ffwtools</b>.  
+where <b>y</b> is your desired installation directory for <b>ffwtools</b>,
+say <b>/usr/local</b>.
 </li> </p>
 
 <li> Run the usual <b>make; make install</b> sequence.
 </li> </p>
 
-<li> Set environment variables:
+<li> Set environment variables (no spaces around the = sign!):
 </p>
 
 <pre>
-export C_INCLUDE_PATH = x/fftw-3.3.6-pl1/api 
-export LD_RUN_PATH = ylib 
-export LIBRARY_PATH = y/lib 
+export C_INCLUDE_PATH=x/fftw-3.3.6-pl1/api 
+export LD_RUN_PATH=y/lib 
+export LIBRARY_PATH=y/lib 
 </pre>
 </li> </p>
+
+<li> You may need to install <b>libtiff-dev</b>, say by 
+</p>
+
+<pre>
+sudo apt-get install libtiff-deve
+</pre>
+</li> </p> 
 
 <li> Then run the R steps as above.
 </li> </p>
