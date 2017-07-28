@@ -28,15 +28,29 @@ siaction <- R6Class("siaction",
                     lock_objects = FALSE,
                     public = list(
                       # Initialize all the values of this action
-                      initialize = function(brightness, contrast, gamma, crop) {
+                      initialize = function(brightness, contrast, gamma, crop, xoff, yoff) {
                         private$brightness <- brightness
                         private$contrast <- contrast
                         private$gamma <- gamma
                         private$crop <- crop
+                        private$xoffset <- xoff
+                        private$yoffset <- yoff
                       },
                       # Get the c()'d properties of this particular action
                       get_action = function() {
                         return (c(private$brightness, private$contrast, private$gamma, private$crop))
+                      },
+                      get_brightness = function() {
+                        return (private$brightness)
+                      },
+                      get_contrast = function() {
+                        return (private$contrast)
+                      },
+                      get_gamma = function() {
+                        return (private$gamma)
+                      },
+                      get_offsets = function() {
+                        return (c(private$xoffset, private$yoffset))
                       }
                     ),
                     private = list(
@@ -44,7 +58,9 @@ siaction <- R6Class("siaction",
                       brightness = 0,
                       contrast = 0,
                       gamma = 0,
-                      crop = NULL
+                      crop = NULL,
+                      xoffset = 0,
+                      yoffset = 0
                     )
 )
 
@@ -172,7 +188,8 @@ shinyimg <- R6Class("shinyimg",
                           action_matrix[i, ] <- c(history[1], history[2], 
                                                   history[3], history[4], 
                                                   history[5], history[6], 
-                                                  history[7])
+                                                  history[7], history[8],
+                                                  history[9])
                           i = i + 1
                         }
                         # Save the current action number
@@ -205,7 +222,9 @@ shinyimg <- R6Class("shinyimg",
                                              action_matrix[i, 4],
                                              action_matrix[i, 5],
                                              action_matrix[i, 6],
-                                             action_matrix[i, 7]
+                                             action_matrix[i, 7],
+                                             action_matrix[i, 8],
+                                             action_matrix[i, 9]
                           )
                         }
                         private$actions <- actions
@@ -490,7 +509,10 @@ shinyimg <- R6Class("shinyimg",
                                             crop1x = private$xy1[1],
                                             crop1y = private$xy1[2], 
                                             crop2x = private$xy2[1], 
-                                            crop2y = private$xy2[2]
+                                            crop2y = private$xy2[2],
+                                            xoffset = private$xoffset,
+                                            yoffset = private$yoffset
+                                            
                       ) {
                         
                         # If we are not at the most recent image, we need 
@@ -510,7 +532,10 @@ shinyimg <- R6Class("shinyimg",
                                                               c(
                                                                 c(crop1x,crop1y), 
                                                                 c(crop2x, crop2y)
-                                                              )))
+                                                              ),
+                                                              xoffset,
+                                                              yoffset
+                                                              ))
                         # Add one to the action counter because we just 
                         # added an action to the action list
                         private$actions <- private$actions + 1
@@ -527,9 +552,16 @@ shinyimg <- R6Class("shinyimg",
                       applyAction = function(action) {
                         # Unpack the action variable
                         dataframe = action[[1]]
-                        
                         # Use the action's getter to return the c()'d args
                         args = dataframe$get_action()
+                        
+                        private$brightness = args[1]
+                        private$contrast = args[2]
+                        private$gamma = args[3]
+                        private$xy1 = c(args[4], args[5])
+                        private$xy2 = c(args[6], args[7])
+                        private$xoffset = args[8][1]
+                        private$yoffset = args[8][1]
                         
                         # args[2] is contrast, but we use local_img as
                         # the source image.
