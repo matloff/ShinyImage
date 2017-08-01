@@ -4,6 +4,8 @@ Title: ShinyImage
 Version: 0.1.0
 Authors@R: c(person("Alexander", "Fu", email = "aafu@ucdavis.edu",
         role = c("aut")),
+     person("Ariel", "Shin", email = "arishin@ucdavis.edu",
+        role = c("aut")),
      person("Norm", "Matloff", email = "nsmatloff@ucdavis.edu",
         role = c("aut", "cre")))
 Description: Imaging package, with an emphasis on recording history of changes.
