@@ -114,8 +114,8 @@ install.packages(c('shiny','shinyjs'))
 ```
 
 ### Usage
-
-A gui can also be spawned to edit images using the sample provided or a user can upload an image, link, or an image log of a .si object created through shinyimg
+<li> A gui can also be spawned to edit images using the sample provided or a user can upload an image, link, or an image log of a .si object created through shinyimg
+</p>
 
 <li> A user can edit brightness, contrast, and gamma correction. The user can also rotate, blur, and crop an image. These changes can be made to the image using the sliders. In order to crop a photo, the user has to highlight a box over the original plot. A preview of the cropped image with pop up below the original image. To keep the cropped image, click the keep button which will pop up below the preview image.  
 </p>
@@ -123,7 +123,7 @@ A gui can also be spawned to edit images using the sample provided or a user can
 <li> While editing an image, a user can undo, redo, or reset the image. These actions are executed through buttons at the bottom of the sidebar. 
 </p>
 
-<li> # After editing an image, a user can download the image and the image log. These actions are below the main plot. 
+<li> After editing an image, a user can download the image and the image log. These actions are below the main plot. 
 </p>
 
 <li> The user can also view the image log to see which actions were recorded. 
@@ -132,12 +132,6 @@ A gui can also be spawned to edit images using the sample provided or a user can
 ```R
 # The user's working directory must be set to ShinyImage/R
 > shiny::runApp('app19.R')
-
-## Documentation 
-
-```R
-> ?shinyimg  # the various operations, e.g. crop(), are described here
-
 ```
 
 <h3>
