@@ -1,0 +1,5 @@
+Will become the main files in the ShinyImage/R File
+To run the Shiny app 2.0, set working directory to runShiny
+After entering R, 
+
+> shiny::runApp('app19.R')
