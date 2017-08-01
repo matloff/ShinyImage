@@ -28,29 +28,24 @@ siaction <- R6Class("siaction",
                     lock_objects = FALSE,
                     public = list(
                       # Initialize all the values of this action
-                      initialize = function(brightness, contrast, gamma, crop, xoff, yoff) {
+                      initialize = function(brightness, contrast, gamma, crop, blur, rotate, grayscale) {
                         private$brightness <- brightness
                         private$contrast <- contrast
                         private$gamma <- gamma
                         private$crop <- crop
-                        private$xoffset <- xoff
-                        private$yoffset <- yoff
+                        private$blur <- blur
+                        private$rotate <- rotate
+                        private$grayscale <- grayscale
                       },
                       # Get the c()'d properties of this particular action
                       get_action = function() {
-                        return (c(private$brightness, private$contrast, private$gamma, private$crop))
-                      },
-                      get_brightness = function() {
-                        return (private$brightness)
-                      },
-                      get_contrast = function() {
-                        return (private$contrast)
-                      },
-                      get_gamma = function() {
-                        return (private$gamma)
-                      },
-                      get_offsets = function() {
-                        return (c(private$xoffset, private$yoffset))
+                        return (c(private$brightness, 
+                                  private$contrast, 
+                                  private$gamma, 
+                                  private$crop, 
+                                  private$blur, 
+                                  private$rotate, 
+                                  private$grayscale))
                       }
                     ),
                     private = list(
@@ -59,8 +54,9 @@ siaction <- R6Class("siaction",
                       contrast = 0,
                       gamma = 0,
                       crop = NULL,
-                      xoffset = 0,
-                      yoffset = 0
+                      blur = 0, 
+                      rotate = 0, 
+                      grayscale = 0
                     )
 )
 
@@ -131,9 +127,18 @@ shinyimg <- R6Class("shinyimg",
                       # Resets this object's values to the default ones.
                       set_default = function() {
                         # Default brightness
+                        private$myhistory = c(0,0,0,0,0,0,0,0,0,0)
                         private$brightness = 0
                         # Default Contrast
                         private$contrast = 1
+                        # Default Gamma 
+                        private$gamma = 1
+                        # Default Blur
+                        private$blur = 0
+                        # Default Rotate
+                        private$rotate = 0
+                        # Default grayscale 
+                        private$grayscale = 0 
                         # CURRENT Number of actions. Can be less than the
                         # Actual number of actions due to undos.
                         private$actions = 0
@@ -159,6 +164,8 @@ shinyimg <- R6Class("shinyimg",
                         private$lazy_load = 0
                         # The number of lazy actions we have done so far.
                         private$lazy_actions = 0
+                        private$noUndo = 0
+                        private$noRedo = 0
                       },
                       # Outputs the image as a plot
                       render = function() {
@@ -179,17 +186,18 @@ shinyimg <- R6Class("shinyimg",
                         # Generated action matrix done in O(1) time.
                         action_matrix <- matrix(NA, 
                                                 nrow=length(private$img_history), 
-                                                ncol=7)
+                                                ncol=10)
                         # Fill in the history data
                         i = 1
                         for (item in private$img_history) {
                           history <- item$get_action()
+                          #print(history)
                           # TODO: Map function perhaps?
                           action_matrix[i, ] <- c(history[1], history[2], 
                                                   history[3], history[4], 
                                                   history[5], history[6], 
                                                   history[7], history[8],
-                                                  history[9])
+                                                  history[9], history[10])
                           i = i + 1
                         }
                         # Save the current action number
@@ -198,6 +206,10 @@ shinyimg <- R6Class("shinyimg",
                         img <- imageData(private$local_img)
                         # Save everything to file.
                         base::save(action_matrix, actions, img, file=file)
+                      },
+                      saveHistory = function(file = 'workspace2.si') {
+                      	a <- private$img_history
+                      	base::save(a, file = file)
                       },
                       # Counterpart to the save function, will load from
                       # previous save file.
@@ -224,7 +236,8 @@ shinyimg <- R6Class("shinyimg",
                                              action_matrix[i, 6],
                                              action_matrix[i, 7],
                                              action_matrix[i, 8],
-                                             action_matrix[i, 9]
+                                             action_matrix[i, 9],
+                                             action_matrix[i, 10],
                           )
                         }
                         private$actions <- actions
@@ -261,9 +274,12 @@ shinyimg <- R6Class("shinyimg",
                           if (private$autodisplay) {
                             self$render()
                           }
+
+                          private$noUndo = 0
                         } else {
                           # There are no actions to undo.
                           print("No action to undo")
+                          private$noUndo = 1
                         }
                       },
                       # Uses the actions list (img_history) to redo the last
@@ -284,9 +300,13 @@ shinyimg <- R6Class("shinyimg",
                           if (private$autodisplay) {
                             self$render()
                           }
+
+                          private$noRedo = 0
+
                         } else {
                           # No actions to redo.
                           print("No action to redo")
+                          private$noRedo = 1
                         }
                       },
                       
@@ -344,6 +364,30 @@ shinyimg <- R6Class("shinyimg",
                         # removes 0.1 contrast.
                         private$mutator(3, -0.1)
                       },
+
+                      add_gamma = function() {
+                        private$mutator(5, 0.5)
+                      },
+                      
+                      remove_gamma = function() {
+                        private$mutator(5, -0.5)
+                      },
+
+                      add_blur = function() {
+                        private$mutator(7, 1)
+                      }, 
+
+                      remove_blur = function() {
+                        private$mutator(7, -1)
+                      }, 
+
+                      add_rotate = function() {
+                        private$mutator(9, 1)
+                      }, 
+
+                      remove_rotate = function() {
+                        private$mutator(9, -1)
+                      },
                       
                       # Adjusts brightness by the argument. Mainly used
                       # by the Shiny app.
@@ -359,6 +403,22 @@ shinyimg <- R6Class("shinyimg",
                       set_contrast = function(contrast) {
                         # Sets brightness.
                         private$mutator(4, contrast)
+                      },
+
+                      set_gamma = function(gamma) {
+                        private$mutator(6, gamma)
+                      },
+
+                      set_blur = function(blur) {
+                        private$mutator(8, blur)
+                      }, 
+
+                      set_rotate = function(rotate) {
+                        private$mutator(10, rotate)
+                      },
+
+                      set_grayscale = function(grayscale) {
+                        private$mutator(11, grayscale)
                       },
                       
                       # The command line cropper uses locator to have the
@@ -395,26 +455,27 @@ shinyimg <- R6Class("shinyimg",
                       # The function used by Shiny to crop using absolute 
                       # coordinates. 
                       cropxy = function(x1, x2, y1, y2) {
-                        # TODO: Temporary workaround to prevent an image 
-                        # with a height or a width from being created. 
-                        # Should be removed when the image return method 
-                        # is fixed below. 
+                        #same as crop but used by shiny
+                        private$current_image <<- 
+                          private$current_image[x1:x2,y1:y2,]
                         
-                        if (abs(x1-x2) == 0 || abs(y1-y2) == 0)
-                          return
+                        # In order to maintain a correct cropping, 
+                        # we need to know how much of
+                        # the original image has already been cropped.
+                        xdiff = x2 - x1
+                        ydiff = y2 - y1
                         
-                        # TODO: Make sure the ABSOLUTE coordinates are not
-                        private$xy1 = c(min(x1, x2), min(y1, y2))
-                        private$xy2 = c(max(x1,x2), max(y1,y2))
-                        # We use the add action in order to apply 
-                        # that action.
+                        # The offset is needed to maintain the ABSOLUTE 
+                        # crop data.
+                        private$xoffset = private$xoffset + x1
+                        private$yoffset = private$yoffset + y1
+                        
+                        # Create the absolute crop data using the offsets
+                        # and new area.
+                        private$xy1 = c(private$xoffset, private$yoffset)
+                        private$xy2 = c(private$xoffset + xdiff, 
+                                        private$yoffset + ydiff)
                         private$add_action()
-                        
-                        # TODO: Temporary workaround to return the correct 
-                        # image. Is not efficient because it generates the 
-                        # image from scratch every time. 
-                        private$applyAction(
-                          private$img_history[private$actions])
                       },
                       # Returns the size of the current image.
                       # Needed for Shiny to determine the max values of
@@ -433,6 +494,39 @@ shinyimg <- R6Class("shinyimg",
                       # Gets the raw matrix slices of the current image
                       get_raw = function() {
                         return (imageData(private$current_img))
+                      }, 
+                      savejpg = function(file) {
+                        writeImage(private$current_image, file)
+                      }, 
+                      gethistory = function() {
+                      	return(private$myhistory)
+                      }, 
+                      get_brightness = function() {
+                        return (private$brightness)
+                      },
+                      get_contrast = function() {
+                        return (private$contrast)
+                      },
+                      get_gamma = function() {
+                        return (private$gamma)
+                      },
+                      get_blur = function() {
+                        return (private$blur)
+                      }, 
+                      get_rotate = function() {
+                        return(private$rotate)
+                      },
+                      get_color = function() {
+                      	return(private$grayscale)
+                  	  },
+                      get_imghistory = function() { 
+                        return(private$img_history)
+                      }, 
+                      cantUndo = function() {
+                      	return(private$noUndo)
+                      }, 
+                      cantRedo = function() {
+                      	return(private$noRedo)
                       }
                       #Uses a matrix as the image. Can be used to reintegrate
                       # a get_raw generated matrix.
@@ -445,9 +539,15 @@ shinyimg <- R6Class("shinyimg",
                     private = list(
                       # The following are the members of the shinyimg obj.
                       # Default brightness
+                      myhistory = c(0,0,0,0,0,0,0,0,0,0),
+                      #names(myhistory) <- c(1,2,3,4,5,6,7,8,9,10),
                       brightness = 0,
                       # Default Contrast
                       contrast = 1,
+                      gamma = 1, 
+                      blur = 0, 
+                      rotate = 0, 
+                      grayscale = 0, 
                       # CURRENT Number of actions. Can be less than the
                       # Actual number of actions due to undos.
                       actions = 0,
@@ -494,7 +594,31 @@ shinyimg <- R6Class("shinyimg",
                                  private$contrast + amount,
                                
                                #  ActionID 4, contrast setting
-                               private$contrast <- amount
+                               private$contrast <- amount,
+
+                               # ActionID 5, gamm adjustment
+                               private$gamma <- 
+                                 private$gamma + amount, 
+
+                               # ActionID 6, gamma setting
+                               private$gamma <- amount,
+
+                               # Action ID 7, blur adjustment
+                               private$blur <- 
+                                 private$blur + amount, 
+
+                               # Action ID 8, blur setting
+                               private$blur <- amount,
+
+                               # Action ID 9, rotate adjustment
+                               private$rotate <- 
+                                 private$rotate + amount, 
+
+                               # Action ID 10, rotate setting
+                               private$rotate <- amount,
+
+                               # Action ID 11, grayscale setting
+                               private$grayscale <- amount
                         )
                         
                         private$add_action()
@@ -505,13 +629,14 @@ shinyimg <- R6Class("shinyimg",
                       # bottom right x, bottom right y respectively. 
                       add_action = function(bright = private$brightness, 
                                             cont = private$contrast, 
-                                            gam = 0, 
+                                            gam = private$gamma, 
                                             crop1x = private$xy1[1],
                                             crop1y = private$xy1[2], 
                                             crop2x = private$xy2[1], 
                                             crop2y = private$xy2[2],
-                                            xoffset = private$xoffset,
-                                            yoffset = private$yoffset
+                                            blurring = private$blur,
+                                            rotation = private$rotate, 
+                                            colorMode = private$grayscale
                                             
                       ) {
                         
@@ -533,8 +658,9 @@ shinyimg <- R6Class("shinyimg",
                                                                 c(crop1x,crop1y), 
                                                                 c(crop2x, crop2y)
                                                               ),
-                                                              xoffset,
-                                                              yoffset
+                                                              blurring, 
+                                                              rotation, 
+                                                              colorMode
                                                               ))
                         # Add one to the action counter because we just 
                         # added an action to the action list
@@ -554,28 +680,60 @@ shinyimg <- R6Class("shinyimg",
                         dataframe = action[[1]]
                         # Use the action's getter to return the c()'d args
                         args = dataframe$get_action()
-                        
                         private$brightness = args[1]
                         private$contrast = args[2]
                         private$gamma = args[3]
                         private$xy1 = c(args[4], args[5])
-                        private$xy2 = c(args[6], args[7])
-                        private$xoffset = args[8][1]
-                        private$yoffset = args[8][2]
-                        
-                        # args[2] is contrast, but we use local_img as
-                        # the source image.
+                        private$xy2 = c(args[6], args[7])   
+                        private$blur = args[8]
+                        private$rotate = args[9]
+                        private$grayscale = args[10]
+
+                        # args[8] is blurring
+                        if (args[8] > 0)
+                        {
+                          private$current_image <- 
+                            gblur(private$local_img, sigma = args[8])
+                        } 
+
+                        #need to fix blur back to original image
+                        if (args[8] <= 0)
+                        {
+                          private$current_image <- private$local_img
+                        }      
+
+                        # args[2] is contrast
                         private$current_image <- 
-                          private$local_img * args[2]
+                          private$current_image * args[2]
+
                         # args[1] is brightness
                         private$current_image <- 
                           private$current_image + args[1]
-                        
+
+                        # args[3] is gamma
+                        private$current_image <- 
+                          private$current_image ^ args[3]
+ 
                         # args[4] through args[7] are ABSOLUTE 
                         # crop locations.
                         private$current_image <- private$current_image[
                           args[4]:args[6], args[5]:args[7], 
                           ]
+
+                        #args[12] is grayscale
+                        if (args[10] == 0)
+                        {
+                          private$current_image <- channel(private$current_image, "rgb")
+                        }
+                        else
+                          private$current_image <- channel(private$current_image, "gray")
+       
+                        # args[11] is rotation
+                        private$current_image <- rotate(private$current_image, args[9])
+
+                        #print(args)
+                        private$myhistory <- args
+
                       },
                       # The matr argument imports a matrix as the image.
                       # The remaining two arguments are supplied by the 
@@ -660,259 +818,8 @@ shinyimg <- R6Class("shinyimg",
                     )
 )
 
-
-
-
-
-
-#' Wrapper to load an image from a cold boot. 
-#' 
-#' @param filename The filename of a file previously generated by shinyimg's $save function. 
-#' @examples
-#' local_tiger = shinyimg$new("Tigerwater_edit2.jpg")
-#' local_tiger$save("tiger.si")
-#' # Restart R 
-#' reloaded_tiger = shinyload("tiger.si")
-#' @export
 shinyload = function(filename) {
   shinyimg$new(NULL, filename)
 }
 
-#' The ShinyImg GUI editor
-#' @docType class
-#' @importFrom R6 R6Class
-#' @export
-#' @keywords data
-#' @return Object of \code{\link{R6Class}} with manipulation functions.
-#' @format \code{\link{R6Class}} object.
-#' @examples
-#' local_tiger = shinyimg$new("Tigerwater_edit2.jpg")
-#' editor_instance = shinygui$new()
-#' editor_instance$load(tiger)
-#' # The original image can also be provided:
-#' editor_instance$load("Tigerwater_edit2.jpg")
-#' #' @section Methods:
-#' \describe{
-#'   \item{Documentation}{The user should create an instance to facilitate the gui editing of an image.}
-#'   \item{\code{new()}}{Default constructor. No arguments required.}
-#'
-#'   \item{\code{load()}}{Loads a ShinyImage or raw image in order to process.}
-#'   }
-#'
-shinygui <- R6Class("shinygui",
-                    # TODO: Figure out if the ShinyGui part needs to be mutable.
-                    lock_objects = FALSE,
-                    public = list(
-                      initialize = function() {
-                        # TODO: See if there are any variables that can be initialized here.
-                        # I.e., Settings for the ShinyGui.
-                        # TODO: Render button? 
-                      },
-                      load = function(img) {
-                        
-                        # If the argument from load is NOT a shinyimg, then
-                        # create the shinyimg object using the image as the
-                        # source image. 
-                        if (class(img)[1] != "shinyimg") {
-                          img = shinyimg$new(img)
-                        }
-                        
-                        
-                        if (!require("shiny")) {
-                          cat("shiny is not installed. Please install it first.")
-                          return
-                        }
-                        
-                        if (!require("shinydashboard")) {
-                          cat("shinydashboard is not installed. Please install it first.")
-                          return
-                        }
-                        
-                        library("shinydashboard")
-                        library("shiny")
-                        
-                        server <- function(input, output, session) {
-                          
-                          # TODO: Figure out how to make image more "reactive"
-                          # as it does not work for certain circumstances/ does 
-                          # not work intermittently. 
-                          current_image <- reactive({
-                            current_image <- img$current_image
-                          })
-                          
-                          # Set the intial slider values. This takes ~1s to startup.
-                          # TODO: Optimize (somehow).
-                          updateSliderInput(session, "brightness", value = img$brightness * 10)
-                          updateSliderInput(session, "contrast", value = (1 - img$contrast) * 10)
-                          
-                          # TODO: Use this startup segment to try and optimize some of the 
-                          # loading times by offloading some of the additional processing until
-                          # AFTER the app starts up. 
-                          observe({
-                            # cat("Startup complete.")
-                          })
-                          
-                          # If the browser window becomes closed, stop the app as well. 
-                          observeEvent(input$close, {
-                            stopApp()
-                          })
-                          
-                          # The image plot displayed by Shiny uses "plot2" as the rendered
-                          # image.
-                          output$plot2 <- renderPlot({
-                            display(current_image(), method = "raster")
-                          })
-                          
-                          # Sets the brightness based on the slider value. 
-                          # TODO: The output image rendering does not get updated unless
-                          # explicitly called (using a function with the renderplot in
-                          # it will not actually update the image).
-                          observeEvent(input$brightness, {
-                            img$set_brightness(input$brightness / 10)
-                            output$plot2 <- renderPlot({
-                              display(img$current_image, method = "raster")
-                            })
-                          })
-                          # Sets the contrast based on the slider value. 
-                          # TODO: The output image rendering does not get updated unless
-                          # explicitly called (using a function with the renderplot in
-                          # it will not actually update the image).
-                          observeEvent(input$contrast, {
-                            actualContrast = (1 + input$contrast / 10)
-                            img$set_contrast(actualContrast)
-                            output$plot2 <- renderPlot({
-                              display(img$current_image, method = "raster")
-                            })
-                          })
-                          
-                          # Updates the x1 (top left) slider based on error checking
-                          observeEvent(input$x1, {
-                            # If the x1 coord is greater or equal to x2, reset it to
-                            # 1 px width.
-                            if (input$x1 >= input$x2) {
-                              updateSliderInput(session, "x1", value = input$x2 - 1)
-                              return
-                            }
-                            
-                            # Do the actual cropping and display
-                            img$cropxy(input$x1, input$x2, input$y1, input$y2)
-                            output$plot2 <- renderPlot({
-                              display(img$current_image, method = "raster")
-                            })
-                          })
-                          
-                          # Updates the y1 (top left) slider based on error checking
-                          observeEvent(input$y1, {
-                            # If the y1 coord is greater or equal to y2, reset it to
-                            # 1 px height.
-                            if (input$y1 >= input$y2) {
-                              updateSliderInput(session, "y1", value = input$y2 - 1)
-                              return
-                            }
-                            
-                            # Do the actual cropping and display
-                            img$cropxy(input$x1, input$x2, input$y1, input$y2)      
-                            output$plot2 <- renderPlot({
-                              display(img$current_image, method = "raster")
-                            })
-                          })
-                          
-                          # Updates the x2 (bottom right) slider based on error checking
-                          observeEvent(input$x2, {
-                            # If the x2 slider is less than x1, reset it to 1 px.
-                            if (input$x2 <= input$x1) {
-                              updateSliderInput(session, "x2", value = input$x1 + 1)
-                              return
-                            }
-                            # Do the actual cropping and display
-                            img$cropxy(input$x1, input$x2, input$y1, input$y2)
-                            output$plot2 <- renderPlot({
-                              display(img$current_image, method = "raster")
-                            })
-                          })
-                          
-                          # Updates the x2 (bottom right) slider based on error checking
-                          observeEvent(input$y2, {
-                            # If the y2 slider is less than y1, reset it to 1 px.
-                            if (input$y2 <= input$y1) {
-                              updateSliderInput(session, "y2", value = input$y1 + 1)
-                              return
-                            }
-                            
-                            # Do the actual cropping and display
-                            img$cropxy(input$x1, input$x2, input$y1, input$y2)
-                            output$plot2 <- renderPlot({
-                              display(img$current_image, method = "raster")
-                            })
-                          })
-                          
-                          # Double click cropping
-                          observeEvent(input$plot1_dblclick, {
-                            brush <- input$plot1_brush
-                            # If we have a brush equipped
-                            if (!is.null(brush)) {
-                              startx = max(0, brush$xmin)
-                              starty = max(0, brush$ymin)
-                              xbound = input$x2 - input$x1
-                              ybound = input$y2 - input$y1
-                              endx = brush$xmax
-                              endy = brush$ymax
-                              
-                              # Calculating actual bounds for the new subimage
-                              if (endx > xbound)
-                                endx = xbound
-                              if (endy > ybound)
-                                endy = ybound
-                              
-                              # Perform the actual cropping
-                              img$cropxy(input$x1 + startx, input$x1 + endx, 
-                                         input$y1 + starty, input$y1 + endy)
-                              
-                              # Calculate the offsets for updating the sliders
-                              savedx1 = input$x1 + startx
-                              savedx2 = input$x1 + endx
-                              savedy1 = input$y1 + starty
-                              savedy2 = input$y1 + endy
-                              # Update the bounds on the GUI
-                              updateSliderInput(session, "x1", value = savedx1)
-                              updateSliderInput(session, "x2", value = savedx2)
-                              updateSliderInput(session, "y1", value = savedy1)
-                              updateSliderInput(session, "y2", value = savedy2)
-                            }
-                          })
-                          
-                          # Set the output image
-                          output$img <- img$getimg()
-                        }
-                        
-                        ui <- dashboardPage(
-                          dashboardHeader(title = "ShinyImg GUI"),
-                          dashboardSidebar(
-                            # The sliders on the sidebar
-                            sliderInput("brightness", "Image Brightness", -10, 10, 0),
-                            sliderInput("contrast", "Image Contrast", -10, 10, 0),
-                            sliderInput("x1", "X1 Crop", 0, img$size()[1], 0),
-                            sliderInput("x2", "X2 Crop", 0, img$size()[1], img$size()[1]),
-                            sliderInput("y1", "Y1 Crop", 0, img$size()[2], 0),
-                            sliderInput("y2", "Y2 Crop", 0, img$size()[2], img$size()[2])
-                          ),
-                          dashboardBody(
-                            # Boxes need to be put in a row (or column)
-                            fluidRow(
-                              box(width = 12, 
-                                  background = "black", 
-                                  plotOutput("plot2", 
-                                             height = img$size()[2]/2, width = img$size()[1]/2,
-                                             dblclick = "plot1_dblclick",
-                                             brush = brushOpts(
-                                               id = "plot1_brush",
-                                               resetOnNew = TRUE
-                                             )
-                                  ))
-                            )
-                          )
-                        )
-                        cat("ShinyImg GUI will now start running.\n")
-                        cat("Please use the close button in the GUI to stop the server.")
-                        shinyApp(ui = ui, server = server)
-                      }))
+#DELETED PREVIOUS SHINY CODE
