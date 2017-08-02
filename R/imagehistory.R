@@ -22,6 +22,7 @@ library(R6)
 #'
 #'   \item{\code{get_action()}}{This method returns a c() list of the input parameters.}
 #'   
+
 siaction <- R6Class("siaction",
                     # Make this action mutable. TODO: Make it so that
                     # it doesn't need to be
@@ -156,7 +157,8 @@ shinyimg <- R6Class("shinyimg",
                         # Variable to store the current image to display
                         private$current_image = NULL
                         # Option to have the output automatically rendered
-                        private$autodisplay = 1
+                        # autodisplay is off till function is called
+                        private$autodisplay = 0
                         # The filename used for the autosave in 
                         # case of crashes
                         private$autosave_filename = "workspace.si"
@@ -165,6 +167,10 @@ shinyimg <- R6Class("shinyimg",
                         # The number of lazy actions we have done so far.
                         private$lazy_actions = 0
                         # bool value to determine if user can undo 
+                      },
+                      set_autodisplay = function() 
+                      {
+                        private$autodisplay = 1
                       },
                       # Outputs the image as a plot
                       render = function() {
