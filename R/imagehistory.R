@@ -164,8 +164,7 @@ shinyimg <- R6Class("shinyimg",
                         private$lazy_load = 0
                         # The number of lazy actions we have done so far.
                         private$lazy_actions = 0
-                        private$noUndo = 0
-                        private$noRedo = 0
+                        # bool value to determine if user can undo 
                       },
                       # Outputs the image as a plot
                       render = function() {
@@ -274,12 +273,30 @@ shinyimg <- R6Class("shinyimg",
                           if (private$autodisplay) {
                             self$render()
                           }
-
-                          private$noUndo = 0
                         } else {
                           # There are no actions to undo.
                           print("No action to undo")
-                          private$noUndo = 1
+                        }
+                      },
+                      shinyUndo = function() {
+
+                        #same as undo
+                        #but got rid of auto render
+                        #and print statement
+                        #cant call the above bc those two lines
+                        #mess up shiny app 
+                        if (private$actions != 1) {
+                          # Step back by one action
+                          private$actions <- private$actions - 1
+                          
+                          # Apply the action.
+                          private$applyAction(
+                            private$img_history[private$actions])
+                          
+                          return(1)
+                        } else {
+                          # There are no actions to undo.
+                          return(0)
                         }
                       },
                       # Uses the actions list (img_history) to redo the last
@@ -300,16 +317,26 @@ shinyimg <- R6Class("shinyimg",
                           if (private$autodisplay) {
                             self$render()
                           }
-
-                          private$noRedo = 0
-
                         } else {
                           # No actions to redo.
                           print("No action to redo")
-                          private$noRedo = 1
                         }
                       },
-                      
+                      shinyRedo = function() {
+                        # If there are actions to redo
+                        if (private$actions < length(private$img_history)) {
+                          # Increment by one action, then apply it
+                          private$actions <- private$actions + 1
+                          private$applyAction(
+                            private$img_history[private$actions])
+                        
+                          return(1)
+                        } else {
+                          # No actions to redo.
+                          return(0)
+                        }
+                      },
+
                       toggle_ll = function() {
                         private$lazy_load <- 1 - private$lazy_load;
                         if (private$lazy_load == 1) {
@@ -522,11 +549,13 @@ shinyimg <- R6Class("shinyimg",
                       get_imghistory = function() { 
                         return(private$img_history)
                       }, 
-                      cantUndo = function() {
-                      	return(private$noUndo)
+                      get_actions = function() {
+                        return(private$actions)
                       }, 
-                      cantRedo = function() {
-                      	return(private$noRedo)
+                      checkRedo = function() {
+                        if (private$actions < length(private$img_history))
+                          return(TRUE)
+                        else return(FALSE)
                       }
                       #Uses a matrix as the image. Can be used to reintegrate
                       # a get_raw generated matrix.

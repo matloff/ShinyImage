@@ -1,5 +1,4 @@
 library(shiny)
-library(EBImage)
 library(shinyjs)
 
 validate((need(file.exists("imagehistory.R"), "Please input imagehistory.R into the same directory that contains app19.R")))
@@ -72,19 +71,16 @@ ui <- fluidPage(
           sliderInput("gamma", "Increase/Decrease Gamma Correction", min = 0, max = 50, value = 1, step = 0.5),
           sliderInput("rotation", "Rotate Image", min = 0, max = 360, value = 0, step = 1),
           sliderInput("blurring", "Blur Image", min = 0, max = 20, value = 0, step = 1),
-          tags$head(tags$style(HTML('#button1{background-color:red}'))),
-          tags$head(tags$style(HTML('#button2{background-color:red}'))),
           actionButton("button1", "Undo"), 
           actionButton("button2", "Redo"), 
-          actionButton("button3", "Reset"), 
-          textOutput("dimetext"),
-          textOutput("help")
+          actionButton("button3", "Reset")
+          #textOutput("dimetext"),
+          #textOutput("help")
         ),
         mainPanel(
           HTML(
             paste(
               h3('Image Editor', align = "center"),
-              h6('What the shinyimg object looks like; temporary (will become the main plot or in sync with the mainplot)'),
               plotOutput("plot3",
                 click = "plot_click",
                 dblclick = "plot_dblclick",
@@ -232,6 +228,11 @@ server <- function(input, output, session) {
 
   #shows a preview of the cropped function
   #shows the keep button (originally hiding) 
+
+  #TODO
+  #either 1) render image after sliders are updated
+  # 2) make the plot disappear if the image changes
+  # 3) do nothing
   output$plot2 <- renderPlot({
     p <- input$plot_brush
     validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
@@ -337,28 +338,41 @@ server <- function(input, output, session) {
 
   #undo button
   observeEvent(input$button1, {
+  	#needed to create a separate functino to check for the number of actions left
+  	#because of the auto render
 
-    output$plot3 <- renderPlot({
-      shinyImageFile$shiny_img_origin$undo() 
+    if (shinyImageFile$shiny_img_origin$shinyUndo() == 0) {
+      showModal(modalDialog(
+      title = "Important message", 
+        "No more actions to undo!"))
+    }
+    else 
+    {
+      output$plot3 <- renderPlot({
+      shinyImageFile$shiny_img_origin$render() 
       updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
       updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
       updateSliderInput(session, "gamma", value = shinyImageFile$shiny_img_origin$get_gamma())
       updateSliderInput(session, "blurring", value = shinyImageFile$shiny_img_origin$get_blur())
       updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
       updateSliderInput(session, "color", value = shinyImageFile$shiny_img_origin$get_color())
-    })
-    if (shinyImageFile$shiny_img_origin$cantUndo() == 1) {
-      showModal(modalDialog(
-      title = "Important message", 
-        "No more actions to undo!"))
-    }
+     })
+     }
   })
 
   #redo button 
-  #not working
   observeEvent(input$button2, {
-
-    output$plot3 <- renderPlot({
+    if (shinyImageFile$shiny_img_origin$shinyRedo() == 0) {
+      showModal(modalDialog(
+      title = "Important message", 
+        "No more actions to redo!"))
+    }
+    #need to put in else statement otherwise it will try to output a null plot
+    #because the output of shinyImageFile$shiny_img_origin$redo() is not an image
+    #when there are no more actions to redo
+    else 
+    {
+   	  output$plot3 <- renderPlot({
       shinyImageFile$shiny_img_origin$redo() 
       updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
       updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
@@ -367,10 +381,6 @@ server <- function(input, output, session) {
       updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
       updateSliderInput(session, "color", value = shinyImageFile$shiny_img_origin$get_color())
     })
-    if (shinyImageFile$shiny_img_origin$cantRedo() == 1) {
-      showModal(modalDialog(
-      title = "Important message", 
-        "No more actions to redo!"))
     }
   })
 
@@ -451,11 +461,14 @@ server <- function(input, output, session) {
 
 #//////// CODE FOR IMAGE LOG VIEWER /////////////
 
+# TO DO 
+#CREATE A BUTTON TO VIEW CURRENT IMAGE'S LOG
+#NEED TO FIX SAVE BUTTON TO VIEW DIFFERENT IMAGE'S LOG
 #--------------SECOND PANEL: shows user image log-------------
 #*******UPDATE************
   observeEvent(input$file3, {
-    shinyImageFile$shiny_img_origin <- shinyload(renameUpload(input$file2))
-    output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin})
+    #shinyImageFile$shiny_img_origin <- shinyload(renameUpload(input$file2))
+    output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin$get_imghistory()})
   })
 
   #TODO: include image log of current image
