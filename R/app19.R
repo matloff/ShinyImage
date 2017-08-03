@@ -154,8 +154,10 @@ server <- function(input, output, session) {
   	if(input$radio == 1)
   	{
     	shinyImageFile$shiny_img_origin <- 
-        shinyimg$new('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')
-	  }
+        shinyimg$new('colors.jpeg')
+        #https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg
+      	output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+    }
     # if (input$radio == 2)
     # {
     #   output$plot3 <- renderText({ validate(need(!is.null(input$file1), "Must upload a valid jpg, png, or tiff")) })
@@ -191,18 +193,22 @@ server <- function(input, output, session) {
   #if they enter a new file, their file will become the new imageFile
   observeEvent(input$file1, {
     shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
+    output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
   })
 
   #if they enter a new url, their url will become the new new imageFile
   observeEvent(input$url1, {
     validate(need(input$url1 != "", "Must type in a valid jpeg, png, or tiff"))
     shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
+    output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
   })
 
   #if user uploads an image log, they will see the picture with previous settings
   #need to update sliders
   observeEvent(input$file2, {
     shinyImageFile$shiny_img_origin <- shinyimg$new(NULL, shinyload(renameUpload(input$file2)))
+    output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+    
   })
 
 #//////// END OF CODE FOR RADIO BUTTONS /////////////
@@ -322,18 +328,23 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$color, {
-    if (input$color == 2)
-    {
-      shinyImageFile$shiny_img_origin$set_grayscale(1)
-      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
-      output$plot2 <- renderPlot(croppedShiny(shinyImageFile$shiny_img_origin))
-    }
-    else
-    {
-      shinyImageFile$shiny_img_origin$set_grayscale(0)
-      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
-      output$plot2 <- renderPlot(croppedShiny(shinyImageFile$shiny_img_origin))
-    }
+      if (input$color == 2)
+      {
+        shinyImageFile$shiny_img_origin$set_grayscale(1)
+        output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+        output$plot2 <- renderPlot(croppedShiny(shinyImageFile$shiny_img_origin))
+      }
+    #prevents shiny from rendering color image at start up 
+    #checks to see if the user clicked color + they can click undo
+       if (input$color == 1 && shinyImageFile$shiny_img_origin$shinyUndo() != 0)
+       {
+         shinyImageFile$shiny_img_origin$set_grayscale(0)
+         output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+         output$plot2 <- renderPlot(croppedShiny(shinyImageFile$shiny_img_origin))
+       }
+
+       # print("after color: ")
+    	#print(shinyImageFile$shiny_img_origin$get_imghistory())
   })
 
 #//////// END OF CODE FOR CROPPING AND PLOTS /////////////
@@ -347,7 +358,7 @@ server <- function(input, output, session) {
   observeEvent(input$button3, {
     if(input$radio == 1)
     {
-      shinyImageFile$shiny_img_origin <- shinyimg$new('https://s-media-cache-ak0.pinimg.com/736x/62/c7/59/62c75942f58a0579f384fccc499a54f3--flower-crowns-flower-girls.jpg')  
+      shinyImageFile$shiny_img_origin <- shinyimg$new('colors.jpeg')  
     }
     if(input$radio == 2)
     {

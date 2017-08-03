@@ -756,11 +756,13 @@ shinyimg <- R6Class("shinyimg",
                           ]
 
                         #args[12] is grayscale
-                        if (args[10] == 0)
-                        {
-                          private$current_image <- channel(private$current_image, "rgb")
-                        }
-                        else
+                        #if (args[10] == 0)
+                        #{
+                        #  private$current_image <- channel(private$current_image, "rgb")
+                        #}
+                        #else
+                        #image can revert back to color 
+                        if (args[10] == 1)
                           private$current_image <- channel(private$current_image, "gray")
        
                         # args[11] is rotation
