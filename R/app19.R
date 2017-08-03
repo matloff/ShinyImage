@@ -9,6 +9,26 @@ source('imagehistory.R')
 #faster image rendering
 #updated comments
 
+#TODO 
+## (1) Need to fix view iamge log 
+      # (1a) current image should be constantly updating 
+      # currently if user clicks on view image log --> edit image --> then view image log agaon 
+      # they have to refresh the buttons 
+      # (1b ) Need to be able to view .si file in view image log 
+## (2) Need to fix Upload Image Log - load your own .si object
+## (3) need to make color mode faster -- currently really slow 
+## (4) still needs to make rendering faster
+#
+## (5) certain combinatino of photos do not work
+## (6) need to fix combination of crop and rotate or document better 
+        #current if you crop a rotated photo --> you rotate the cropped image 
+        #however, you want a cropping of a rotated photo in the normal angle
+## (7) more testing
+## (8) add options for more functions in EBImage
+## (9) fix documentation on github 
+## (10) when user switches between radio buttons; image should reset
+        #current the previous image is still on the plot
+
 if (!require("shiny")) {
 	cat("shiny is not installed. Please install it first.")
 }
@@ -29,8 +49,8 @@ ui <- fluidPage(
 
   titlePanel("Shiny Image"),
 
-  tabsetPanel(
-    tabPanel("Image Editor",
+  tabsetPanel(id = "tabs", 
+    tabPanel("Image Editor", value = "tab1",
 
       sidebarLayout(
         sidebarPanel(
@@ -112,11 +132,11 @@ ui <- fluidPage(
         )
       )
     ), 
-    tabPanel("View Image Log", 
+    tabPanel("View Image Log", value = "tab2", 
       sidebarLayout(
         sidebarPanel(
           radioButtons("radio2", label = ("Current Image or Upload .si File"), 
-            choices = list("Current Image" = 1, "Upload .si file" = 2), selected = character(0)
+            choices = list("Current Image" = 1, "Upload .si file" = 2), selected = 1
           ), 
           conditionalPanel(
             condition = "input.radio2 == 2",
@@ -524,8 +544,19 @@ server <- function(input, output, session) {
 #NEED TO LET USER DECIDE BETWEEN SEEING HISTORY VS SEEING PREVIOUSLY EDITED IMAGE
 #--------------SECOND PANEL: shows user image log-------------
 
-  observeEvent(input$radio2, {
-    if (input$radio2 == 1)
+  #radio2 -- view image log options doesnt have a pre-selected button so we are not rendering
+  # a image log till the user specifies 
+  # observeEvent(input$radio2, {
+  #   #if user clicks the first button - current image's log will pop up
+  #   if (input$radio2 == 1)
+  #     output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin$get_imghistory()})
+  # })
+
+  #if user clicked view image log of current image --> edited image --> clicked the tab again
+  # the radio button is set at current image
+  # should re-render the img history 
+  observeEvent(input$tabs, {
+    if (input$tabs == 'tab2' && input$radio2 == 1)
       output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin$get_imghistory()})
   })
 
@@ -533,7 +564,7 @@ server <- function(input, output, session) {
   #need to figure out how to load saveHistory
   observeEvent(input$file3, {
     newFile <- shinyload(renameUpload(input$file3))
-    output$ImageLog <- renderPrint({newFile})
+    output$ImageLog <- renderPrint({"NEED FILE"})
   })
 
   #TODO: include image log of current image
