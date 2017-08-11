@@ -1,6 +1,8 @@
 library(EBImage)                             #Include EBImage Lib
 library(R6)
 
+#FIX SAVE & SAVE HISTORY
+
 #' Class providing object describing one action.
 #'
 #' @docType class
@@ -171,6 +173,8 @@ shinyimg <- R6Class("shinyimg",
                       set_autodisplay = function() 
                       {
                         private$autodisplay = 1
+                        #need to add self$render
+                        #causing random errors right now
                       },
                       # Outputs the image as a plot
                       render = function() {
@@ -196,7 +200,6 @@ shinyimg <- R6Class("shinyimg",
                         i = 1
                         for (item in private$img_history) {
                           history <- item$get_action()
-                          #print(history)
                           # TODO: Map function perhaps?
                           action_matrix[i, ] <- c(history[1], history[2], 
                                                   history[3], history[4], 
@@ -209,6 +212,8 @@ shinyimg <- R6Class("shinyimg",
                         actions <- private$actions
                         # Save the current image as well
                         img <- imageData(private$local_img)
+                        #print("saving image")
+                        #display(img, method = "raster")
                         # Save everything to file.
                         base::save(action_matrix, actions, img, file=file)
                       },
@@ -242,7 +247,7 @@ shinyimg <- R6Class("shinyimg",
                                              action_matrix[i, 7],
                                              action_matrix[i, 8],
                                              action_matrix[i, 9],
-                                             action_matrix[i, 10],
+                                             action_matrix[i, 10]
                           )
                         }
                         private$actions <- actions
@@ -457,6 +462,8 @@ shinyimg <- R6Class("shinyimg",
                       # The command line cropper uses locator to have the
                       # user locate the two corners of the subimage. 
                       crop = function() {
+
+                        #possibly create a special instance for rotation
                         print("Select the two opposite corners 
                               of a rectangle on the plot.")
                         location = locator(2)
@@ -464,6 +471,7 @@ shinyimg <- R6Class("shinyimg",
                         y1 = min(location$y[1], location$y[2])
                         x2 = max(location$x[1], location$x[2])
                         y2 = max(location$y[1], location$y[2])
+                        #comment and print here --
                         private$current_image <<- 
                           private$current_image[x1:x2,y1:y2,]
                         
@@ -765,7 +773,7 @@ shinyimg <- R6Class("shinyimg",
                         if (args[10] == 1)
                           private$current_image <- channel(private$current_image, "gray")
        
-                        # args[11] is rotation
+                        #args[11] is rotation
                         private$current_image <- rotate(private$current_image, args[9])
 
                         #print(args)
