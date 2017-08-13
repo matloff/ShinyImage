@@ -1,7 +1,6 @@
 library(EBImage)                             #Include EBImage Lib
 library(R6)
 
-#FIX SAVE & SAVE HISTORY
 
 #' Class providing object describing one action.
 #'
