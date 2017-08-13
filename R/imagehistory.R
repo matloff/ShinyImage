@@ -176,6 +176,13 @@ shinyimg <- R6Class("shinyimg",
                         #need to add self$render
                         #causing random errors right now
                       },
+                      #turns off autodisplay
+                      #alternative is to keep it in 1 function
+                      #but made a style choice 
+                      set_autodisplay_OFF = function()
+                      {
+                        private$autodisplay = 0
+                      },
                       # Outputs the image as a plot
                       render = function() {
                         # Reset the lazy actions
@@ -217,6 +224,7 @@ shinyimg <- R6Class("shinyimg",
                         # Save everything to file.
                         base::save(action_matrix, actions, img, file=file)
                       },
+                      #might delete later
                       saveHistory = function(file = 'workspace2.si') {
                       	a <- private$img_history
                       	base::save(a, file = file)
