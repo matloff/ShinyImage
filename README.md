@@ -69,29 +69,50 @@ R command line; examples of the GUI are given later in this document.
 # 'tiger' is an object of class 'shinyimg', which in turn is a subclass
 # of 'R6'
 
+# set autodisplay on 
+# after first image modification, 
+# image will render and pop up in a new window
+# or user can manually render image
+> tiger$set_autodisplay()
+# manually rendering image
+> tiger$render()
 # crop the image
 > tiger$crop()
 [1] "Select the two opposite corners of a rectangle on the plot."
+# add brightness
+> tiger$add_brightness()
 # add contrast
 > tiger$add_contrast()
+# add gamma
+> tiger$add_gamma()
+# add blur
+> tiger$add_blur()
+
+
+# remove brightness
+> tiger$remove_brightness()
 # remove contrast
 > tiger$remove_contrast()
-# add contrast again
-> tiger$add_brightness()
-# remove contrast, again
-> tiger$remove_brightness()
+# remove gamma
+> tiger$remove_gamma()
+# remove blur
+> tiger$remove_blur()
 
-# we have had five actions, and can undo the last 4 of them, say,
-# by calling undo four times
+# we have had nine actions, and can undo the last 8 of them
+# we will undo the last five actions (remove blur and remove gamma)
+# by calling undo five times
+# undoes the removal of the blur
 > tiger$undo()
+# undoes the removal of gamma 
 > tiger$undo()
+# undoes the removal of contrast
 > tiger$undo()
+#undoes the removal of brightness
 > tiger$undo()
-# we are now back at the cropped image
-# we can also redo the adding of contrast
+# undoes the adding of the blur 
+> tiger$undo()
+# we can also redo the adding of the blur
 > tiger$redo()
-# and finally, display the image
-> tiger$render()
 
 # we can also save the image to edit later on
 > tiger$save("tiger-water.si")
