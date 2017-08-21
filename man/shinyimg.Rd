@@ -57,8 +57,6 @@ web_tiger$add_contrast() # Adds contrast
 
 web_tiger$remove_contrast() # Removes Contrast
 
-web_tiger$crop() # Allows the user to select two points to crop to.
-
 web_tiger$save('save.ri') # Saves the current state. The filename is optional.
 
 web_tiger$load('save.ri') # Loads from a previously saved state. The filename is optional. Requires a previously instantiated shinyimg instance (argument provided to new can be null).

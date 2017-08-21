@@ -3,6 +3,7 @@
 export(runShiny)
 export(shinyimg)
 export(shinyload)
+export(siaction)
 import(shiny)
 importFrom(R6,R6Class)
 importFrom(shinyjs,hidden)

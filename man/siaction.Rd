@@ -35,6 +35,6 @@ Class providing object describing one action.
 
 \examples{
 crop = c(c(0, 0), c(1200, 1400))
-siaction$new(0.1, 1, 0, crop)
+siaction$new(0.1, 1, 0, crop, 1, 0, 0)
 }
 \keyword{data}
