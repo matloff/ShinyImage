@@ -14,6 +14,6 @@ Author: Alexander Fu [aut],
 Maintainer: Ariel Shin <arishin@ucdavis.edu>
 Description: Imaging package, with an emphasis on recording history of changes.
 Depends: EBImage, R6, shiny, shinyjs
-License: MIT
+License: MIT + file LICENSE
 LazyData: TRUE
 RoxygenNote: 6.0.1

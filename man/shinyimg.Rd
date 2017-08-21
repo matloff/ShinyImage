@@ -27,7 +27,8 @@ An EBImage wrapper with integrated history tracking.
   \item{\code{remove_brightness()}}{Removes brightness (darkens) to the image.}
   \item{\code{add_contrast()}}{Adds contrast to the image.}
   \item{\code{remove_contrast()}}{Removes contrast from the image.}
-  \item{\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates. After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
+  \item{\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates. 
+    After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
   \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
   \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
   \item{\code{dim()}}{Returns the current image dimentions.}
@@ -59,7 +60,8 @@ web_tiger$remove_contrast() # Removes Contrast
 
 web_tiger$save('save.ri') # Saves the current state. The filename is optional.
 
-web_tiger$load('save.ri') # Loads from a previously saved state. The filename is optional. Requires a previously instantiated shinyimg instance (argument provided to new can be null).
+web_tiger$load('save.ri') # Loads from a previously saved state. The filename is optional. 
+#Requires a previously instantiated shinyimg instance (argument provided to new can be null).
 
 }
 \keyword{data}
