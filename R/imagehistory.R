@@ -73,7 +73,6 @@ siaction <- R6Class("siaction",
 #' @examples
 #' 
 #' 
-#' local_tiger = shinyimg$new('Tigerwater_edit2.jpg')
 #' web_tiger = shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
 #'
 #' local_tiger$add_brightness()

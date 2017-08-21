@@ -8,8 +8,12 @@ Authors@R: c(person("Alexander", "Fu", email = "aafu@ucdavis.edu",
         role = c("aut")),
      person("Norm", "Matloff", email = "nsmatloff@ucdavis.edu",
         role = c("aut", "cre")))
+Author: Alexander Fu [aut], 
+  Ariel Shin [aut], 
+  Norm Matloff [aut, cre]
+Maintainer: Ariel Shin <arishin@ucdavis.edu>
 Description: Imaging package, with an emphasis on recording history of changes.
-Depends: EBImage
+Depends: EBImage, R6, shiny, shinyjs
 License: MIT
 LazyData: TRUE
 RoxygenNote: 6.0.1
