@@ -66,7 +66,8 @@ siaction <- R6Class("siaction",
 #' An EBImage wrapper with integrated history tracking.
 #'
 #' @docType class
-#' @importFrom R6 R6Class EBImage
+#' @import EBImage
+#' @importFrom R6 R6Class
 #' @export
 #' @keywords data
 #' @return Object of \code{\link{R6Class}} with manipulation functions.
