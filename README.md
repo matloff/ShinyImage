@@ -151,8 +151,7 @@ install.packages(c('shiny','shinyjs'))
 </p>
 
 ```R
-# The user's working directory must be set to ShinyImage/R
-> shiny::runApp('app19.R')
+> runShiny()
 ```
 
 <h3>
