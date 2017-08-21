@@ -41,6 +41,7 @@ An EBImage wrapper with integrated history tracking.
 
 web_tiger = shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
 
+web_tiger$render()
 web_tiger$add_brightness()
 web_tiger$undo() # Undoes the brightness addition
 
