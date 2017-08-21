@@ -4,6 +4,8 @@
 #' @name runShiny-function
 #' @export
 #' @import shiny 
+#' @importFrom EBImage display imageData Image colorMode readImage 
+#' writeImage gblur combine channel rotate
 #' @importFrom shinyjs hidden hide show
 runShiny <- function() {
   appDir <- system.file("shinyapp", "app19.R", package = "ShinyImage")

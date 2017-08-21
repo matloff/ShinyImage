@@ -66,7 +66,8 @@ siaction <- R6Class("siaction",
 #' An EBImage wrapper with integrated history tracking.
 #'
 #' @docType class
-#' @import EBImage
+#' @importFrom EBImage display imageData Image colorMode readImage 
+#' writeImage gblur combine channel rotate
 #' @importFrom R6 R6Class
 #' @export
 #' @keywords data
