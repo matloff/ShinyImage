@@ -156,7 +156,7 @@ install.packages(c('shiny','shinyjs'))
 ```
 
 <h3>
-<a name="Linux">Installing ffwtools on Linux </a> 
+<a name="Linux">Installing fftwtools on Linux </a> 
 </h3>
 
 <UL>
@@ -172,7 +172,7 @@ install.packages(c('shiny','shinyjs'))
 </pre>
 
 <p>
-where <b>y</b> is your desired installation directory for <b>ffwtools</b>,
+where <b>y</b> is your desired installation directory for <b>fftwtools</b>,
 say <b>/usr/local</b>.
 </li> </p>
 

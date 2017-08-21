@@ -1,5 +1,6 @@
 library(shiny)
 library(shinyjs)
+library(ShinyImage)
 
 #version 19
 #synchronizes shinyimg and img
@@ -47,13 +48,13 @@ ui <- fluidPage(
               value = '')
           ),
           conditionalPanel(
-          	condition = "input.radio == 4", 
-          	fileInput(inputId = 'file2', 
-          		label = 'Upload .si file', 
-          		placeholder = "Must be a ShinyImg Object", 
-          		accept = c(
-          			"file/si", 
-          			".si"))
+            condition = "input.radio == 4", 
+            fileInput(inputId = 'file2', 
+              label = 'Upload .si file', 
+              placeholder = "Must be a ShinyImg Object", 
+              accept = c(
+                "file/si", 
+                ".si"))
           ),
           radioButtons("color", label = ("Color Mode"), choices = list("Color" = 1, "Greyscale" = 2), selected = 1),
           sliderInput("bright", "Increase/Decrease Brightness:", min = -10, max = 10, value = 0, step = 0.1),
@@ -137,8 +138,8 @@ server <- function(input, output, session) {
   #ensures that user is in the right file 
   #has shiny, EBImage, and shinyjs installed
   guiInit <- function() {
-    validate((need(file.exists("imagehistory.R"), "Please input imagehistory.R into the same directory that contains app19.R")))
-    source('imagehistory.R')
+    #validate((need(file.exists("~/ShinyImage/R/imagehistory.R"), "Please input imagehistory.R into the same directory that contains app19.R")))
+    #source('~/ShinyImage/R/imagehistory.R')
 
     if (!require("shiny")) {
       cat("shiny is not installed. Please install it first.")
@@ -165,11 +166,11 @@ server <- function(input, output, session) {
   observe({
     guiInit()
 
-  	if(input$radio == 1)
-  	{
-    	shinyImageFile$shiny_img_origin <- 
+    if(input$radio == 1)
+    {
+      shinyImageFile$shiny_img_origin <- 
         shinyimg$new('https://iksteam.files.wordpress.com/2010/09/untitled1.jpg')
-      	output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+        output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
     }
     if (input$radio == 2)
     {
@@ -277,8 +278,8 @@ server <- function(input, output, session) {
   #only executes when keep is clicked 
   recursiveCrop <- eventReactive(input$keep,{
     isolate({
-    	p <- input$plot_brush 
-    	shinyImageFile$shiny_img_origin$cropxy(p$xmin,p$xmax,p$ymin,p$ymax)
+      p <- input$plot_brush 
+      shinyImageFile$shiny_img_origin$cropxy(p$xmin,p$xmax,p$ymin,p$ymax)
       output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
     })
     session$resetBrush("plot_brush")
@@ -450,8 +451,8 @@ server <- function(input, output, session) {
 
   #undo button
   observeEvent(input$button1, {
-  	#needed to create a separate functino to check for the number of actions left
-  	#because of the auto render
+    #needed to create a separate functino to check for the number of actions left
+    #because of the auto render
 
     if (shinyImageFile$shiny_img_origin$shinyUndo() == 0) {
       showModal(modalDialog(
@@ -485,7 +486,7 @@ server <- function(input, output, session) {
     #when there are no more actions to redo
     else 
     {
-   	  output$plot3 <- renderPlot({
+      output$plot3 <- renderPlot({
       shinyImageFile$shiny_img_origin$redo() 
       updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
       updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
@@ -559,11 +560,11 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$download4, {
-  	shinyImageFile$shiny_img_origin$save()
-  	#creates a pop up window 
-  	showModal(modalDialog(
-  		title = "Important message", 
-  		"Check your current directory for workplace.si for Image History!"))
+    shinyImageFile$shiny_img_origin$save()
+    #creates a pop up window 
+    showModal(modalDialog(
+      title = "Important message", 
+      "Check your current directory for workplace.si for Image History!"))
   })
 
 #//////// END OF CODE FOR DOWNLOAD BUTTONS /////////////
