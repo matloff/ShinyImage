@@ -3,7 +3,8 @@
 #' @description A function to start shiny app
 #' @name runShiny-function
 #' @export
-#' @import shiny shinyjs
+#' @import shiny 
+#' @importFrom shinyjs hidden hide show
 runShiny <- function() {
   appDir <- system.file("shinyapp", "app19.R", package = "ShinyImage")
   if (appDir == "") {
