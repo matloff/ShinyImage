@@ -22,7 +22,8 @@ library(R6)
 #'   \item{\code{new(brightness, contrast, gamma, crop)}}{This method is used to create object of this class with the appropriate parameters.}
 #'
 #'   \item{\code{get_action()}}{This method returns a c() list of the input parameters.}
-#'   
+#' }  
+#'
 
 siaction <- R6Class("siaction",
                     # Make this action mutable. TODO: Make it so that
@@ -873,5 +874,3 @@ shinyimg <- R6Class("shinyimg",
 shinyload = function(filename) {
   shinyimg$new(NULL, filename)
 }
-
-#DELETED PREVIOUS SHINY CODE

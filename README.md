@@ -15,7 +15,7 @@ package:
 <UL>
 
 <li> 
-<b>ffwtools</b>:  Install from CRAN, except for Linux; for the latter,
+<b>fftwtools</b>:  Install from CRAN, except for Linux; for the latter,
   sse 
 <a href="#Linux">these special instructions.</a> 
 </li> </p> 
