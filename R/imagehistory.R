@@ -1,7 +1,5 @@
 library(EBImage)                             #Include EBImage Lib
 library(R6)
-library(shiny)
-
 
 #' Class providing object describing one action.
 #'
