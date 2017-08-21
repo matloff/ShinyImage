@@ -19,7 +19,8 @@ ui <- fluidPage(
   shinyjs::useShinyjs(),
 
   titlePanel("Shiny Image"),
-
+  tags$style(type='text/css', "#stop { float:right; }"),
+  actionButton("stop", "Return to command line"), 
   tabsetPanel(id = "tabs", 
     tabPanel("Image Editor", value = "tab1",
 
@@ -602,5 +603,15 @@ server <- function(input, output, session) {
   #TODO: include image log of current image
 #//////// END OF CODE FOR IMAGE LOG VIEWER /////////////
 
+#//////// START OF CODE FOR STOP SHINY APP ///////////////
+  observeEvent(input$stop, {
+    stopApp()
+  })
+#//////// END OF CODE FOR STOP SHINY APP ///////////////
+  
 } #end of server
+
 shinyApp(ui, server)
+
+
+
