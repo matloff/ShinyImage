@@ -162,7 +162,10 @@ shinyimg <- R6Class("shinyimg",
                         private$autodisplay = 0
                         # The filename used for the autosave in 
                         # case of crashes
-                        private$autosave_filename = "workspace.si"
+                        #private$autosave_filename = "workspace.si"
+                        #heere
+                        private$autosave_filename = 
+                          paste(format(Sys.time(), "%b%d%H%M%S"), "-", "workspace.si",sep="")
                         # Determines if we lazy load
                         private$lazy_load = 0
                         # The number of lazy actions we have done so far.
@@ -616,7 +619,9 @@ shinyimg <- R6Class("shinyimg",
                       # Option to have the output automatically rendered
                       autodisplay = 0,
                       # The filename used for the autosave in case of crashes
-                      autosave_filename = "workspace.si",
+                      #autosave_filename = "workspace.si",
+                      autosave_filename = 
+                        paste(format(Sys.time(), "%b%d%H%M%S"), "-", "workspace.si",sep=""),
                       # Startup function. Can take a image, and/or
                       # the autosave filename.
                       lazy_load = 0,

@@ -564,7 +564,7 @@ server <- function(input, output, session) {
     #creates a pop up window 
     showModal(modalDialog(
       title = "Important message", 
-      "Check your current directory for workplace.si for Image History!"))
+      "Check your current directory", getwd() ,"for workplace.si for Image History!"))
   })
 
 #//////// END OF CODE FOR DOWNLOAD BUTTONS /////////////
