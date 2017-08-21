@@ -150,6 +150,8 @@ install.packages(c('shiny','shinyjs'))
 <li> The user can also view the image log to see which actions were recorded. 
 </p>
 
+Run these commands from within R. 
+
 ```R
 > runShiny()
 ```
@@ -192,7 +194,15 @@ export LIBRARY_PATH=y/lib
 </p>
 
 <pre>
-sudo apt-get install libtiff-deve
+sudo apt-get install libtiff-devel
+</pre>
+</li> </p> 
+
+<li> You may also need to install <b>fftw-dev</b>, by 
+</p>
+
+<pre>
+sudo apt-get install fftw-devel
 </pre>
 </li> </p> 
 
