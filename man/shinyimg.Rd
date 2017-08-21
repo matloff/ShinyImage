@@ -41,26 +41,26 @@ An EBImage wrapper with integrated history tracking.
 
 web_tiger = shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
 
-local_tiger$add_brightness()
-local_tiger$undo() # Undoes the brightness addition
+web_tiger$add_brightness()
+web_tiger$undo() # Undoes the brightness addition
 
-local_tiger$redo() # Redoes the brightness addition
+web_tiger$redo() # Redoes the brightness addition
 
-shiny_tiger = local_tiger$getimg() # Now usable by Shiny
+shiny_tiger = web_tiger$getimg() # Now usable by Shiny
 
-local_tiger$add_brightness() # Adds brightness to the image
+web_tiger$add_brightness() # Adds brightness to the image
 
-local_tiger$remove_brightness() # Removes brightness
+web_tiger$remove_brightness() # Removes brightness
 
-local_tiger$add_contrast() # Adds contrast
+web_tiger$add_contrast() # Adds contrast
 
-local_tiger$remove_contrast() # Removes Contrast
+web_tiger$remove_contrast() # Removes Contrast
 
-local_tiger$crop() # Allows the user to select two points to crop to.
+web_tiger$crop() # Allows the user to select two points to crop to.
 
-local_tiger$save('save.ri') # Saves the current state. The filename is optional.
+web_tiger$save('save.ri') # Saves the current state. The filename is optional.
 
-local_tiger$load('save.ri') # Loads from a previously saved state. The filename is optional. Requires a previously instantiated shinyimg instance (argument provided to new can be null).
+web_tiger$load('save.ri') # Loads from a previously saved state. The filename is optional. Requires a previously instantiated shinyimg instance (argument provided to new can be null).
 
 }
 \keyword{data}
