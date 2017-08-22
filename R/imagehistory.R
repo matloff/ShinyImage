@@ -84,24 +84,14 @@ siaction <- R6Class("siaction",
 #' web_tiger$undo() # Undoes the brightness addition
 #'
 #' web_tiger$redo() # Redoes the brightness addition
-#' 
-#' shiny_tiger = web_tiger$getimg() # Now usable by Shiny
 #'
 #' web_tiger$add_brightness() # Adds brightness to the image
 #' 
-#' web_tiger$remove_brightness() # Removes brightness
-#' 
 #' web_tiger$add_contrast() # Adds contrast
-#' 
-#' web_tiger$remove_contrast() # Removes Contrast
 #' 
 #' web_tiger$add_gamma() #Adds Gamma correction
 #' 
-#' web_tiger$remove_gamma() #Removes correction
-#' 
 #' web_tiger$add_rotate() #Adds rotation by 1 degree
-#' 
-#' web_tiger$remove_rotate() #Removes rotation by 1 degree
 #' 
 #' web_tiger$add_blur() #Adds blurring
 #' 
@@ -119,7 +109,6 @@ siaction <- R6Class("siaction",
 #'
 #'   \item{\code{undo()}}{Undoes the last change done to this image. When the original image state is reached, no more undos are possible.}
 #'   \item{\code{redo()}}{Redos the next action after an undo has been performed. Will no longer redo if there are no more undos to redo.}
-#'   \item{\code{getimg()}}{Returns a Shiny compatible image.}
 #'   \item{\code{add_brightness()}}{Adds brightness to the image.}
 #'   \item{\code{remove_brightness()}}{Removes brightness (darkens) to the image.}
 #'   \item{\code{add_contrast()}}{Adds contrast to the image.}
@@ -393,14 +382,6 @@ shinyimg <- R6Class("shinyimg",
                         # like collapsing history
                         return (self$clone())
                       },
-                      # Rendering function used to get a plot that can be
-                      # used by Shiny
-                      getimg = function() {
-                        return (renderPlot({
-                          display(private$current_image, method = "raster")
-                        }))
-                      },
-                      
                       # Adjusts brightness by 0.1. This is a good increment
                       # but a variable brightness function should be added.
                       add_brightness = function() {
