@@ -148,6 +148,8 @@ tiger$cropxy(0,10,0,10)
 
 ## Using the Shiny GUI
 
+![alt text](ShinyPreview.png)
+
 #### Starting the Shiny GUI
 ```R
 > runShiny()
