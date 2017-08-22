@@ -31,11 +31,9 @@ biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
 </li> </p> 
 
 <li>
-<b>R6</b>: Install from CRAN. 
+<b>GUI Installation</b>: Install from CRAN. 
 
 ```R
-# and if you would like to use the GUI, run the command
-# below as well
 install.packages(c('shiny','shinyjs'))
 ```
 </li> </p> 
