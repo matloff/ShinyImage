@@ -147,8 +147,11 @@ tiger$cropxy(0,10,0,10)
 ```
 
 ## Using the Shiny GUI
-```{r, out.width = "800px"}
-knitr::include_graphics("ShinyPreview.png")
+```{r fig.width=5, fig.height=3,echo=FALSE}
+library(png)
+library(grid)
+img <- readPNG("ShinyPreview.png")
+ grid.raster(img)
 ```
 
 #### Starting the Shiny GUI
