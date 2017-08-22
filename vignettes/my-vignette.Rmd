@@ -147,8 +147,9 @@ tiger$cropxy(0,10,0,10)
 ```
 
 ## Using the Shiny GUI
-
-![alt text](ShinyPreview.png)
+```{r, out.width = "800px"}
+knitr::include_graphics("ShinyPreview.png")
+```
 
 #### Starting the Shiny GUI
 ```R
