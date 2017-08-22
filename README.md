@@ -36,7 +36,7 @@ biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
 ```R
 # and if you would like to use the GUI, run the command
 # below as well
-install.packages(c('shiny','shinydashboard'))
+install.packages(c('shiny','shinyjs'))
 ```
 </li> </p> 
 
