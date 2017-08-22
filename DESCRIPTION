@@ -11,7 +11,7 @@ Authors@R: c(person("Alexander", "Fu", email = "aafu@ucdavis.edu",
 Author: Alexander Fu [aut], 
   Ariel Shin [aut], 
   Norm Matloff [aut, cre]
-Maintainer: Ariel Shin <arishin@ucdavis.edu>
+Maintainer: Norm Matloff <nsmatloff@ucdavis.edu>
 Description: Imaging package, with an emphasis on recording history of changes.
 Depends: EBImage, R6, shiny, shinyjs
 License: MIT + file LICENSE
