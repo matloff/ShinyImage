@@ -17,3 +17,6 @@ Depends: EBImage, R6, shiny, shinyjs
 License: MIT + file LICENSE
 LazyData: TRUE
 RoxygenNote: 6.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

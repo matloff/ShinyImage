@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Authors: Norm Matloff, Alex Fu, Ariel Shin" />
+
+<meta name="date" content="2017-08-22" />
+
+<title>ShinyImage</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">ShinyImage</h1>
+<h4 class="author"><em>Authors: Norm Matloff, Alex Fu, Ariel Shin</em></h4>
+<h4 class="date"><em>2017-08-22</em></h4>
+
+
+
+<p>Imaging package, with an emphasis on journaling, i.e. recording history of changes. Undo/redo operations, ability to display multiple versions (currently under construction), etc. The history is persistent, i.e. across sessions. Can be run from the R command line, or from a Shiny-based GUI.</p>
+<div id="functions" class="section level2">
+<h2>Functions</h2>
+<p>Once installed, a user can create a shinyimg object to modify pictures.</p>
+<div id="creating-a-new-image" class="section level4">
+<h4>Creating a new image</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">&gt;<span class="st"> </span>tiger &lt;-<span class="st"> </span>shinyimg$<span class="kw">new</span>(<span class="st">'https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg'</span>)
+<span class="co"># In addition to a web link, a user can also upload a jpeg, png, or tiff saved locally.</span>
+<span class="co"># We will continue tiger as our shiny image object to modify for the rest of our examples</span></code></pre></div>
+</div>
+<div id="autodisplay" class="section level4">
+<h4>Autodisplay</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can render an image after every modification or they can turn on autodisplay</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">render</span>() <span class="co">#user needs to initially render image</span>
+<span class="co"># a window should pop up with an image of the tiger</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_autodisplay</span>() <span class="co">#the user no longer needs to render image after a modification</span>
+
+<span class="co"># To turn off autodisplay</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_autodsiplay_OFF</span>()
+<span class="co"># user must now render an image to view modifications</span></code></pre></div>
+</div>
+<div id="brightness" class="section level4">
+<h4>Brightness</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to modify brightness</span>
+<span class="co"># The initial value of brightness is 0</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_brightness</span>() <span class="co">#adds brightness by 0.1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remomve_brightness</span>() <span class="co">#removes brightness by 0.1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_brightness</span>(<span class="dv">1</span>) <span class="co">#sets brightness by number inputted</span></code></pre></div>
+</div>
+<div id="contrast" class="section level4">
+<h4>Contrast</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to modify contrast</span>
+<span class="co"># The initial value of contrast is 0</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_contrast</span>() <span class="co">#adds contrast by 0.1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remomve_contrast</span>() <span class="co">#removes contrast by 0.1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_contrast</span>(<span class="dv">2</span>) <span class="co">#sets contrast by number inputted</span></code></pre></div>
+</div>
+<div id="gamma-correction" class="section level4">
+<h4>Gamma Correction</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to modify gamma correction</span>
+<span class="co"># The initial value of gamma correction is 1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_gamma</span>() <span class="co">#adds gamma correction by 0.5</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remove_gamma</span>() <span class="co">#removes gamma correction by 0.5</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_gamma</span>(<span class="dv">2</span>) <span class="co">#sets gamma correction by number inputted</span></code></pre></div>
+</div>
+<div id="blurring" class="section level4">
+<h4>Blurring</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to blur an image</span>
+<span class="co"># The initial value of blur is 0</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_blur</span>() <span class="co">#adds blurring by 1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remove_blur</span>() <span class="co">#removes blurring by 1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_blur</span>(<span class="dv">2</span>) <span class="co">#sets blurring by number inputted</span></code></pre></div>
+</div>
+<div id="rotation" class="section level4">
+<h4>Rotation</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to rotate an image</span>
+<span class="co"># The initial value of rotate is 0</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_rotate</span>() <span class="co">#rotates image by 1 degree to the right</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remove_rotate</span>() <span class="co">#rotates image by 1 degree to the left</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_rotate</span>(<span class="dv">2</span>) <span class="co">#sets rotation by degree inputted</span></code></pre></div>
+</div>
+<div id="colormode" class="section level4">
+<h4>Colormode</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can change an image to grayscale or back to colormode</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_grayscale</span>(<span class="dv">1</span>) <span class="co">#changes image to grayscale</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_grayscale</span>(<span class="dv">0</span>) <span class="co">#reverts image to color</span></code></pre></div>
+</div>
+<div id="crop" class="section level4">
+<h4>Crop</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are two ways a user can crop an image</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">crop</span>() <span class="co">#must have image rendered before this action is called</span>
+<span class="co"># A + icon will appear on the window that contains the image for user to select the crop</span>
+
+<span class="co"># A user can specify the coordinates</span>
+tiger$<span class="kw">cropxy</span>(<span class="dv">0</span>,<span class="dv">10</span>,<span class="dv">0</span>,<span class="dv">10</span>) 
+<span class="co"># The fields of cropxy are: min of x, max of x, min of y, max of y</span>
+<span class="co"># must be less than the dimensions of image</span>
+
+<span class="co"># to get dimensions of the image</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">size</span>()</code></pre></div>
+</div>
+<div id="undo" class="section level4">
+<h4>Undo</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can undo a modification</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()</code></pre></div>
+</div>
+<div id="redo" class="section level4">
+<h4>Redo</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can redo a modification</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">redo</span>()</code></pre></div>
+</div>
+<div id="get-settings" class="section level4">
+<h4>Get Settings</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can view the settings of the image using get</span>
+&gt;<span class="st"> </span><span class="kw">gethistory</span>() <span class="co">#returns recorded changes to image</span>
+&gt;<span class="st"> </span><span class="kw">get_brightness</span>() <span class="co">#returns brightness value</span>
+&gt;<span class="st"> </span><span class="kw">get_contrast</span>() <span class="co">#returns contrast value</span>
+&gt;<span class="st"> </span><span class="kw">get_gamma</span>() <span class="co">#returns gamma correction value</span>
+&gt;<span class="st"> </span><span class="kw">get_blur</span>() <span class="co">#returns blur value</span>
+&gt;<span class="st"> </span><span class="kw">get_rotate</span>() <span class="co">#returns degrees rotated</span>
+&gt;<span class="st"> </span><span class="kw">get_color</span>() <span class="co">#returns color mode value</span></code></pre></div>
+</div>
+<div id="save" class="section level4">
+<h4>Save</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can save the SI object to save object with history changes of image</span>
+<span class="co"># A user can re-edit an SI object</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">save</span>() <span class="co">#saved in current directory as workspace.si</span>
+<span class="co"># A user can also specify the file name</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">save</span>(<span class="st">'save.si'</span>) 
+
+<span class="co"># A user can also save the physical image e.g. the jpg image</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">savejpg</span>()</code></pre></div>
+</div>
+<div id="load" class="section level4">
+<h4>Load</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can reupload a previously saved SI object</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">load</span>(<span class="st">'workspace.si'</span>)</code></pre></div>
+</div>
+</div>
+<div id="using-the-shiny-gui" class="section level2">
+<h2>Using the Shiny GUI</h2>
+<div id="starting-the-shiny-gui" class="section level4">
+<h4>Starting the Shiny GUI</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">&gt;<span class="st"> </span><span class="kw">runShiny</span>()</code></pre></div>
+</div>
+<div id="uploading-an-image" class="section level4">
+<h4>Uploading an Image</h4>
+<p>A user can use the sample, upload an image, upload a link, or upload an SI object</p>
+</div>
+<div id="modifying-the-image" class="section level4">
+<h4>Modifying the Image</h4>
+<p>A user can change the color mode (Color or Gray Scale), brightness, contrast, gamma correction, and blur.</p>
+<p>A user can also crop the image by clicking the image and dragging their preferred crop. A preview will pop up below. If a user likes the crop, they can click the <code>keep</code> button. Otherwise, the user can keep dragging the blue box that represents their crop to find the exact cropping they prefer.</p>
+<p>A user can also click <code>Undo</code>, <code>Redo</code>, or <code>Reset</code>.</p>
+</div>
+<div id="saving-an-image" class="section level4">
+<h4>Saving an Image</h4>
+<p>A user can either click <code>Download the JPG Image</code> or <code>Download the SI Shiny Image Object</code></p>
+</div>
+<div id="viewing-the-image-log" class="section level4">
+<h4>Viewing the Image Log</h4>
+<p>A user can click the <code>View Image Log</code> tab. If they are modifying an image, the image log will automatically show the current image’s action. Otherwise, a user can upload their own .si file to view actions logged.</p>
+</div>
+<div id="exiting-shiny" class="section level4">
+<h4>Exiting Shiny</h4>
+<p>On the top right, click <code>Return to command line</code></p>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
