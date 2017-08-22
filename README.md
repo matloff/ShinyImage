@@ -53,6 +53,12 @@ R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz
 with __z__ being the location you wish to install ShinyImg to
 (changing the version number as necessary).
 
+Alternatively, ShinyImage can be installed using devtools. From R, 
+```
+> install.packages(c('devtools', 'roxygen2', 'knitr'))
+> devtools::install()
+```
+
 ## Example Usage
 
 Here we will perform several actions, both to illustrate some ShinyImage
