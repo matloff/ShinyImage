@@ -76,26 +76,18 @@ siaction <- R6Class("siaction",
 #' @examples
 #' 
 #' web_tiger = shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
-#'
-#' web_tiger$render()
 #' 
-#' web_tiger$add_brightness()
+#' web_tiger$add_brightness() # Adds brightness to image
 #' 
 #' web_tiger$undo() # Undoes the brightness addition
 #'
 #' web_tiger$redo() # Redoes the brightness addition
-#'
-#' web_tiger$add_brightness() # Adds brightness to the image
 #' 
 #' web_tiger$add_contrast() # Adds contrast
 #' 
 #' web_tiger$add_gamma() #Adds Gamma correction
 #' 
 #' web_tiger$add_rotate() #Adds rotation by 1 degree
-#' 
-#' web_tiger$add_blur() #Adds blurring
-#' 
-#' web_tiger$remove_blur() #Removes blurring
 #' 
 #' web_tiger$save('save.si') # Saves the current state. The filename is optional.
 #' 
