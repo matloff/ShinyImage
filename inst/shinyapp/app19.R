@@ -170,7 +170,7 @@ server <- function(input, output, session) {
     if(input$radio == 1)
     {
       shinyImageFile$shiny_img_origin <- 
-        shinyimg$new('https://iksteam.files.wordpress.com/2010/09/untitled1.jpg')
+        shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
         output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
     }
     if (input$radio == 2)
@@ -426,7 +426,7 @@ server <- function(input, output, session) {
   observeEvent(input$button3, {
     if(input$radio == 1)
     {
-      shinyImageFile$shiny_img_origin <- shinyimg$new('https://iksteam.files.wordpress.com/2010/09/untitled1.jpg')  
+      shinyImageFile$shiny_img_origin <- shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')  
     }
     if(input$radio == 2)
     {
