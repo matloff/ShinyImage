@@ -1,6 +1,6 @@
 ---
 title: "ShinyImage"
-author: "Authors: Norm Matloff, Alex Fu, Ariel Shin"
+author: "Norm Matloff, Alex Fu, Ariel Shin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
