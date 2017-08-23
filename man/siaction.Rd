@@ -23,7 +23,13 @@ Class providing object describing one action.
 
 \item{\code{gamma}}{Stores url of the last visualization created by this object.}
 
-\item{\code{crop}}{A double nested sequence of crops c(c(x1, y1), c(x2, y2)).
+\item{\code{crop}}{A double nested sequence of crops c(c(x1, y1), c(x2, y2)).}
+
+\item{\code{blur}}{stores value of blur}
+
+\item{\code{rotate}}{stores value of rotate}
+
+\item{\code{grayscale}}{stores value of colormode (1 if grayscale, 0 if color)
 #' @section Methods:
 \describe{
 \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}

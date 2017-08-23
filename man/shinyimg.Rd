@@ -18,19 +18,51 @@ An EBImage wrapper with integrated history tracking.
 
 \describe{
 \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
+\item{\code{set_autodisplay()}}{Turns on automatic rendering of image. User must still initially call render() to display image}
+\item{\code{set_autodisplay_OFF()}}{Turns off automatic image rendering}
 \item{\code{new(img)}}{Default constructor. \code{img} can be either a URL or a location of a local image.}
-
 \item{\code{undo()}}{Undoes the last change done to this image. When the original image state is reached, no more undos are possible.}
 \item{\code{redo()}}{Redos the next action after an undo has been performed. Will no longer redo if there are no more undos to redo.}
+\item{\code{shinyUnod()}}{Undoes the last change done to this image without autorendering; used by Shiny.
+When the original image state is reached, no more undos are possible.}
+\item{\code{redo()}}{Redos the next action after an undo has been performed without autorendering; used by Shiny.
+Will no longer redo if there are no more undos to redo.}
+\item{\code{toggle_ll()}}{Returns status of lazy loading.}
+\item{\code{copy()}}{Returns a copy of the image.}
 \item{\code{add_brightness()}}{Adds brightness to the image.}
 \item{\code{remove_brightness()}}{Removes brightness (darkens) to the image.}
 \item{\code{add_contrast()}}{Adds contrast to the image.}
 \item{\code{remove_contrast()}}{Removes contrast from the image.}
+\item{\code{add_gamma()}}{Adds gamma correction to the image.}
+\item{\code{remove_gamma()}}{Remoevs gamma correction from the image.}
+\item{\code{add_blur()}}{Adds blur to the entire photo.}
+\item{\code{remove_blur()}}{Removes blur from the entire photo.}
+\item{\code{add_rotate()}}{Rotates image to the right.}
+\item{\code{remove_rotate()}}{Rotates image to the left.}
+\item{\code{set_brightness()}}{Sets the brightness of the image by number inputted.}
+\item{\code{set_contrast()}}{Sets the contrast of the image by number inputted.}
+\item{\code{set_gamma()}}{Sets the gamma correction of the image by number inputted.}
+\item{\code{set_blur()}}{Sets the blur of the image by number inputted.}
+\item{\code{set_rotate()}}{Sets the degree of rotation of the image by number inputted.}
+\item{\code{set_grayscale((num))}}{Sets the image to grayscale if 1 is inputted; Reverts the image back to colormode if 0 is inputted}
 \item{\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates.
 After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
+\item{\code{cropxy()}}{Performs same action as crop but it is used by Shiny and the parameters are different.}
+\item{\code{get_raw()}}{Gets the raw matrix slices of the current image.}
+\item{\code{gethistory()}}{Returns a copy of the members of the shinyimg object stored in myhistory.}
+\item{\code{get_brightness()}}{Returns a copy of the value stored for brightness.}
+\item{\code{get_contrast()}}{Returns a copy of the value stored for contrast.}
+\item{\code{get_gamma()}}{Returns a copy of the value stored for gamma correction.}
+\item{\code{get_blur()}}{Returns a copy of the value stored for blur.}
+\item{\code{get_rotate()}}{Returns a copy of the value stored for rotation.}
+\item{\code{get_color()}}{Returns a copy of the value stored for grayscale/colormode.}
+\item{\code{get_imghistory()}}{Returns a copy of the list of image histories.}
+\item{\code{get_actions()}}{Returns a copy of the list of the input parameters.}
+\item{\code{checkRedo()}}{Returns a bool value to check the status of available Redoes; used by Shiny.}
 \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
+\item{\code{savejpg(filepath)}}{Saves a jpg of the image.}
 \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
-\item{\code{dim()}}{Returns the current image dimentions.}
+\item{\code{size()}}{Returns the current image dimentions.}
 \item{\code{render()}}{Renders the current image.}
 \item{\code{toggle_render()}}{Toggles the automatic rendering after making a change. By default, this option is off.}
 }
@@ -45,6 +77,7 @@ web_tiger$add_brightness() # Adds brightness to image
 web_tiger$undo() # Undoes the brightness addition
 
 \dontrun{
+
 web_tiger$redo() # Redoes the brightness addition
 
 web_tiger$add_contrast() # Adds contrast
@@ -57,6 +90,7 @@ web_tiger$save('save.si') # Saves the current state. The filename is optional.
 
 web_tiger$load('save.si') # Loads from a previously saved state. The filename is optional. 
 #Requires a previously instantiated shinyimg instance (argument provided to new can be null).
+
 }
 
 }
