@@ -16,6 +16,9 @@ library(R6)
 #' @field contrast Stores id of your current session on the server.
 #' @field gamma Stores url of the last visualization created by this object.
 #' @field crop A double nested sequence of crops c\(c\(x1, y1\), c\(x2, y2\)\).
+#' @field blur stores value of blur
+#' @field rotate stores value of rotate 
+#' @field grayscale stores value of colormode (1 if grayscale, 0 if color)
 #' #' @section Methods:
 #' \describe{
 #'   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
@@ -82,6 +85,7 @@ siaction <- R6Class("siaction",
 #' web_tiger$undo() # Undoes the brightness addition
 #'
 #'\dontrun{
+#'
 #' web_tiger$redo() # Redoes the brightness addition
 #' 
 #' web_tiger$add_contrast() # Adds contrast
@@ -94,24 +98,57 @@ siaction <- R6Class("siaction",
 #' 
 #' web_tiger$load('save.si') # Loads from a previously saved state. The filename is optional. 
 #' #Requires a previously instantiated shinyimg instance (argument provided to new can be null).
+#' 
 #'}
 #'
 #' @section Methods:
 #' \describe{
 #'   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
+#'   \item{\code{set_autodisplay()}}{Turns on automatic rendering of image. User must still initially call render() to display image}
+#'   \item{\code{set_autodisplay_OFF()}}{Turns off automatic image rendering}
 #'   \item{\code{new(img)}}{Default constructor. \code{img} can be either a URL or a location of a local image.}
-#'
 #'   \item{\code{undo()}}{Undoes the last change done to this image. When the original image state is reached, no more undos are possible.}
 #'   \item{\code{redo()}}{Redos the next action after an undo has been performed. Will no longer redo if there are no more undos to redo.}
+#'   \item{\code{shinyUnod()}}{Undoes the last change done to this image without autorendering; used by Shiny. 
+#'      When the original image state is reached, no more undos are possible.}
+#'   \item{\code{redo()}}{Redos the next action after an undo has been performed without autorendering; used by Shiny. 
+#'      Will no longer redo if there are no more undos to redo.}
+#'   \item{\code{toggle_ll()}}{Returns status of lazy loading.}
+#'   \item{\code{copy()}}{Returns a copy of the image.}
 #'   \item{\code{add_brightness()}}{Adds brightness to the image.}
 #'   \item{\code{remove_brightness()}}{Removes brightness (darkens) to the image.}
 #'   \item{\code{add_contrast()}}{Adds contrast to the image.}
 #'   \item{\code{remove_contrast()}}{Removes contrast from the image.}
+#'   \item{\code{add_gamma()}}{Adds gamma correction to the image.}
+#'   \item{\code{remove_gamma()}}{Remoevs gamma correction from the image.}
+#'   \item{\code{add_blur()}}{Adds blur to the entire photo.}
+#'   \item{\code{remove_blur()}}{Removes blur from the entire photo.}
+#'   \item{\code{add_rotate()}}{Rotates image to the right.}
+#'   \item{\code{remove_rotate()}}{Rotates image to the left.}
+#'   \item{\code{set_brightness()}}{Sets the brightness of the image by number inputted.}
+#'   \item{\code{set_contrast()}}{Sets the contrast of the image by number inputted.}
+#'   \item{\code{set_gamma()}}{Sets the gamma correction of the image by number inputted.}
+#'   \item{\code{set_blur()}}{Sets the blur of the image by number inputted.}
+#'   \item{\code{set_rotate()}}{Sets the degree of rotation of the image by number inputted.}
+#'   \item{\code{set_grayscale((num))}}{Sets the image to grayscale if 1 is inputted; Reverts the image back to colormode if 0 is inputted}
 #'   \item{\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates. 
 #'     After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
+#'   \item{\code{cropxy()}}{Performs same action as crop but it is used by Shiny and the parameters are different.}
+#'   \item{\code{get_raw()}}{Gets the raw matrix slices of the current image.}
+#'   \item{\code{gethistory()}}{Returns a copy of the members of the shinyimg object stored in myhistory.}
+#'   \item{\code{get_brightness()}}{Returns a copy of the value stored for brightness.}
+#'   \item{\code{get_contrast()}}{Returns a copy of the value stored for contrast.}
+#'   \item{\code{get_gamma()}}{Returns a copy of the value stored for gamma correction.}
+#'   \item{\code{get_blur()}}{Returns a copy of the value stored for blur.}
+#'   \item{\code{get_rotate()}}{Returns a copy of the value stored for rotation.}
+#'   \item{\code{get_color()}}{Returns a copy of the value stored for grayscale/colormode.}
+#'   \item{\code{get_imghistory()}}{Returns a copy of the list of image histories.}
+#'   \item{\code{get_actions()}}{Returns a copy of the list of the input parameters.}
+#'   \item{\code{checkRedo()}}{Returns a bool value to check the status of available Redoes; used by Shiny.}
 #'   \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
+#'   \item{\code{savejpg()}}{Saves a jpg of the image.}
 #'   \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
-#'   \item{\code{dim()}}{Returns the current image dimentions.}
+#'   \item{\code{size()}}{Returns the current image dimentions.}
 #'   \item{\code{render()}}{Renders the current image.}
 #'   \item{\code{toggle_render()}}{Toggles the automatic rendering after making a change. By default, this option is off.}
 #'   }
@@ -174,12 +211,10 @@ shinyimg <- R6Class("shinyimg",
                       set_autodisplay = function() 
                       {
                         private$autodisplay = 1
-                        #need to add self$render
-                        #causing random errors right now
+                        #TODO: need to add self$render
+                        #currently, unable to display image after calling set_autodisplay()
                       },
                       #turns off autodisplay
-                      #alternative is to keep it in 1 function
-                      #but made a style choice 
                       set_autodisplay_OFF = function()
                       {
                         private$autodisplay = 0
@@ -220,15 +255,8 @@ shinyimg <- R6Class("shinyimg",
                         actions <- private$actions
                         # Save the current image as well
                         img <- imageData(private$local_img)
-                        #print("saving image")
-                        #display(img, method = "raster")
                         # Save everything to file.
                         base::save(action_matrix, actions, img, file=file)
-                      },
-                      #might delete later
-                      saveHistory = function(file = 'workspace2.si') {
-                      	a <- private$img_history
-                      	base::save(a, file = file)
                       },
                       # Counterpart to the save function, will load from
                       # previous save file.
@@ -300,11 +328,11 @@ shinyimg <- R6Class("shinyimg",
                       },
                       shinyUndo = function() {
 
-                        #same as undo
-                        #but got rid of auto render
-                        #and print statement
-                        #cant call the above bc those two lines
-                        #mess up shiny app 
+                        # same as undo
+                        # but got rid of auto render
+                        # and print statement
+                        # cant call the above bc those two lines
+                        # intefere with the shiny app 
                         if (private$actions != 1) {
                           # Step back by one action
                           private$actions <- private$actions - 1
@@ -343,6 +371,9 @@ shinyimg <- R6Class("shinyimg",
                         }
                       },
                       shinyRedo = function() {
+                        # same as Redo 
+                        # without auto render and print statement
+                        # utilized by Shiny
                         # If there are actions to redo
                         if (private$actions < length(private$img_history)) {
                           # Increment by one action, then apply it
@@ -356,7 +387,6 @@ shinyimg <- R6Class("shinyimg",
                           return(0)
                         }
                       },
-
                       toggle_ll = function() {
                         private$lazy_load <- 1 - private$lazy_load;
                         if (private$lazy_load == 1) {
@@ -427,18 +457,12 @@ shinyimg <- R6Class("shinyimg",
                       remove_rotate = function() {
                         private$mutator(9, -1)
                       },
-                      
-                      # Adjusts brightness by the argument. Mainly used
-                      # by the Shiny app.
-                      # TODO: Document the usage of this function.
+
                       set_brightness = function(brightness) {
                         # Sets brightness.
                         private$mutator(2, brightness)
                       },
                       
-                      # Adjusts contrast by the argument. Mainly used
-                      # by the Shiny app.
-                      # TODO: Document the usage of this function.
                       set_contrast = function(contrast) {
                         # Sets brightness.
                         private$mutator(4, contrast)
@@ -446,17 +470,23 @@ shinyimg <- R6Class("shinyimg",
 
                       set_gamma = function(gamma) {
                         private$mutator(6, gamma)
+                        # Sets gamma correction
                       },
 
                       set_blur = function(blur) {
+                        # Sets blur
                         private$mutator(8, blur)
                       }, 
 
                       set_rotate = function(rotate) {
+                        # Sets rotation of image
                         private$mutator(10, rotate)
                       },
 
                       set_grayscale = function(grayscale) {
+                        # Sets image to grayscale if argument is 1
+                        # Else image is colormode
+                        # Can revert image to colormode if argument is 0
                         private$mutator(11, grayscale)
                       },
                       
@@ -766,20 +796,13 @@ shinyimg <- R6Class("shinyimg",
                           args[4]:args[6], args[5]:args[7], 
                           ]
 
-                        #args[12] is grayscale
-                        #if (args[10] == 0)
-                        #{
-                        #  private$current_image <- channel(private$current_image, "rgb")
-                        #}
-                        #else
-                        #image can revert back to color 
+                        # args[10] is colormode
                         if (args[10] == 1)
                           private$current_image <- channel(private$current_image, "gray")
        
                         #args[11] is rotation
                         private$current_image <- rotate(private$current_image, args[9])
 
-                        #print(args)
                         private$myhistory <- args
 
                       },
