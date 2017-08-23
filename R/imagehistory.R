@@ -83,17 +83,19 @@ siaction <- R6Class("siaction",
 #'
 #' web_tiger$redo() # Redoes the brightness addition
 #' 
+#' donttest{
 #' web_tiger$add_contrast() # Adds contrast
 #' 
 #' web_tiger$add_gamma() #Adds Gamma correction
 #' 
 #' web_tiger$add_rotate() #Adds rotation by 1 degree
-#' 
+#' }
+#'
 #' web_tiger$save('save.si') # Saves the current state. The filename is optional.
 #' 
 #' web_tiger$load('save.si') # Loads from a previously saved state. The filename is optional. 
 #' #Requires a previously instantiated shinyimg instance (argument provided to new can be null).
-#' 
+#'
 #' @section Methods:
 #' \describe{
 #'   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
