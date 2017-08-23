@@ -583,7 +583,7 @@ shinyimg <- R6Class("shinyimg",
                       # returns a copy of the members of the shinyimg object
                       gethistory = function() {
                       	return(private$myhistory)
-                      }, \item{\code{get_()}}{}
+                      }, 
                       # returns a copy of the brightness value
                       get_brightness = function() {
                         return (private$brightness)
