@@ -146,7 +146,7 @@ siaction <- R6Class("siaction",
 #'   \item{\code{get_actions()}}{Returns a copy of the list of the input parameters.}
 #'   \item{\code{checkRedo()}}{Returns a bool value to check the status of available Redoes; used by Shiny.}
 #'   \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
-#'   \item{\code{savejpg()}}{Saves a jpg of the image.}
+#'   \item{\code{savejpg(filepath)}}{Saves a jpg of the image.}
 #'   \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
 #'   \item{\code{size()}}{Returns the current image dimentions.}
 #'   \item{\code{render()}}{Renders the current image.}
@@ -326,6 +326,7 @@ shinyimg <- R6Class("shinyimg",
                           print("No action to undo")
                         }
                       },
+                      # undo function for Shiny app
                       shinyUndo = function() {
 
                         # same as undo
@@ -370,6 +371,7 @@ shinyimg <- R6Class("shinyimg",
                           print("No action to redo")
                         }
                       },
+                      # Redo action for Shiny app
                       shinyRedo = function() {
                         # same as Redo 
                         # without auto render and print statement
@@ -387,6 +389,7 @@ shinyimg <- R6Class("shinyimg",
                           return(0)
                         }
                       },
+                      # Returns status of lazy loading
                       toggle_ll = function() {
                         private$lazy_load <- 1 - private$lazy_load;
                         if (private$lazy_load == 1) {
@@ -433,27 +436,33 @@ shinyimg <- R6Class("shinyimg",
                         # removes 0.1 contrast.
                         private$mutator(3, -0.1)
                       },
-
+                      
+                      # Adjusts gamma by 0.5
                       add_gamma = function() {
                         private$mutator(5, 0.5)
                       },
                       
+                      # Adjusts gamma by -0.5
                       remove_gamma = function() {
                         private$mutator(5, -0.5)
                       },
 
+                      # Adjusts blur by 1
                       add_blur = function() {
                         private$mutator(7, 1)
                       }, 
 
+                      # Adjusts blur by -1
                       remove_blur = function() {
                         private$mutator(7, -1)
                       }, 
 
+                      # Adjusts rotate by 1 degree
                       add_rotate = function() {
                         private$mutator(9, 1)
                       }, 
 
+                      # Adjusts rotate by -1 degree
                       remove_rotate = function() {
                         private$mutator(9, -1)
                       },
@@ -567,36 +576,48 @@ shinyimg <- R6Class("shinyimg",
                       get_raw = function() {
                         return (imageData(private$current_img))
                       }, 
+                      # saves image as a jpeg 
                       savejpg = function(file) {
                         writeImage(private$current_image, file)
                       }, 
+                      # returns a copy of the members of the shinyimg object
                       gethistory = function() {
                       	return(private$myhistory)
-                      }, 
+                      }, \item{\code{get_()}}{}
+                      # returns a copy of the brightness value
                       get_brightness = function() {
                         return (private$brightness)
                       },
+                      # returns a copy of the contrast value
                       get_contrast = function() {
                         return (private$contrast)
                       },
+                      # returns a copy of the gamma value
                       get_gamma = function() {
                         return (private$gamma)
                       },
+                      # returns a copy of the blur value
                       get_blur = function() {
                         return (private$blur)
                       }, 
+                      # returns a copy of the rotate value
                       get_rotate = function() {
                         return(private$rotate)
                       },
+                      # returns a copy of the grayscale value
+                      # indicates colormode
                       get_color = function() {
                       	return(private$grayscale)
                   	  },
+                      # returns a copy of the list of image histories
                       get_imghistory = function() { 
                         return(private$img_history)
                       }, 
+                      # returns a copy of the list of input parameters
                       get_actions = function() {
                         return(private$actions)
                       }, 
+                      # returns a copy of the status of redoes available
                       checkRedo = function() {
                         if (private$actions < length(private$img_history))
                           return(TRUE)
