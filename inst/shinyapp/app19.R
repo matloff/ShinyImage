@@ -12,7 +12,7 @@ library(ShinyImage)
 ## (2) need to make imagelog null for null images 
 ## (3) test all combinations
 ## (4) add options for more functions in EBImage
-## (5) fix documentation on github 
+       # --currently rotation is hidden
 
 # ______________________ start of UI _____________________
 ui <- fluidPage( 
@@ -73,7 +73,7 @@ ui <- fluidPage(
           HTML(
             paste(
               h3('Image Editor', align = "center"),
-              plotOutput("plot3",
+              plotOutput("plot1",
                 click = "plot_click",
                 dblclick = "plot_dblclick",
                 hover = "plot_hover",
@@ -134,77 +134,60 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   options(shiny.maxRequestSize=30*1024^2) #file can be up to 30 mb; default is 5 mb
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL)
-
-  #moved free standing code from the beginning of the file
-  #ensures that user is in the right file 
-  #has shiny, EBImage, and shinyjs installed
-  guiInit <- function() {
-    #validate((need(file.exists("~/ShinyImage/R/imagehistory.R"), "Please input imagehistory.R into the same directory that contains app19.R")))
-    #source('~/ShinyImage/R/imagehistory.R')
-
-    if (!require("shiny")) {
-      cat("shiny is not installed. Please install it first.")
-    }
-
-    if (!require("EBImage")) {
-      cat("EBImage is not installed. Please install it first.")
-    }
-
-    #needed to hide and show the keep button 
-    #if clicked accidentally, it causes errors
-    if (!require("shinyjs")) {
-      cat("shinyjs is not installed. Please install it first.")
-    }
-  }
-
-  #TODO -- if other radio buttons are clicked; display nothing
-  #currently sample or previous image is displayed
-
-#TO DO
-#NEED TO FIX PLOT2 WHEN RADIO BUTTON IS SWITCHED
-#REALLY SLOW 
-
+  
+  #checks radio for file input
   observe({
-    guiInit()
-
+    #sample is chosen
+    #default
     if(input$radio == 1)
     {
       shinyImageFile$shiny_img_origin <- 
+        #using image of tiger
         shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
-        output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+        #outputs image to plot1 -- main plot
+        output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
     }
+    #user chose input file option
     if (input$radio == 2)
     {
-      reset('file1')
-      output$plot3 <- renderPlot({ 
+      reset('file1') #allows plot1 to be null when radio is clicked
+      # creates a warning to upload correct file 
+      # otherwise outputs image
+      output$plot1 <- renderPlot({ 
         validate(need(!is.null(input$file1), "Must upload a valid jpg, png, or tiff"))
         if (is.null(input$file1))
           return(NULL)
       })
     }
+    # user chose input link option
     if(input$radio == 3)
     {
-      reset('url1')
-      output$plot3 <- renderPlot({ 
+      reset('url1') #allows plot1 to be null when radio is clicked
+      # creates a warning to upload correct link
+      # otherwise outputs image
+      output$plot1 <- renderPlot({ 
         validate(need(input$url1 != "", "Must type in a valid jpeg, png, or tiff"))
         if (is.null(input$file1))
           return(NULL)
       })
     }
+    # user chose input si object option
     if(input$radio == 4)
     {
-      reset('file2')
-      output$plot3 <- renderPlot({ 
+      reset('file2') #allows plot1 to be null when radio is clicked
+      # creates a warning to upload correct .si file
+      # otherwise outputs image
+      output$plot1 <- renderPlot({ 
         validate(need(!is.null(input$file2), "Must upload a valid .si file"))
         if (is.null(input$file1))
           return(NULL)
       })
     }
+  }) # end of observe
 
-  })
-
-
-#might combine with anove observe
+  # second observe
+  # looks at its first 3 lines and observes those inputs
+  # resets the sliders
   observe({
     #if user clicks a new radio button, uploads new file, or url
     #the sliders will change
@@ -212,8 +195,9 @@ server <- function(input, output, session) {
     input$file1
     input$url1
     input$radio
-    # if (!is.null(input$file1) || is.na(input$url1) || input$radio > 1)
-    # {
+
+    # update sliders to inital values 
+    # and reset plot brush
     updateSliderInput(session, "bright", value = 0)
     updateSliderInput(session, "contrast", value = 0)
     updateSliderInput(session, "gamma", value = 1)
@@ -223,6 +207,7 @@ server <- function(input, output, session) {
     session$resetBrush("plot_brush")
     # }
   })
+  
 #//////// CDOE FOR RADIO BUTTONS /////////////
   #when user uploads file
   #the datapath is different from the one needed to properly recognize photo
@@ -242,21 +227,21 @@ server <- function(input, output, session) {
   #if they enter a new file, their file will become the new imageFile
   observeEvent(input$file1, {
     shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
-    output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
   })
 
   #if they enter a new url, their url will become the new new imageFile
   observeEvent(input$url1, {
     validate(need(input$url1 != "", "Must type in a valid jpeg, png, or tiff"))
     shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
-    output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
   })
 
   #if user uploads an image log, they will see the picture with previous settings
   #need to update sliders
   observeEvent(input$file2, {
     shinyImageFile$shiny_img_origin$load(renameUpload(input$file2))
-    output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
 
     #need to update sliders to saved image settings
     updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
@@ -281,7 +266,7 @@ server <- function(input, output, session) {
     isolate({
       p <- input$plot_brush 
       shinyImageFile$shiny_img_origin$cropxy(p$xmin,p$xmax,p$ymin,p$ymax)
-      output$plot3 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+      output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
     })
     session$resetBrush("plot_brush")
   })
@@ -315,11 +300,6 @@ server <- function(input, output, session) {
 
   #shows a preview of the cropped function
   #shows the keep button (originally hiding) 
-
-  #TODO
-  #either 1) render image after sliders are updated
-  # 2) make the plot disappear if the image changes
-  # 3) do nothing
   output$plot2 <- renderPlot({
     p <- input$plot_brush
     validate(need(p != 'NULL', "Highlight a portion of the photo to see a cropped version!"))
@@ -340,7 +320,7 @@ server <- function(input, output, session) {
     if (input$bright != 0)
     {
       shinyImageFile$shiny_img_origin$set_brightness(input$bright / 10)
-      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -353,7 +333,7 @@ server <- function(input, output, session) {
     if (input$contrast != 0) {
       actualContrast = 1 + (input$contrast / 10)
       shinyImageFile$shiny_img_origin$set_contrast(actualContrast)
-      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -365,7 +345,7 @@ server <- function(input, output, session) {
     if (input$gamma != 1)
     {
       shinyImageFile$shiny_img_origin$set_gamma(input$gamma)
-      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -376,7 +356,7 @@ server <- function(input, output, session) {
   #   if (input$rotation != 0)
   #   {
   #     shinyImageFile$shiny_img_origin$set_rotate(input$rotation) 
-  #     output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+  #     output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
   #     output$plot2 <- renderPlot({
   #       croppedShiny(shinyImageFile$shiny_img_origin)
   #       shinyjs::show("keep")
@@ -387,7 +367,7 @@ server <- function(input, output, session) {
     if (input$blurring != 0)
     {
       shinyImageFile$shiny_img_origin$set_blur(input$blurring)
-      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -398,7 +378,7 @@ server <- function(input, output, session) {
     if (input$color == 2)
     {
       shinyImageFile$shiny_img_origin$set_grayscale(1)
-      output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -408,7 +388,7 @@ server <- function(input, output, session) {
     if (input$color == 1 && shinyImageFile$shiny_img_origin$shinyUndo() != 0)
     {
      shinyImageFile$shiny_img_origin$set_grayscale(0)
-     output$plot3 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+     output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -440,7 +420,7 @@ server <- function(input, output, session) {
     updateSliderInput(session, "bright", value = 0)
     updateSliderInput(session, "contrast", value = 0)
     updateSliderInput(session, "gamma", value = 1)
-    updateSliderInput(session, "rotation", value = 0)
+    # updateSliderInput(session, "rotation", value = 0)
     updateSliderInput(session, "blurring", value = 0)
     updateRadioButtons(session, "color", selected = 1)
     session$resetBrush("plot_brush")
@@ -462,7 +442,7 @@ server <- function(input, output, session) {
     }
     else 
     {
-      output$plot3 <- renderPlot({
+      output$plot1 <- renderPlot({
         #TODO: look into why its render and not undo 
       shinyImageFile$shiny_img_origin$render() 
       updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
@@ -487,7 +467,7 @@ server <- function(input, output, session) {
     #when there are no more actions to redo
     else 
     {
-      output$plot3 <- renderPlot({
+      output$plot1 <- renderPlot({
       shinyImageFile$shiny_img_origin$redo() 
       updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
       updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
@@ -504,28 +484,10 @@ server <- function(input, output, session) {
 
 #//////// CODE FOR HELPFUL TEXTS /////////////
 
-  #creates an ID for the image log 
-  #imgID <- reactive({
-  #  if(input$radio == 1)
-  #    id <- paste0("id1-sample")
-  #  if(input$radio == 2)
-  #    id <- paste0("id2-", input$file1[[1]])
-  #  if(input$radio == 3)
-  #    id <- paste0("id3-", input$url1)
-  #  if(input$radio == 4)
-  #    id <- paste("id4-prevSaved")
-  #return(id)
-  #})
-
   #textbox for user to see what the image ID is
   output$idReader <- renderText({
     paste0("ID: ", imgID())
   })
-
-  #helpful text to show the user the crop function 
-  #output$txt1 <- renderText({
-  #    "Click and drag where you would like to crop the photo. To save the cropped version, press keep."
-  #})
 
   #creates the textbox below plot2 about the plot_brush details and etc
   output$info <- renderText({
@@ -572,19 +534,6 @@ server <- function(input, output, session) {
 
 #//////// CODE FOR IMAGE LOG VIEWER /////////////
 
-# TO DO 
-#NEED TO FIX SAVE BUTTON TO VIEW DIFFERENT IMAGE'S LOG
-#NEED TO LET USER DECIDE BETWEEN SEEING HISTORY VS SEEING PREVIOUSLY EDITED IMAGE
-#--------------SECOND PANEL: shows user image log-------------
-
-  #radio2 -- view image log options doesnt have a pre-selected button so we are not rendering
-  # a image log till the user specifies 
-  # observeEvent(input$radio2, {
-  #   #if user clicks the first button - current image's log will pop up
-  #   if (input$radio2 == 1)
-  #     output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin$get_imghistory()})
-  # })
-
   #if user clicked view image log of current image --> edited image --> clicked the tab again
   # the radio button is set at current image
   # should re-render the img history 
@@ -600,10 +549,12 @@ server <- function(input, output, session) {
     output$ImageLog <- renderPrint({shinyImageFile$shiny_img_origin$get_imghistory()})
   })
 
-  #TODO: include image log of current image
 #//////// END OF CODE FOR IMAGE LOG VIEWER /////////////
 
 #//////// START OF CODE FOR STOP SHINY APP ///////////////
+  #When user clicks the return to command line button
+  #stops the shiny app
+  # prevents user from quitting shiny using ^C on commandline 
   observeEvent(input$stop, {
     stopApp()
   })
