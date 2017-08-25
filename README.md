@@ -198,7 +198,7 @@ export LIBRARY_PATH=y/lib
 </p>
 
 <pre>
-sudo apt-get install libtiff-devel
+sudo apt-get install libtiff-dev
 </pre>
 </li> </p> 
 
@@ -206,9 +206,19 @@ sudo apt-get install libtiff-devel
 </p>
 
 <pre>
-sudo apt-get install fftw-devel
+sudo apt-get install fftw-dev
 </pre>
 </li> </p> 
+
+<li> If fftw library does not get properly installed, try
+</p>
+
+<pre>
+sudo apt-get install fftw3 fftw3-dev pkg-config
+</pre>
+</li> </p> 
+
+
 
 <li> Then run the R steps as above.
 </li> </p>
