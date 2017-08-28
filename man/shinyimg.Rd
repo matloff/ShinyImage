@@ -70,7 +70,7 @@ After two points are selected, a cropping selection can be create in order to cr
 
 \examples{
 
-web_tiger = shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
+web_tiger = shinyimg$new(system.file("images","sample.jpg",package="ShinyImage"))
 
 web_tiger$add_brightness() # Adds brightness to image
 

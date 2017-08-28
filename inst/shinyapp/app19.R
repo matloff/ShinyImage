@@ -143,7 +143,7 @@ server <- function(input, output, session) {
     {
       shinyImageFile$shiny_img_origin <- 
         #using image of tiger
-        shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
+        shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
         #outputs image to plot1 -- main plot
         output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
     }
@@ -406,7 +406,7 @@ server <- function(input, output, session) {
   observeEvent(input$button3, {
     if(input$radio == 1)
     {
-      shinyImageFile$shiny_img_origin <- shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')  
+      shinyImageFile$shiny_img_origin <- shinyimg$new(system.file("images","sample.jpg",package="ShinyImage"))  
     }
     if(input$radio == 2)
     {
