@@ -27,7 +27,7 @@ ui <- fluidPage(
       sidebarLayout(
         sidebarPanel(
           radioButtons("radio", label = ("Sample or Upload Image"), 
-            choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Shiny Image" = 4), selected = 1),
+            choices = list("Sample/Current Image" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Shiny Image" = 4), selected = 1),
           conditionalPanel(
             condition = "input.radio == 2",
             fileInput(inputId = 'file1',
@@ -141,11 +141,22 @@ server <- function(input, output, session) {
     #default
     if(input$radio == 1)
     {
+      if (!exists("current"))
+      {
       shinyImageFile$shiny_img_origin <- 
         #using image of tiger
         shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
+      }
+      
+      else
+      {
+        # using current image from commandline
+        # optional parameter for runShiny
+        shinyImageFile$shiny_img_origin <- current 
+      }
+    
         #outputs image to plot1 -- main plot
-        output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+      output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
     }
     #user chose input file option
     if (input$radio == 2)

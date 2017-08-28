@@ -160,6 +160,12 @@ Run these commands from within R.
 > runShiny()
 ```
 
+<li> A user can use an image they are currently editing on the commandline to edit in the GUI
+```R
+# using our previous example of our shinyimg object tiger
+> runShiny(tiger)
+```
+
 <h3>
 <a name="Linux">Installing fftwtools on Linux </a> 
 </h3>

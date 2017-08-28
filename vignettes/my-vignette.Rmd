@@ -158,7 +158,10 @@ tiger$cropxy(0,10,0,10)
 
 #### Starting the Shiny GUI
 ```R
-> runShiny()
+> runShiny() 
+
+# A user can also use an image they are currently editing in the GUI
+> runShiny(tiger)
 ```
 
 #### Uploading an Image
