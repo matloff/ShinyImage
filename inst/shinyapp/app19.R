@@ -530,7 +530,7 @@ server <- function(input, output, session) {
 
   #allows user to download plot1 - imageFile
   output$download1 <- downloadHandler('temp.jpeg', function(file) {
-    shinyImageFile$shiny_img_origin$savejpg(file)
+    shinyImageFile$shiny_img_origin$saveImage(file)
   })
 
   observeEvent(input$download4, {

@@ -166,7 +166,14 @@ R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz</code></pre>
 <span class="co"># if you want to revert to a previous saved state, you can also do:</span>
 &gt;<span class="st"> </span>tiger$<span class="kw">load</span>(<span class="st">&quot;tiger-water.si&quot;</span>)
 <span class="co"># this will load the image back to the state it was in when you saved the image.</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()  <span class="co"># not too late to undo changes made before the save!</span></code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()  <span class="co"># not too late to undo changes made before the save!</span>
+
+<span class="co"># lastly, if we want to save the physical image</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">save</span>(<span class="st">'tiger.jpg'</span>)
+<span class="co"># we can save it as either jpg, png, or tiff</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">save</span>(<span class="st">'tiger.png'</span>)
+<span class="co"># if a user does not specify the name, the default is temp.jpeg</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">save</span>()</code></pre></div>
 </div>
 <div id="gui-installation-and-usage" class="section level2">
 <h2>GUI Installation and Usage</h2>

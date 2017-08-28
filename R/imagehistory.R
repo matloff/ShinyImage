@@ -146,7 +146,7 @@ siaction <- R6Class("siaction",
 #'   \item{\code{get_actions()}}{Returns a copy of the list of the input parameters.}
 #'   \item{\code{checkRedo()}}{Returns a bool value to check the status of available Redoes; used by Shiny.}
 #'   \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
-#'   \item{\code{savejpg(filepath)}}{Saves a jpg of the image.}
+#'   \item{\code{saveImage(filepath)}}{Saves a jpg of the image.}
 #'   \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
 #'   \item{\code{size()}}{Returns the current image dimentions.}
 #'   \item{\code{render()}}{Renders the current image.}
@@ -577,8 +577,13 @@ shinyimg <- R6Class("shinyimg",
                         return (imageData(private$current_img))
                       }, 
                       # saves image as a jpeg 
-                      savejpg = function(file) {
-                        writeImage(private$current_image, file)
+                      saveImage = function(file) {
+                        if(missing(file))
+                        {
+                          writeImage(private$current_image, files = "temp.jpg")
+                        }
+                        else
+                          writeImage(private$current_image, file)
                       }, 
                       # returns a copy of the members of the shinyimg object
                       gethistory = function() {

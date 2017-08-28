@@ -144,7 +144,7 @@ tiger$cropxy(0,10,0,10)
 > tiger$save('save.si') 
 
 # A user can also save the physical image e.g. the jpg image
-> tiger$savejpg()
+> tiger$saveImage()
 ```
 
 #### Load

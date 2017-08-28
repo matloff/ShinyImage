@@ -126,6 +126,13 @@ R command line; examples of the GUI are given later in this document.
 > tiger$load("tiger-water.si")
 # this will load the image back to the state it was in when you saved the image.
 > tiger$undo()  # not too late to undo changes made before the save!
+
+# lastly, if we want to save the physical image
+> tiger$saveImage('tiger.jpg')
+# we can save it as either jpg, png, or tiff
+> tiger$saveImage('tiger.png')
+# if a user does not specify the name, the default is temp.jpeg
+> tiger$saveImage()
 ```
 
 ## GUI Installation and Usage
