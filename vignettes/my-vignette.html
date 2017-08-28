@@ -80,122 +80,122 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>Once installed, a user can create a shinyimg object to modify pictures.</p>
 <div id="creating-a-new-image" class="section level4">
 <h4>Creating a new image</h4>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="op">&gt;</span><span class="st"> </span>tiger &lt;-<span class="st"> </span>shinyimg<span class="op">$</span><span class="kw">new</span>(<span class="st">'https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg'</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">&gt;<span class="st"> </span>tiger &lt;-<span class="st"> </span>shinyimg$<span class="kw">new</span>(<span class="st">'https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg'</span>)
 <span class="co"># In addition to a web link, a user can also upload a jpeg, png, or tiff saved locally.</span>
 <span class="co"># We will continue tiger as our shiny image object to modify for the rest of our examples</span></code></pre></div>
 </div>
 <div id="autodisplay" class="section level4">
 <h4>Autodisplay</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can render an image after every modification or they can turn on autodisplay</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">render</span>() <span class="co">#user needs to initially render image</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">render</span>() <span class="co">#user needs to initially render image</span>
 <span class="co"># a window should pop up with an image of the tiger</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_autodisplay</span>() <span class="co">#the user no longer needs to render image after a modification</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_autodisplay</span>() <span class="co">#the user no longer needs to render image after a modification</span>
 
 <span class="co"># To turn off autodisplay</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_autodsiplay_OFF</span>()
+&gt;<span class="st"> </span>tiger$<span class="kw">set_autodsiplay_OFF</span>()
 <span class="co"># user must now render an image to view modifications</span></code></pre></div>
 </div>
 <div id="brightness" class="section level4">
 <h4>Brightness</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to modify brightness</span>
 <span class="co"># The initial value of brightness is 0</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_brightness</span>() <span class="co">#adds brightness by 0.1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remomve_brightness</span>() <span class="co">#removes brightness by 0.1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_brightness</span>(.<span class="dv">5</span>) <span class="co">#sets brightness by number inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_brightness</span>(<span class="dv">0</span>) <span class="co">#sets brightness back to default</span></code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_brightness</span>() <span class="co">#adds brightness by 0.1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remomve_brightness</span>() <span class="co">#removes brightness by 0.1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_brightness</span>(.<span class="dv">5</span>) <span class="co">#sets brightness by number inputted</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_brightness</span>(<span class="dv">0</span>) <span class="co">#sets brightness back to default</span></code></pre></div>
 </div>
 <div id="contrast" class="section level4">
 <h4>Contrast</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to modify contrast</span>
 <span class="co"># The initial value of contrast is 1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_contrast</span>() <span class="co">#adds contrast by 0.1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remomve_contrast</span>() <span class="co">#removes contrast by 0.1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_contrast</span>(<span class="dv">2</span>) <span class="co">#sets contrast by number inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_contrast</span>(<span class="dv">1</span>) <span class="co">#sets contrast back to default</span></code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_contrast</span>() <span class="co">#adds contrast by 0.1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remomve_contrast</span>() <span class="co">#removes contrast by 0.1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_contrast</span>(<span class="dv">2</span>) <span class="co">#sets contrast by number inputted</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_contrast</span>(<span class="dv">1</span>) <span class="co">#sets contrast back to default</span></code></pre></div>
 </div>
 <div id="gamma-correction" class="section level4">
 <h4>Gamma Correction</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to modify gamma correction</span>
 <span class="co"># The initial value of gamma correction is 1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_gamma</span>() <span class="co">#adds gamma correction by 0.5</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_gamma</span>() <span class="co">#removes gamma correction by 0.5</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_gamma</span>(<span class="dv">2</span>) <span class="co">#sets gamma correction by number inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_gamma</span>(<span class="dv">1</span>) <span class="co">#sets gamma correction back to default</span></code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_gamma</span>() <span class="co">#adds gamma correction by 0.5</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remove_gamma</span>() <span class="co">#removes gamma correction by 0.5</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_gamma</span>(<span class="dv">2</span>) <span class="co">#sets gamma correction by number inputted</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_gamma</span>(<span class="dv">1</span>) <span class="co">#sets gamma correction back to default</span></code></pre></div>
 </div>
 <div id="blurring" class="section level4">
 <h4>Blurring</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to blur an image</span>
 <span class="co"># The initial value of blur is 0</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_blur</span>() <span class="co">#adds blurring by 1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_blur</span>() <span class="co">#removes blurring by 1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_blur</span>(<span class="dv">6</span>) <span class="co">#sets blurring by number inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_blur</span>(<span class="dv">0</span>) <span class="co">#sets blurring back to default</span></code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_blur</span>() <span class="co">#adds blurring by 1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remove_blur</span>() <span class="co">#removes blurring by 1</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_blur</span>(<span class="dv">6</span>) <span class="co">#sets blurring by number inputted</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_blur</span>(<span class="dv">0</span>) <span class="co">#sets blurring back to default</span></code></pre></div>
 </div>
 <div id="rotation" class="section level4">
 <h4>Rotation</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to rotate an image</span>
 <span class="co"># The initial value of rotate is 0</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_rotate</span>() <span class="co">#rotates image by 1 degree to the right</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_rotate</span>() <span class="co">#rotates image by 1 degree to the left</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_rotate</span>(<span class="dv">180</span>) <span class="co">#sets rotation by degree inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_rotate</span>(<span class="dv">0</span>) <span class="co">#sets rotation back to default of 0 degrees rotated</span></code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">add_rotate</span>() <span class="co">#rotates image by 1 degree to the right</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">remove_rotate</span>() <span class="co">#rotates image by 1 degree to the left</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_rotate</span>(<span class="dv">180</span>) <span class="co">#sets rotation by degree inputted</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_rotate</span>(<span class="dv">0</span>) <span class="co">#sets rotation back to default of 0 degrees rotated</span></code></pre></div>
 </div>
 <div id="colormode" class="section level4">
 <h4>Colormode</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can change an image to grayscale or back to colormode</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_grayscale</span>(<span class="dv">1</span>) <span class="co">#changes image to grayscale</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_grayscale</span>(<span class="dv">0</span>) <span class="co">#reverts image to color</span></code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_grayscale</span>(<span class="dv">1</span>) <span class="co">#changes image to grayscale</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">set_grayscale</span>(<span class="dv">0</span>) <span class="co">#reverts image to color</span></code></pre></div>
 </div>
 <div id="crop" class="section level4">
 <h4>Crop</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are two ways a user can crop an image</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">crop</span>() <span class="co">#must have image rendered before this action is called</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">crop</span>() <span class="co">#must have image rendered before this action is called</span>
 <span class="co"># A + icon will appear on the window that contains the image for user to select the crop</span>
 
 <span class="co"># A user can specify the coordinates</span>
-tiger<span class="op">$</span><span class="kw">cropxy</span>(<span class="dv">0</span>,<span class="dv">10</span>,<span class="dv">0</span>,<span class="dv">10</span>) 
+tiger$<span class="kw">cropxy</span>(<span class="dv">0</span>,<span class="dv">10</span>,<span class="dv">0</span>,<span class="dv">10</span>) 
 <span class="co"># The fields of cropxy are: min of x, max of x, min of y, max of y</span>
 <span class="co"># must be less than the dimensions of image</span>
 
 <span class="co"># to get dimensions of the image</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">size</span>()</code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">size</span>()</code></pre></div>
 </div>
 <div id="undo" class="section level4">
 <h4>Undo</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can undo a modification</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">undo</span>()</code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()</code></pre></div>
 </div>
 <div id="redo" class="section level4">
 <h4>Redo</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can redo a modification</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">redo</span>()</code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">redo</span>()</code></pre></div>
 </div>
 <div id="get-settings" class="section level4">
 <h4>Get Settings</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can view the settings of the image using get</span>
-<span class="op">&gt;</span><span class="st"> </span><span class="kw">gethistory</span>() <span class="co">#returns recorded changes to image</span>
-<span class="op">&gt;</span><span class="st"> </span><span class="kw">get_brightness</span>() <span class="co">#returns brightness value</span>
-<span class="op">&gt;</span><span class="st"> </span><span class="kw">get_contrast</span>() <span class="co">#returns contrast value</span>
-<span class="op">&gt;</span><span class="st"> </span><span class="kw">get_gamma</span>() <span class="co">#returns gamma correction value</span>
-<span class="op">&gt;</span><span class="st"> </span><span class="kw">get_blur</span>() <span class="co">#returns blur value</span>
-<span class="op">&gt;</span><span class="st"> </span><span class="kw">get_rotate</span>() <span class="co">#returns degrees rotated</span>
-<span class="op">&gt;</span><span class="st"> </span><span class="kw">get_color</span>() <span class="co">#returns color mode value</span></code></pre></div>
+&gt;<span class="st"> </span><span class="kw">gethistory</span>() <span class="co">#returns recorded changes to image</span>
+&gt;<span class="st"> </span><span class="kw">get_brightness</span>() <span class="co">#returns brightness value</span>
+&gt;<span class="st"> </span><span class="kw">get_contrast</span>() <span class="co">#returns contrast value</span>
+&gt;<span class="st"> </span><span class="kw">get_gamma</span>() <span class="co">#returns gamma correction value</span>
+&gt;<span class="st"> </span><span class="kw">get_blur</span>() <span class="co">#returns blur value</span>
+&gt;<span class="st"> </span><span class="kw">get_rotate</span>() <span class="co">#returns degrees rotated</span>
+&gt;<span class="st"> </span><span class="kw">get_color</span>() <span class="co">#returns color mode value</span></code></pre></div>
 </div>
 <div id="save" class="section level4">
 <h4>Save</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can save the SI object to save object with history changes of image</span>
 <span class="co"># A user can re-edit an SI object</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">save</span>() <span class="co">#saved in current directory as workspace.si</span>
+&gt;<span class="st"> </span>tiger$<span class="kw">save</span>() <span class="co">#saved in current directory as workspace.si</span>
 <span class="co"># A user can also specify the file name</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">save</span>(<span class="st">'save.si'</span>) 
+&gt;<span class="st"> </span>tiger$<span class="kw">save</span>(<span class="st">'save.si'</span>) 
 
 <span class="co"># A user can also save the physical image e.g. the jpg image</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">savejpg</span>()</code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">savejpg</span>()</code></pre></div>
 </div>
 <div id="load" class="section level4">
 <h4>Load</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A user can reupload a previously saved SI object</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">load</span>(<span class="st">'workspace.si'</span>)</code></pre></div>
+&gt;<span class="st"> </span>tiger$<span class="kw">load</span>(<span class="st">'workspace.si'</span>)</code></pre></div>
 </div>
 </div>
 <div id="using-the-shiny-gui" class="section level2">
@@ -206,7 +206,10 @@ tiger<span class="op">$</span><span class="kw">cropxy</span>(<span class="dv">0<
 </div>
 <div id="starting-the-shiny-gui" class="section level4">
 <h4>Starting the Shiny GUI</h4>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="op">&gt;</span><span class="st"> </span><span class="kw">runShiny</span>()</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">&gt;<span class="st"> </span><span class="kw">runShiny</span>() 
+
+<span class="co"># A user can also use an image they are currently editing in the GUI</span>
+&gt;<span class="st"> </span><span class="kw">runShiny</span>(tiger)</code></pre></div>
 </div>
 <div id="uploading-an-image" class="section level4">
 <h4>Uploading an Image</h4>

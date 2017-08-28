@@ -161,6 +161,8 @@ Run these commands from within R.
 ```
 
 <li> A user can use an image they are currently editing on the commandline to edit in the GUI
+</p>
+
 ```R
 # using our previous example of our shinyimg object tiger
 > runShiny(tiger)
