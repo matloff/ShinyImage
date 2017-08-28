@@ -13,8 +13,8 @@ shinyload(filename)
 Wrapper to load an image from a cold boot.
 }
 \examples{
-web_tiger = shinyimg$new(system.file("images","sample.jpg",package="ShinyImage"))
-web_tiger$save("tiger.si")
+local_tiger = shinyimg$new(system.file("images","sample.jpg",package="ShinyImage"))
+local_tiger$save("tiger.si")
 # Restart R 
 reloaded_tiger = shinyload("tiger.si")
 }
