@@ -60,7 +60,7 @@ After two points are selected, a cropping selection can be create in order to cr
 \item{\code{get_actions()}}{Returns a copy of the list of the input parameters.}
 \item{\code{checkRedo()}}{Returns a bool value to check the status of available Redoes; used by Shiny.}
 \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
-\item{\code{savejpg(filepath)}}{Saves a jpg of the image.}
+\item{\code{saveImage(filepath)}}{Saves a jpg of the image.}
 \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
 \item{\code{size()}}{Returns the current image dimentions.}
 \item{\code{render()}}{Renders the current image.}

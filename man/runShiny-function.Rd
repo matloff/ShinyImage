@@ -5,7 +5,7 @@
 \alias{runShiny}
 \title{runShiny function to start shiny app}
 \usage{
-runShiny()
+runShiny(current_shinyimg)
 }
 \description{
 A function to start shiny app
