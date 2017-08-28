@@ -42,17 +42,18 @@ Once installed, a user can create a shinyimg object to modify pictures.
 # The initial value of brightness is 0
 > tiger$add_brightness() #adds brightness by 0.1
 > tiger$remomve_brightness() #removes brightness by 0.1
-> tiger$set_brightness(1) #sets brightness by number inputted
-
+> tiger$set_brightness(.5) #sets brightness by number inputted
+> tiger$set_brightness(0) #sets brightness back to default
 ```
 
 #### Contrast
 ```R
 # There are three ways to modify contrast
-# The initial value of contrast is 0
+# The initial value of contrast is 1
 > tiger$add_contrast() #adds contrast by 0.1
 > tiger$remomve_contrast() #removes contrast by 0.1
 > tiger$set_contrast(2) #sets contrast by number inputted
+> tiger$set_contrast(1) #sets contrast back to default
 ```
 
 #### Gamma Correction
@@ -62,6 +63,8 @@ Once installed, a user can create a shinyimg object to modify pictures.
 > tiger$add_gamma() #adds gamma correction by 0.5
 > tiger$remove_gamma() #removes gamma correction by 0.5
 > tiger$set_gamma(2) #sets gamma correction by number inputted
+> tiger$set_gamma(1) #sets gamma correction back to default
+
 ```
 
 #### Blurring
@@ -70,7 +73,9 @@ Once installed, a user can create a shinyimg object to modify pictures.
 # The initial value of blur is 0
 > tiger$add_blur() #adds blurring by 1
 > tiger$remove_blur() #removes blurring by 1
-> tiger$set_blur(2) #sets blurring by number inputted
+> tiger$set_blur(6) #sets blurring by number inputted
+> tiger$set_blur(0) #sets blurring back to default
+
 ```
 
 #### Rotation
@@ -79,7 +84,9 @@ Once installed, a user can create a shinyimg object to modify pictures.
 # The initial value of rotate is 0
 > tiger$add_rotate() #rotates image by 1 degree to the right
 > tiger$remove_rotate() #rotates image by 1 degree to the left
-> tiger$set_rotate(2) #sets rotation by degree inputted
+> tiger$set_rotate(180) #sets rotation by degree inputted
+> tiger$set_rotate(0) #sets rotation back to default of 0 degrees rotated
+
 ```
 
 #### Colormode
