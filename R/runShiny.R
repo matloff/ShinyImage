@@ -18,16 +18,20 @@
 # optional parameter to give the current shinyimg e.g. tiger to the shiny app to work on
 
 runShiny <- function(current_shinyimg) {
+  #intiial declaration of current
+  current <- NULL
+
   if(missing(current_shinyimg))
   {
-    #no argument given 
-    #do nothing
+    #global declaration of current so 
+    #shiny app can access it
+    current <<- NULL
   }
   else
   {
     #assign current_shinyimg to current
     #current is used in the shinyapp if current exists
-    current <- current_shinyimg
+    current <<- current_shinyimg
   }
   
   appDir <- system.file("shinyapp", "app19.R", package = "ShinyImage")

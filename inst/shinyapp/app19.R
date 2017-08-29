@@ -141,15 +141,15 @@ server <- function(input, output, session) {
     #default
     if(input$radio == 1)
     {
-      if (!exists("current"))
+      if (is.null(current))
       {
-      shinyImageFile$shiny_img_origin <- 
         #using image of tiger
         # sample.jpg is titled A tiger in the water
         #  By Bob Jagendorf 
         #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
         #  via Wikimedia Commons
-        shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
+        shinyImageFile$shiny_img_origin <- 
+          shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
       }
       
       else
@@ -157,7 +157,6 @@ server <- function(input, output, session) {
         # using current image from commandline
         # optional parameter for runShiny
         shinyImageFile$shiny_img_origin <- current
-
         #need to also change reload!!!! 
       }
     
@@ -423,22 +422,22 @@ server <- function(input, output, session) {
   observeEvent(input$button3, {
     if(input$radio == 1)
     {
-      if (!exists("current"))
+      if (is.null(current))
       {
-      shinyImageFile$shiny_img_origin <- 
         #using image of tiger
         # sample.jpg is titled A tiger in the water
         #  By Bob Jagendorf 
         #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
         #  via Wikimedia Commons
-        shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
+        shinyImageFile$shiny_img_origin <- 
+          shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
       }
+      
       else
       {
         # using current image from commandline
         # optional parameter for runShiny
         shinyImageFile$shiny_img_origin <- current
-
         #need to also change reload!!!! 
       }
     }
