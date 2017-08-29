@@ -7,13 +7,15 @@
 \usage{
 runShiny(current_shinyimg)
 }
+\arguments{
+\item{current_shinyimg}{takes in an optional parameter of a image user is
+currently editing in the command line}
+}
 \description{
 A function to start shiny app
 }
-\section{Fields}{
-
-\describe{
-\item{\code{current_shinyimg}}{takes in an optional parameter of a image user is
-currently editing in the command line}
-}}
-
+\examples{
+\dontrun{
+   runShiny()
+}
+}

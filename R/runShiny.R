@@ -3,12 +3,16 @@
 #' @description A function to start shiny app
 #' @name runShiny-function
 #' @export
-#' @field current_shinyimg takes in an optional parameter of a image user is 
+#' @param current_shinyimg takes in an optional parameter of a image user is 
 #'    currently editing in the command line
 #' @import shiny 
 #' @importFrom EBImage display imageData Image colorMode readImage 
 #' writeImage gblur combine channel rotate
 #' @importFrom shinyjs hidden hide show
+#' @examples
+#' \dontrun{
+#'    runShiny()
+#' }
 
 # function to run the Shiny app
 # optional parameter to give the current shinyimg e.g. tiger to the shiny app to work on
