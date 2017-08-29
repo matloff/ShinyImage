@@ -67,6 +67,10 @@ R command line; examples of the GUI are given later in this document.
 
 ```R
 # load image, whether local file or from the Web
+# the image being used is titled 'A tiger in the water'
+#  By Bob Jagendorf 
+#  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
+#  via Wikimedia Commons
 > tiger <- 
    shinyimg$new("https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg")
 

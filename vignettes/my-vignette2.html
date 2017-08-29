@@ -12,7 +12,7 @@
 
 <meta name="author" content="Norm Matloff, Alex Fu, Ariel Shin" />
 
-<meta name="date" content="2017-08-28" />
+<meta name="date" content="2017-08-29" />
 
 <title>ShinyImage</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">ShinyImage</h1>
 <h4 class="author"><em>Norm Matloff, Alex Fu, Ariel Shin</em></h4>
-<h4 class="date"><em>2017-08-28</em></h4>
+<h4 class="date"><em>2017-08-29</em></h4>
 
 
 
@@ -107,9 +107,13 @@ R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz</code></pre>
 <div id="example-usage" class="section level2">
 <h2>Example Usage</h2>
 <p>Here we will perform several actions, both to illustrate some ShinyImage operations and also to show the journaling. All operations will use the R command line; examples of the GUI are given later in this document.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># load image, whether local file or from the Web</span>
-&gt;<span class="st"> </span>tiger &lt;-<span class="st"> </span>
-<span class="st">   </span>shinyimg$<span class="kw">new</span>(<span class="st">&quot;https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg&quot;</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#  load image, whether local file or from the Web</span>
+<span class="co">#  the image being used is titled 'A tiger in the water'</span>
+<span class="co">#  By Bob Jagendorf </span>
+<span class="co">#  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], </span>
+<span class="co">#  via Wikimedia Commons</span>
+<span class="op">&gt;</span><span class="st"> </span>tiger &lt;-<span class="st"> </span>
+<span class="st">   </span>shinyimg<span class="op">$</span><span class="kw">new</span>(<span class="st">&quot;https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg&quot;</span>)
 
 <span class="co"># 'tiger' is an object of class 'shinyimg', which in turn is a subclass</span>
 <span class="co"># of 'R6'</span>
@@ -118,62 +122,62 @@ R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz</code></pre>
 <span class="co"># after first image modification, </span>
 <span class="co"># image will render and pop up in a new window</span>
 <span class="co"># or user can manually render image</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">set_autodisplay</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_autodisplay</span>()
 <span class="co"># manually rendering image</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">render</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">render</span>()
 <span class="co"># crop the image</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">crop</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">crop</span>()
 [<span class="dv">1</span>] <span class="st">&quot;Select the two opposite corners of a rectangle on the plot.&quot;</span>
 <span class="co"># add brightness</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">add_brightness</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_brightness</span>()
 <span class="co"># add contrast</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">add_contrast</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_contrast</span>()
 <span class="co"># add gamma</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">add_gamma</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_gamma</span>()
 <span class="co"># add blur</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">add_blur</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_blur</span>()
 
 
 <span class="co"># remove brightness</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">remove_brightness</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_brightness</span>()
 <span class="co"># remove contrast</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">remove_contrast</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_contrast</span>()
 <span class="co"># remove gamma</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">remove_gamma</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_gamma</span>()
 <span class="co"># remove blur</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">remove_blur</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_blur</span>()
 
 <span class="co"># we have had nine actions, and can undo the last 8 of them</span>
 <span class="co"># we will undo the last five actions (remove blur and remove gamma)</span>
 <span class="co"># by calling undo five times</span>
 <span class="co"># undoes the removal of the blur</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">undo</span>()
 <span class="co"># undoes the removal of gamma </span>
-&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">undo</span>()
 <span class="co"># undoes the removal of contrast</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">undo</span>()
 <span class="co">#undoes the removal of brightness</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">undo</span>()
 <span class="co"># undoes the adding of the blur </span>
-&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">undo</span>()
 <span class="co"># we can also redo the adding of the blur</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">redo</span>()
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">redo</span>()
 
 <span class="co"># we can also save the image to edit later on</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">save</span>(<span class="st">&quot;tiger-water.si&quot;</span>)
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">save</span>(<span class="st">&quot;tiger-water.si&quot;</span>)
 <span class="co"># and later we can come back after a cold boot to do:</span>
-&gt;<span class="st"> </span>tiger &lt;-<span class="st"> </span><span class="kw">shinyload</span>(<span class="st">&quot;tiger-water.si&quot;</span>)
+<span class="op">&gt;</span><span class="st"> </span>tiger &lt;-<span class="st"> </span><span class="kw">shinyload</span>(<span class="st">&quot;tiger-water.si&quot;</span>)
 <span class="co"># if you want to revert to a previous saved state, you can also do:</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">load</span>(<span class="st">&quot;tiger-water.si&quot;</span>)
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">load</span>(<span class="st">&quot;tiger-water.si&quot;</span>)
 <span class="co"># this will load the image back to the state it was in when you saved the image.</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">undo</span>()  <span class="co"># not too late to undo changes made before the save!</span>
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">undo</span>()  <span class="co"># not too late to undo changes made before the save!</span>
 
 <span class="co"># lastly, if we want to save the physical image</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">save</span>(<span class="st">'tiger.jpg'</span>)
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">saveImage</span>(<span class="st">'tiger.jpg'</span>)
 <span class="co"># we can save it as either jpg, png, or tiff</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">save</span>(<span class="st">'tiger.png'</span>)
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">saveImage</span>(<span class="st">'tiger.png'</span>)
 <span class="co"># if a user does not specify the name, the default is temp.jpeg</span>
-&gt;<span class="st"> </span>tiger$<span class="kw">save</span>()</code></pre></div>
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">saveImage</span>()</code></pre></div>
 </div>
 <div id="gui-installation-and-usage" class="section level2">
 <h2>GUI Installation and Usage</h2>
@@ -201,12 +205,12 @@ After editing an image, a user can download the image and the image log. These a
 The user can also view the image log to see which actions were recorded.
 </p>
 <p>Run these commands from within R.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">&gt;<span class="st"> </span><span class="kw">runShiny</span>()</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="op">&gt;</span><span class="st"> </span><span class="kw">runShiny</span>()</code></pre></div>
 <li>
 A user can use an image they are currently editing on the commandline to edit in the GUI
 </p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># using our previous example of our shinyimg object tiger</span>
-&gt;<span class="st"> </span><span class="kw">runShiny</span>(tiger)</code></pre></div>
+<span class="op">&gt;</span><span class="st"> </span><span class="kw">runShiny</span>(tiger)</code></pre></div>
 <h3>
 <a name="Linux">Installing fftwtools on Linux </a>
 </h3>

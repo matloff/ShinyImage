@@ -71,12 +71,15 @@ After two points are selected, a cropping selection can be create in order to cr
 \examples{
 
 local_tiger = shinyimg$new(system.file("images","sample.jpg",package="ShinyImage"))
-
+# sample.jpg is titled A tiger in the water
+#  By Bob Jagendorf 
+#  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
+#  via Wikimedia Commons
 local_tiger$add_brightness() # Adds brightness to image
 
-local_tiger$undo() # Undoes the brightness addition
-
 \dontrun{
+
+local_tiger$undo() # Undoes the brightness addition
 
 local_tiger$redo() # Redoes the brightness addition
 

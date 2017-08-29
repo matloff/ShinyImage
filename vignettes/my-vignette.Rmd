@@ -18,6 +18,10 @@ Once installed, a user can create a shinyimg object to modify pictures.
 #### Creating a new image
 
 ```R
+#  the image being used in this example is titled 'A tiger in the water'
+#  By Bob Jagendorf 
+#  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
+#  via Wikimedia Commons
 > tiger <- shinyimg$new('https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg')
 # In addition to a web link, a user can also upload a jpeg, png, or tiff saved locally.
 # We will continue tiger as our shiny image object to modify for the rest of our examples
