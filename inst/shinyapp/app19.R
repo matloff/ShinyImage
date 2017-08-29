@@ -27,7 +27,7 @@ ui <- fluidPage(
       sidebarLayout(
         sidebarPanel(
           radioButtons("radio", label = ("Sample or Upload Image"), 
-            choices = list("Sample/Current Image" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Shiny Image" = 4), selected = 1),
+            choices = list("Sample" = 1, "Upload Image" = 2, "Upload Link" = 3, "Upload Shiny Image" = 4), selected = 1),
           conditionalPanel(
             condition = "input.radio == 2",
             fileInput(inputId = 'file1',
@@ -135,31 +135,26 @@ server <- function(input, output, session) {
   options(shiny.maxRequestSize=30*1024^2) #file can be up to 30 mb; default is 5 mb
   shinyImageFile <- reactiveValues(shiny_img_origin = NULL)
   
+  #checks if variable called current exists
+  #would contain si object if runShiny was given an argument
+  observeEvent(!is.null(current),
+  {
+    updateRadioButtons(session, "radio", selected = 4)
+  })
+
   #checks radio for file input
   observe({
     #sample is chosen
     #default
     if(input$radio == 1)
     {
-      if (is.null(current))
-      {
-        #using image of tiger
-        # sample.jpg is titled A tiger in the water
-        #  By Bob Jagendorf 
-        #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
-        #  via Wikimedia Commons
-        shinyImageFile$shiny_img_origin <- 
-          shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
-      }
-      
-      else
-      {
-        # using current image from commandline
-        # optional parameter for runShiny
-        shinyImageFile$shiny_img_origin <- current
-        #need to also change reload!!!! 
-      }
-    
+      #using image of tiger
+      # sample.jpg is titled A tiger in the water
+      #  By Bob Jagendorf 
+      #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
+      #  via Wikimedia Commons
+      shinyImageFile$shiny_img_origin <- 
+        shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
         #outputs image to plot1 -- main plot
       output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
     }
@@ -190,15 +185,30 @@ server <- function(input, output, session) {
     # user chose input si object option
     if(input$radio == 4)
     {
-      reset('file2') #allows plot1 to be null when radio is clicked
-      # creates a warning to upload correct .si file
-      # otherwise outputs image
-      output$plot1 <- renderPlot({ 
-        validate(need(!is.null(input$file2), "Must upload a valid .si file"))
-        if (is.null(input$file1))
-          return(NULL)
-      })
-    }
+      if (!is.null(current))
+      {
+        shinyImageFile$shiny_img_origin <- current
+        output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()
+        updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
+        updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
+        updateSliderInput(session, "gamma", value = shinyImageFile$shiny_img_origin$get_gamma())
+        updateSliderInput(session, "blurring", value = shinyImageFile$shiny_img_origin$get_blur())
+        # updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
+        updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
+        })
+      }
+      else 
+      {
+        reset('file2') #allows plot1 to be null when radio is clicked
+        # creates a warning to upload correct .si file
+        # otherwise outputs image
+        output$plot1 <- renderPlot({ 
+          validate(need(!is.null(input$file2), "Must upload a valid .si file"))
+          if (is.null(input$file1))
+            return(NULL)
+        })
+      } # end of else
+    } # end of input$radio == 4 if
   }) # end of observe
 
   # second observe
@@ -422,24 +432,13 @@ server <- function(input, output, session) {
   observeEvent(input$button3, {
     if(input$radio == 1)
     {
-      if (is.null(current))
-      {
-        #using image of tiger
-        # sample.jpg is titled A tiger in the water
-        #  By Bob Jagendorf 
-        #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
-        #  via Wikimedia Commons
-        shinyImageFile$shiny_img_origin <- 
-          shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
-      }
-      
-      else
-      {
-        # using current image from commandline
-        # optional parameter for runShiny
-        shinyImageFile$shiny_img_origin <- current
-        #need to also change reload!!!! 
-      }
+      #using image of tiger
+      # sample.jpg is titled A tiger in the water
+      #  By Bob Jagendorf 
+      #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
+      #  via Wikimedia Commons
+      shinyImageFile$shiny_img_origin <- 
+        shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
     }
     if(input$radio == 2)
     {
@@ -449,6 +448,17 @@ server <- function(input, output, session) {
     {
       shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
     }
+    if(input$radio == 4)
+    {
+      #TODO: more testing with previously saved objects
+      if (!is.null(current))
+      {
+        shinyImageFile$shiny_img_origin <- current
+      }
+      else 
+        shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
+    }
+    #TODO!!! if statement for #4
 
     updateSliderInput(session, "bright", value = 0)
     updateSliderInput(session, "contrast", value = 0)
