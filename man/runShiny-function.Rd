@@ -10,3 +10,10 @@ runShiny(current_shinyimg)
 \description{
 A function to start shiny app
 }
+\section{Fields}{
+
+\describe{
+\item{\code{current_shinyimg}}{takes in an optional parameter of a image user is
+currently editing in the command line}
+}}
+
