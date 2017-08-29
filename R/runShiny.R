@@ -3,6 +3,8 @@
 #' @description A function to start shiny app
 #' @name runShiny-function
 #' @export
+#' @field current_shinyimg takes in an optional parameter of a image user is 
+#'    currently editing in the command line
 #' @import shiny 
 #' @importFrom EBImage display imageData Image colorMode readImage 
 #' writeImage gblur combine channel rotate
@@ -14,12 +16,14 @@
 runShiny <- function(current_shinyimg) {
   if(missing(current_shinyimg))
   {
+    #no argument given 
     #do nothing
   }
   else
   {
-    #create a global variable for the current shinyimg 
-    current <<- current_shinyimg
+    #assign current_shinyimg to current
+    #current is used in the shinyapp if current exists
+    current <- current_shinyimg
   }
   
   appDir <- system.file("shinyapp", "app19.R", package = "ShinyImage")

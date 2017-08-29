@@ -152,7 +152,9 @@ server <- function(input, output, session) {
       {
         # using current image from commandline
         # optional parameter for runShiny
-        shinyImageFile$shiny_img_origin <- current 
+        shinyImageFile$shiny_img_origin <- current
+
+        #need to also change reload!!!! 
       }
     
         #outputs image to plot1 -- main plot
