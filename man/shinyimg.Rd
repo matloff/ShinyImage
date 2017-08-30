@@ -70,7 +70,7 @@ After two points are selected, a cropping selection can be create in order to cr
 
 \examples{
 
-local_tiger = shinyimg$new(system.file("images","sample.jpg",package="ShinyImage"))
+local_tiger = shinyimg$new(system.file("images","tiger_small.jpg",package="ShinyImage"))
 # sample.jpg is titled A tiger in the water
 #  By Bob Jagendorf 
 #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
