@@ -70,28 +70,27 @@ After two points are selected, a cropping selection can be create in order to cr
 
 \examples{
 
-local_tiger = shinyimg$new(system.file("images","tiger_small.jpg",package="ShinyImage"))
-# sample.jpg is titled A tiger in the water
-#  By Bob Jagendorf 
-#  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
-#  via Wikimedia Commons
-local_tiger$add_brightness() # Adds brightness to image
+small_tiger = shinyimg$new(system.file("images","tiger_small.jpg",package="ShinyImage"))
+
+small_tiger$add_brightness() # Adds brightness to image
+
+small_tiger$add_contrast() #Adds contrast to image 
+
+small_tiger$undo() # Undoes the brightness addition
+
+small_tiger$redo() # Redoes the brightness addition
 
 \dontrun{
+ 
+small_tiger$add_gamma() #Adds Gamma correction
 
-local_tiger$undo() # Undoes the brightness addition
+small_tiger$add_blur() #Adds blur to image 
 
-local_tiger$redo() # Redoes the brightness addition
+small_tiger$add_rotate() #Adds rotation by 1 degree
 
-local_tiger$add_contrast() # Adds contrast
+small_tiger$save('save.si') # Saves the current state. The filename is optional.
 
-local_tiger$add_gamma() #Adds Gamma correction
-
-local_tiger$add_rotate() #Adds rotation by 1 degree
-
-local_tiger$save('save.si') # Saves the current state. The filename is optional.
-
-local_tiger$load('save.si') # Loads from a previously saved state. The filename is optional. 
+small_tiger$load('save.si') # Loads from a previously saved state. The filename is optional. 
 #Requires a previously instantiated shinyimg instance (argument provided to new can be null).
 
 }
