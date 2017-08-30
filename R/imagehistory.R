@@ -111,7 +111,7 @@ siaction <- R6Class("siaction",
 #'   \item{\code{new(img)}}{Default constructor. \code{img} can be either a URL or a location of a local image.}
 #'   \item{\code{undo()}}{Undoes the last change done to this image. When the original image state is reached, no more undos are possible.}
 #'   \item{\code{redo()}}{Redos the next action after an undo has been performed. Will no longer redo if there are no more undos to redo.}
-#'   \item{\code{shinyUnod()}}{Undoes the last change done to this image without autorendering; used by Shiny. 
+#'   \item{\code{shinyUndo()}}{Undoes the last change done to this image without autorendering; used by Shiny. 
 #'      When the original image state is reached, no more undos are possible.}
 #'   \item{\code{redo()}}{Redos the next action after an undo has been performed without autorendering; used by Shiny. 
 #'      Will no longer redo if there are no more undos to redo.}
