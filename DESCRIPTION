@@ -14,10 +14,8 @@ Author: Alexander Fu [aut],
 Maintainer: Norm Matloff <nsmatloff@ucdavis.edu>
 Description: Imaging package, with an emphasis on recording history of changes.
 Depends: EBImage, R6, shiny, shinyjs
-License: MIT + file LICENSE
+License: MIT 
 LazyData: TRUE
-RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown
-Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
