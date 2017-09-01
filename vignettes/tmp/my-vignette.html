@@ -12,7 +12,7 @@
 
 <meta name="author" content="Norm Matloff, Alex Fu, Ariel Shin" />
 
-<meta name="date" content="2017-08-29" />
+<meta name="date" content="2017-08-24" />
 
 <title>ShinyImage</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">ShinyImage</h1>
 <h4 class="author"><em>Norm Matloff, Alex Fu, Ariel Shin</em></h4>
-<h4 class="date"><em>2017-08-29</em></h4>
+<h4 class="date"><em>2017-08-24</em></h4>
 
 
 
@@ -80,11 +80,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>Once installed, a user can create a shinyimg object to modify pictures.</p>
 <div id="creating-a-new-image" class="section level4">
 <h4>Creating a new image</h4>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#  the image being used in this example is titled 'A tiger in the water'</span>
-<span class="co">#  By Bob Jagendorf </span>
-<span class="co">#  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], </span>
-<span class="co">#  via Wikimedia Commons</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger &lt;-<span class="st"> </span>shinyimg<span class="op">$</span><span class="kw">new</span>(<span class="st">'https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg'</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="op">&gt;</span><span class="st"> </span>tiger &lt;-<span class="st"> </span>shinyimg<span class="op">$</span><span class="kw">new</span>(<span class="st">'https://upload.wikimedia.org/wikipedia/commons/1/1c/Tigerwater_edit2.jpg'</span>)
 <span class="co"># In addition to a web link, a user can also upload a jpeg, png, or tiff saved locally.</span>
 <span class="co"># We will continue tiger as our shiny image object to modify for the rest of our examples</span></code></pre></div>
 </div>
@@ -105,17 +101,15 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co"># The initial value of brightness is 0</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_brightness</span>() <span class="co">#adds brightness by 0.1</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remomve_brightness</span>() <span class="co">#removes brightness by 0.1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_brightness</span>(.<span class="dv">5</span>) <span class="co">#sets brightness by number inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_brightness</span>(<span class="dv">0</span>) <span class="co">#sets brightness back to default</span></code></pre></div>
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_brightness</span>(<span class="dv">1</span>) <span class="co">#sets brightness by number inputted</span></code></pre></div>
 </div>
 <div id="contrast" class="section level4">
 <h4>Contrast</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># There are three ways to modify contrast</span>
-<span class="co"># The initial value of contrast is 1</span>
+<span class="co"># The initial value of contrast is 0</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_contrast</span>() <span class="co">#adds contrast by 0.1</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remomve_contrast</span>() <span class="co">#removes contrast by 0.1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_contrast</span>(<span class="dv">2</span>) <span class="co">#sets contrast by number inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_contrast</span>(<span class="dv">1</span>) <span class="co">#sets contrast back to default</span></code></pre></div>
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_contrast</span>(<span class="dv">2</span>) <span class="co">#sets contrast by number inputted</span></code></pre></div>
 </div>
 <div id="gamma-correction" class="section level4">
 <h4>Gamma Correction</h4>
@@ -123,8 +117,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co"># The initial value of gamma correction is 1</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_gamma</span>() <span class="co">#adds gamma correction by 0.5</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_gamma</span>() <span class="co">#removes gamma correction by 0.5</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_gamma</span>(<span class="dv">2</span>) <span class="co">#sets gamma correction by number inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_gamma</span>(<span class="dv">1</span>) <span class="co">#sets gamma correction back to default</span></code></pre></div>
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_gamma</span>(<span class="dv">2</span>) <span class="co">#sets gamma correction by number inputted</span></code></pre></div>
 </div>
 <div id="blurring" class="section level4">
 <h4>Blurring</h4>
@@ -132,8 +125,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co"># The initial value of blur is 0</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_blur</span>() <span class="co">#adds blurring by 1</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_blur</span>() <span class="co">#removes blurring by 1</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_blur</span>(<span class="dv">6</span>) <span class="co">#sets blurring by number inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_blur</span>(<span class="dv">0</span>) <span class="co">#sets blurring back to default</span></code></pre></div>
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_blur</span>(<span class="dv">2</span>) <span class="co">#sets blurring by number inputted</span></code></pre></div>
 </div>
 <div id="rotation" class="section level4">
 <h4>Rotation</h4>
@@ -141,8 +133,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co"># The initial value of rotate is 0</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">add_rotate</span>() <span class="co">#rotates image by 1 degree to the right</span>
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">remove_rotate</span>() <span class="co">#rotates image by 1 degree to the left</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_rotate</span>(<span class="dv">180</span>) <span class="co">#sets rotation by degree inputted</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_rotate</span>(<span class="dv">0</span>) <span class="co">#sets rotation back to default of 0 degrees rotated</span></code></pre></div>
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">set_rotate</span>(<span class="dv">2</span>) <span class="co">#sets rotation by degree inputted</span></code></pre></div>
 </div>
 <div id="colormode" class="section level4">
 <h4>Colormode</h4>
@@ -194,7 +185,7 @@ tiger<span class="op">$</span><span class="kw">cropxy</span>(<span class="dv">0<
 <span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">save</span>(<span class="st">'save.si'</span>) 
 
 <span class="co"># A user can also save the physical image e.g. the jpg image</span>
-<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">saveImage</span>()</code></pre></div>
+<span class="op">&gt;</span><span class="st"> </span>tiger<span class="op">$</span><span class="kw">savejpg</span>()</code></pre></div>
 </div>
 <div id="load" class="section level4">
 <h4>Load</h4>
@@ -210,10 +201,7 @@ tiger<span class="op">$</span><span class="kw">cropxy</span>(<span class="dv">0<
 </div>
 <div id="starting-the-shiny-gui" class="section level4">
 <h4>Starting the Shiny GUI</h4>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="op">&gt;</span><span class="st"> </span><span class="kw">runShiny</span>() 
-
-<span class="co"># A user can also use an image they are currently editing in the GUI</span>
-<span class="op">&gt;</span><span class="st"> </span><span class="kw">runShiny</span>(tiger)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="op">&gt;</span><span class="st"> </span><span class="kw">runShiny</span>()</code></pre></div>
 </div>
 <div id="uploading-an-image" class="section level4">
 <h4>Uploading an Image</h4>
