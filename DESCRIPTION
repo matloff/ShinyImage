@@ -1,6 +1,6 @@
 Package: ShinyImage
 Type: Package
-Title: Imaging Package, with an Emphasis on Journaling
+Title: Image Manipulation, with an Emphasis on Journaling
 Version: 0.1.0
 Authors@R: c(person("Alexander", "Fu", email = "aafu@ucdavis.edu",
         role = c("aut")),
@@ -12,7 +12,11 @@ Author: Alexander Fu [aut],
   Ariel Shin [aut], 
   Norm Matloff [aut, cre]
 Maintainer: Norm Matloff <nsmatloff@ucdavis.edu>
-Description: Imaging package, with an emphasis on recording history of changes.
+Description: Standard imaging operations, e.g. crop and contrast
+  adjustment, but with ability to go back and forth through sequence of
+  changes, with records being persistent.  Optional Shiny interface.
+  Useful to help with the research reproducibility problem, and as a
+  teaching tool.
 Depends: EBImage, R6, shiny, shinyjs
 License: MIT 
 LazyData: TRUE
