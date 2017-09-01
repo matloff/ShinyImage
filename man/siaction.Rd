@@ -23,7 +23,7 @@ Class providing object describing one action.
 
 \item{\code{gamma}}{Stores url of the last visualization created by this object.}
 
-\item{\code{crop}}{A double nested sequence of crops c(c(x1, y1), c(x2, y2)).}
+\item{\code{crop}}{A double nested sequence of crops c\(c\(x1, y1\), c\(x2, y2\)\).}
 
 \item{\code{blur}}{stores value of blur}
 
@@ -32,10 +32,10 @@ Class providing object describing one action.
 \item{\code{grayscale}}{stores value of colormode (1 if grayscale, 0 if color)
 #' @section Methods:
 \describe{
-\item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
-\item{\code{new(brightness, contrast, gamma, crop)}}{This method is used to create object of this class with the appropriate parameters.}
+  \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
+  \item{\code{new(brightness, contrast, gamma, crop)}}{This method is used to create object of this class with the appropriate parameters.}
 
-\item{\code{get_action()}}{This method returns a c() list of the input parameters.}
+  \item{\code{get_action()}}{This method returns a c() list of the input parameters.}
 }}
 }}
 

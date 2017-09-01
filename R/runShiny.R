@@ -12,6 +12,8 @@
 #' @examples
 #' \dontrun{
 #'    runShiny()
+      #can exit through the shiny app
+      #or ^C
 #' }
 
 # function to run the Shiny app

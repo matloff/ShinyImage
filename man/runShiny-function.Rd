@@ -8,7 +8,7 @@
 runShiny(current_shinyimg)
 }
 \arguments{
-\item{current_shinyimg}{takes in an optional parameter of a image user is
+\item{current_shinyimg}{takes in an optional parameter of a image user is 
 currently editing in the command line}
 }
 \description{

@@ -130,13 +130,13 @@ tiger$cropxy(0,10,0,10)
 #### Get Settings
 ```R
 # A user can view the settings of the image using get
-> gethistory() #returns recorded changes to image
-> get_brightness() #returns brightness value
-> get_contrast() #returns contrast value
-> get_gamma() #returns gamma correction value
-> get_blur() #returns blur value
-> get_rotate() #returns degrees rotated
-> get_color() #returns color mode value
+> tiger$gethistory() #returns recorded changes to image
+> tiger$get_brightness() #returns brightness value
+> tiger$get_contrast() #returns contrast value
+> tiger$get_gamma() #returns gamma correction value
+> tiger$get_blur() #returns blur value
+> tiger$get_rotate() #returns degrees rotated
+> tiger$get_color() #returns color mode value
 ```
 
 #### Save
