@@ -2,7 +2,7 @@ Package: ShinyImage
 Type: Package
 Title: Image Manipulation, with an Emphasis on Journaling
 Version: 0.1.0
-Authors@R: c(person("Alexander", "Fu", email = "aafu@ucdavis.edu",
+Authors@R: c(person("Alexander", "Fu", email = "alexfu95@gmail.com",
         role = c("aut")),
      person("Ariel", "Shin", email = "arishin@ucdavis.edu",
         role = c("aut")),
