@@ -1,6 +1,13 @@
 
 # ShinyImage
 
+Authors:
+
+Alex Fu <br> 
+Norm Matloff (maintainer, **matloff@cs.ucdavis.edu**)
+<br>
+Ariel Shin
+
 Imaging package, with an emphasis on *journaling*, i.e.  recording
 history of changes.  Undo/redo operations, ability to display multiple
 versions (currently under construction), etc.  The history is
@@ -9,36 +16,30 @@ or from a Shiny-based GUI.
 
 ## Installation
 
-You will need the following packages for the command-line interface to the
-package:
+You will need the following packages for the text-based application: 
 
 <UL>
 
 <li> 
-<b>fftwtools</b>:  Install from CRAN, except for Linux; for the latter,
+<b>fftwtools:</b>  Install from CRAN, except for Linux; for the latter,
   sse 
 <a href="#Linux">these special instructions.</a> 
 </li> </p> 
 
 <li>
-<b>EBImage</b>:  Run these commands from within R:
+<b>EBImage:</b>  Run these commands from within R:
 </p>
 
 ```R
-source("http://bioconductor.org/biocLite.R", verbose = FALSE) #Install package
+source("http://bioconductor.org/biocLite.R", verbose = FALSE) 
 biocLite("EBImage", suppressUpdates=TRUE, suppressAutoUpdate=FALSE, ask = FALSE)
 ```
 </li> </p> 
 
-<li>
-<b>GUI Installation</b>: Install from CRAN. 
-
-```R
-install.packages(c('shiny','shinyjs'))
-```
-</li> </p> 
-
 </UL>
+
+If you wish to use the GUI, see the 
+<a href="#GUIinstalluse">instructions below.</a> 
 
 Having done this, you can install ShinyImage.  For instance, download
 the **.zip** package available [here](//github.com/matloff/ShinyImag) and
@@ -50,11 +51,13 @@ R CMD build ShinyImage-master
 R CMD INSTALL -l z ShinyImage_0.1.0.tar.gz
 ```
 
-with __z__ being the location you wish to install ShinyImg to
+with __z__ being the directory/folder  you wish to install ShinyImg to
 (changing the version number as necessary).
 
-Alternatively, ShinyImage can be installed using devtools. User's working directory must be set to ShinyImage-master. From R, 
-```
+Alternatively, ShinyImage can be installed using **devtools**. User's
+working directory must be set to ShinyImage-master. From R, 
+
+``` R
 > install.packages(c('devtools', 'roxygen2'))
 > devtools::install()
 ```
@@ -77,7 +80,7 @@ R command line; examples of the GUI are given later in this document.
 # 'tiger' is an object of class 'shinyimg', which in turn is a subclass
 # of 'R6'
 
-# set autodisplay on 
+# set autodisplay on; 
 # after first image modification, 
 # image will render and pop up in a new window
 # or user can manually render image
@@ -122,16 +125,18 @@ R command line; examples of the GUI are given later in this document.
 # we can also redo the adding of the blur
 > tiger$redo()
 
-# we can also save the image to edit later on
+# we can also save the image to edit later on, using the ShinyImage format,
+# which will contain not only the newest image version but also undo
+# information needed to restore any previous version
 > tiger$save("tiger-water.si")
-# and later we can come back after a cold boot to do:
+# and later we can reload after a cold boot
 > tiger <- shinyload("tiger-water.si")
 # if you want to revert to a previous saved state, you can also do:
 > tiger$load("tiger-water.si")
 # this will load the image back to the state it was in when you saved the image.
 > tiger$undo()  # not too late to undo changes made before the save!
 
-# lastly, if we want to save the physical image
+# lastly, we can save the currently loaded image version to a standard format
 > tiger$saveImage('tiger.jpg')
 # we can save it as either jpg, png, or tiff
 > tiger$saveImage('tiger.png')
@@ -141,7 +146,9 @@ R command line; examples of the GUI are given later in this document.
 
 ## GUI Installation and Usage
 
+<a name="GUIinstalluse"> 
 ### Installation
+</a> 
 
 Download from CRAN:
 
@@ -150,20 +157,27 @@ install.packages(c('shiny','shinyjs'))
 ```
 
 ### Usage
-<li> A gui can also be spawned to edit images using the sample provided or a user can upload an image, link, or an image log of a .si object created through shinyimg
+
+<li> The GUI can also be used to edit images on new or existing files,
+including an **.si** file saved from use of the text version.
 </p>
 
-<li> A user can edit brightness, contrast, and gamma correction. The user can also rotate, blur, and crop an image. These changes can be made to the image using the sliders. In order to crop a photo, the user has to highlight a box over the original plot. A preview of the cropped image with pop up below the original image. To keep the cropped image, click the keep button which will pop up below the preview image.  
+<li> A user can edit brightness, contrast, and gamma correction. The
+user can also rotate, blur, and crop an image. These changes can be made
+to the image using the sliders. In order to crop a photo, the user has
+to highlight a box over the original plot. A preview of the cropped
+image with pop up below the original image. To keep the cropped image,
+click the keep button that will pop up below the preview image.  </p>
+
+<li> While editing an image, a user can undo, redo, or reset the image.
+These actions are executed through buttons at the bottom of the sidebar.
 </p>
 
-<li> While editing an image, a user can undo, redo, or reset the image. These actions are executed through buttons at the bottom of the sidebar. 
-</p>
+<li> After editing an image, a user can download the image and the image
+log. These actions are below the main plot.  </p>
 
-<li> After editing an image, a user can download the image and the image log. These actions are below the main plot. 
-</p>
-
-<li> The user can also view the image log to see which actions were recorded. 
-</p>
+<li> The user can also view the image log to see which actions were
+recorded.  </p>
 
 Run these commands from within R. 
 
@@ -171,8 +185,8 @@ Run these commands from within R.
 > runShiny()
 ```
 
-<li> A user can use an image they are currently editing on the commandline to edit in the GUI
-</p>
+<li> A user can use an image he/she is currently editing on the
+commandline to edit in the GUI </p>
 
 ```R
 # using our previous example of our shinyimg object tiger
@@ -188,7 +202,7 @@ Run these commands from within R.
 <li> Download http://www.fftw.org/fftw-3.3.6-pl1.tar.gz
 </li> </p> 
 
-<li> Unpack, say to x/fftw-3.3.6-pl1 and from that directory run
+<li> Unpack, say to **x/fftw-3.3.6-pl1** and from that directory run
 </p>
 
 <pre>
@@ -229,7 +243,7 @@ sudo apt-get install fftw-dev
 </pre>
 </li> </p> 
 
-<li> If fftw library does not get properly installed, try
+<li> If **fftw** library does not get properly installed, try
 </p>
 
 <pre>
