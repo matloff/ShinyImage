@@ -32,7 +32,7 @@ ui <- fluidPage(
             condition = "input.radio == 2",
             fileInput(inputId = 'file1',
               label = 'Upload Image',
-              placeholder = 'JPEG, PNG, and TIFF are supported',
+              ##NM placeholder = 'JPEG, PNG, and TIFF are supported',
               accept = c(
                 "image/jpeg",
                 "image/x-png",
@@ -45,14 +45,14 @@ ui <- fluidPage(
             condition = "input.radio == 3",
             textInput(inputId = "url1", 
               label = 'Upload URL', 
-              placeholder = 'JPEG, PNG, and TIFF are supported',
+              ##NM placeholder = 'JPEG, PNG, and TIFF are supported',
               value = '')
           ),
           conditionalPanel(
             condition = "input.radio == 4", 
             fileInput(inputId = 'file2', 
               label = 'Upload .si file', 
-              placeholder = "Must be a ShinyImg Object", 
+              ##NM placeholder = "Must be a ShinyImg Object", 
               accept = c(
                 "file/si", 
                 ".si"))
@@ -114,7 +114,7 @@ ui <- fluidPage(
             condition = "input.radio2 == 2",
             fileInput(inputId = 'file3', 
             label = 'Upload .si file', 
-            placeholder = "Must be a ShinyImg Object", 
+            ##NM placeholder = "Must be a ShinyImg Object", 
             accept = c(
               "file/si", 
               ".si"))
