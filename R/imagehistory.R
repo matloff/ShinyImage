@@ -440,6 +440,7 @@ shinyimg <- R6Class("shinyimg",
                       # Adjusts brightness by 0.1. This is a good increment
                       # but a variable brightness function should be added.
                       add_brightness = function() {
+                        cat('add_brightness()\n',file='~/history.R',append=T)
                         # Adds 0.1 brightness.
                         private$mutator(1, 0.1)
                       },
@@ -539,6 +540,10 @@ shinyimg <- R6Class("shinyimg",
                         y1 = min(location$y[1], location$y[2])
                         x2 = max(location$x[1], location$x[2])
                         y2 = max(location$y[1], location$y[2])
+                        # NM:  for history file
+                        cmd <- paste('cropxy(',
+                           x1, ',', x2, ',', y1, ',', y2, ')', sep='')
+                        cat(cmd,'\n',file='~/history.R',append=TRUE)
                         #comment and print here --
                         private$current_image <<- 
                           private$current_image[x1:x2,y1:y2,]
@@ -564,6 +569,10 @@ shinyimg <- R6Class("shinyimg",
                       # The function used by Shiny to crop using absolute 
                       # coordinates. 
                       cropxy = function(x1, x2, y1, y2) {
+                        # NM:  for history file
+                        cmd <- paste('cropxy(',
+                           x1, ',', x2, ',', y1, ',', y2, ')', sep='')
+                        cat(cmd,'\n',file='~/history.R',append=TRUE)
                         #same as crop but used by shiny
                         private$current_image <<- 
                           private$current_image[x1:x2,y1:y2,]
