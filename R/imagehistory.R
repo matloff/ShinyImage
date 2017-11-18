@@ -181,22 +181,23 @@ siaction <- R6Class("siaction",
 #'   \item{\code{toggle_render()}}{Toggles the automatic rendering after making a change. By default, this option is off.}
 #'   }
 #'   
-logged_image <- 'image'
 shinyimg <- R6Class("shinyimg",
                     lock_objects = FALSE,
                     public = list(
+                      logged_image = format(Sys.time(), "image_%b%y_%X"),
                       # Constructor of the shinyimg class
                       initialize = function(inputImage = NULL, 
                                             autosave_filename = NULL) {
 
-                        logged_image <<- format(Sys.time(), "image_%b%y_%X")
-                        cat(logged_image,' <- shinyimg$new(\'',inputImage,'\')\n',sep='',file='~/history.R',append=TRUE)
+                        self$logged_image <<- format(Sys.time(), "image_%b%y_%X")
+                        #update name when initializing image
+                        cat(self$logged_image,' <- shinyimg$new(\'',inputImage,'\')\n',sep='',file='~/history.R',append=TRUE)
                         self$set_default()
                         private$startup(inputImage, autosave_filename)
                       },
                       # Resets this object's values to the default ones.
                       set_default = function() {
-                        cat('set_default()\n',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_default()\n',sep='',file='~/history.R',append=TRUE)
 
                         # Default brightness
                         private$myhistory = c(0,0,0,0,0,0,0,0,0,0)
@@ -244,7 +245,7 @@ shinyimg <- R6Class("shinyimg",
                       },
                       set_autodisplay = function() 
                       {
-                        cat(logged_image,'$set_autodisplay()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_autodisplay()\n',sep='',file='~/history.R',append=TRUE)
 
                         private$autodisplay = 1
                         #TODO: need to add self$render
@@ -253,7 +254,7 @@ shinyimg <- R6Class("shinyimg",
                       #turns off autodisplay
                       set_autodisplay_OFF = function()
                       {
-                        cat(logged_image,'$set_autodisplay_OFF()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_autodisplay_OFF()\n',sep='',file='~/history.R',append=TRUE)
                         private$autodisplay = 0
                       },
                       # Outputs the image as a plot
@@ -302,7 +303,7 @@ shinyimg <- R6Class("shinyimg",
                       # Counterpart to the save function, will load from
                       # previous save file.
                       load = function(file = private$autosave_filename) {
-                        cat(logged_image,'$load(',file,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$load(',file,')\n',sep="",file='~/history.R',append=TRUE)
                         base::load(file)
                         # Generate the image history.
                         private$img_history = c()
@@ -344,7 +345,7 @@ shinyimg <- R6Class("shinyimg",
                       # Uses the actions list (img_history) to undo the last
                       # done action. DOES NOT PRUNE THE LIST AT THIS POINT. 
                       undo = function() {
-                        cat(logged_image,'$undo()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$undo()\n',sep='',file='~/history.R',append=TRUE)
 
                         # If there are more actions to undo besides the 
                         # original
@@ -372,7 +373,7 @@ shinyimg <- R6Class("shinyimg",
                       },
                       # undo function for Shiny app
                       shinyUndo = function() {
-                        cat(logged_image,'$undo()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$undo()\n',sep='',file='~/history.R',append=TRUE)
                         # same as undo
                         # but got rid of auto render
                         # and print statement
@@ -395,7 +396,7 @@ shinyimg <- R6Class("shinyimg",
                       # Uses the actions list (img_history) to redo the last
                       # undone action.
                       redo = function() {
-                        cat(logged_image,'$redo()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$redo()\n',sep='',file='~/history.R',append=TRUE)
                         # If there are actions to redo
                         if (private$actions < length(private$img_history)) {
                           # Increment by one action, then apply it
@@ -418,7 +419,7 @@ shinyimg <- R6Class("shinyimg",
                       },
                       # Redo action for Shiny app
                       shinyRedo = function() {
-                        cat(logged_image,'redo()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'redo()\n',sep='',file='~/history.R',append=TRUE)
                         # same as Redo 
                         # without auto render and print statement
                         # utilized by Shiny
@@ -451,7 +452,7 @@ shinyimg <- R6Class("shinyimg",
                       # Returns a copy of this image. 
                       # One copy's changes will not affect the other.
                       copy = function() {
-                        cat(logged_image,'$copy()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$copy()\n',sep='',file='~/history.R',append=TRUE)
                         #TODO: Different options for cloning, 
                         # like collapsing history
                         return (self$clone())
@@ -460,7 +461,7 @@ shinyimg <- R6Class("shinyimg",
                       # but a variable brightness function should be added.
                       add_brightness = function() {
                         #adds function to the history log
-                        cat(logged_image,'$add_brightness()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$add_brightness()\n',sep='',file='~/history.R',append=TRUE)
                         # Adds 0.1 brightness.
                         private$mutator(1, 0.1)
                       },
@@ -469,7 +470,7 @@ shinyimg <- R6Class("shinyimg",
                       # but a variable brightness function should be added.
                       remove_brightness = function() {
                         #adds function to the history log
-                        cat(logged_image,'$remove_brightness()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$remove_brightness()\n',sep='',file='~/history.R',append=TRUE)
                         # removes 0.1 brightness.
                         private$mutator(1, -0.1)
                       },
@@ -478,7 +479,7 @@ shinyimg <- R6Class("shinyimg",
                       # but a variable contrast function should be added.
                       add_contrast = function() {
                         #adds function to the history log
-                        cat(logged_image,'$add_contrast()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$add_contrast()\n',sep='',file='~/history.R',append=TRUE)
                         # Adds 0.1 contrast.
                         private$mutator(3, 0.1)
                       },
@@ -487,7 +488,7 @@ shinyimg <- R6Class("shinyimg",
                       # but a variable contrast function should be added.
                       remove_contrast = function() {
                         #adds function to the history log
-                        cat(logged_image,'$remove_contrast()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$remove_contrast()\n',sep='',file='~/history.R',append=TRUE)
                         # removes 0.1 contrast.
                         private$mutator(3, -0.1)
                       },
@@ -495,83 +496,83 @@ shinyimg <- R6Class("shinyimg",
                       # Adjusts gamma by 0.5
                       add_gamma = function() {
                         #adds function to the history log
-                        cat(logged_image,'$add_gamma()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$add_gamma()\n',sep='',file='~/history.R',append=TRUE)
                         private$mutator(5, 0.5)
                       },
                       
                       # Adjusts gamma by -0.5
                       remove_gamma = function() {
                         #adds function to the history log
-                        cat(logged_image,'$remove_gamma()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$remove_gamma()\n',sep='',file='~/history.R',append=TRUE)
                         private$mutator(5, -0.5)
                       },
 
                       # Adjusts blur by 1
                       add_blur = function() {
                         #adds function to the history log
-                        cat(logged_image,'$add_blur()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$add_blur()\n',sep='',file='~/history.R',append=TRUE)
                         private$mutator(7, 1)
                       }, 
 
                       # Adjusts blur by -1
                       remove_blur = function() {
                         #adds function to the history log
-                        cat(logged_image,'$remove_blur()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$remove_blur()\n',sep='',file='~/history.R',append=TRUE)
                         private$mutator(7, -1)
                       }, 
 
                       # Adjusts rotate by 1 degree
                       add_rotate = function() {
                         #adds function to the history log
-                        cat(logged_image,'$add_rotate()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$add_rotate()\n',sep='',file='~/history.R',append=TRUE)
                         private$mutator(9, 1)
                       }, 
 
                       # Adjusts rotate by -1 degree
                       remove_rotate = function() {
                         #adds function to the history log
-                        cat(logged_image,'$remove_rotate()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$remove_rotate()\n',sep='',file='~/history.R',append=TRUE)
                         private$mutator(9, -1)
                       },
 
                       set_brightness = function(brightness) {
                         #adds function to the history log
-                        cat(logged_image,'$set_brightness(',brightness,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_brightness(',brightness,')\n',sep="",file='~/history.R',append=TRUE)
                         # Sets brightness.
                         private$mutator(2, brightness)
                       },
                       
                       set_contrast = function(contrast) {
                         #adds function to the history log
-                        cat(logged_image,'$set_contrast(',contrast,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_contrast(',contrast,')\n',sep="",file='~/history.R',append=TRUE)
                         # Sets brightness.
                         private$mutator(4, contrast)
                       },
 
                       set_gamma = function(gamma) {
                         #adds function to the history log
-                        cat(logged_image,'$set_gamma(',gamma,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_gamma(',gamma,')\n',sep="",file='~/history.R',append=TRUE)
                         private$mutator(6, gamma)
                         # Sets gamma correction
                       },
 
                       set_blur = function(blur) {
                         #adds function to the history log
-                        cat(logged_image,'$set_blur(',blur,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_blur(',blur,')\n',sep="",file='~/history.R',append=TRUE)
                         # Sets blur
                         private$mutator(8, blur)
                       }, 
 
                       set_rotate = function(rotate) {
                         #adds function to the history log
-                        cat(logged_image,'$set_rotate(',rotate,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_rotate(',rotate,')\n',sep="",file='~/history.R',append=TRUE)
                         # Sets rotation of image
                         private$mutator(10, rotate)
                       },
 
                       set_grayscale = function(grayscale) {
                         #adds function to the history log
-                        cat(logged_image,'$set_grayscale(',grayscale,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$set_grayscale(',grayscale,')\n',sep="",file='~/history.R',append=TRUE)
                         # Sets image to grayscale if argument is 1
                         # Else image is colormode
                         # Can revert image to colormode if argument is 0
@@ -593,7 +594,7 @@ shinyimg <- R6Class("shinyimg",
                         # NM:  for history file
                         cmd <- paste('cropxy(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
-                        cat(logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
                         #comment and print here --
                         private$current_image <<- 
                           private$current_image[x1:x2,y1:y2,]
@@ -622,7 +623,7 @@ shinyimg <- R6Class("shinyimg",
                         # NM:  for history file
                         cmd <- paste('cropxy(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
-                        cat(logged_image, '$', cmd,'\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image, '$', cmd,'\n',sep='',file='~/history.R',append=TRUE)
                         #same as crop but used by shiny
                         private$current_image <<- 
                           private$current_image[x1:x2,y1:y2,]
@@ -665,7 +666,7 @@ shinyimg <- R6Class("shinyimg",
                       }, 
                       # saves image as a jpeg 
                       saveImage = function(file) {
-                        cat(logged_image,'$','saveImage(',file,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$','saveImage(',file,')\n',sep="",file='~/history.R',append=TRUE)
                         if(missing(file))
                         {
                           writeImage(private$current_image, files = "temp.jpg")
