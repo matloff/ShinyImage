@@ -259,7 +259,7 @@ shinyimg <- R6Class("shinyimg",
                       },
                       # Outputs the image as a plot
                       render = function() {
-                        cat(logged_image,'$render()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$render()\n',sep='',file='~/history.R',append=TRUE)
 
                         # Reset the lazy actions
                         private$lazy_actions = 0;
