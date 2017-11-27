@@ -711,6 +711,11 @@ shinyimg <- R6Class("shinyimg",
                       get_actions = function() {
                         return(private$actions)
                       }, 
+                      #gets directory of history.R file 
+                      get_history_directory = function() {
+                      	setwd('~')
+                      	return(cat('history.R is located at ', getwd(), '/history.R\n', sep = ""))
+                      },
                       # returns a copy of the status of redoes available
                       checkRedo = function() {
                         if (private$actions < length(private$img_history))
