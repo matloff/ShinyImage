@@ -28,6 +28,54 @@ library(R6)
 #' }  
 #'
 
+#used to keep track of rotate, crop, or any other function that requires order
+Queue <- setRefClass(Class = "Queue",
+                     fields = list(
+                       name = "character",
+                       data = "list"
+                     ),
+                     methods = list(
+                       size = function() {
+                         'Returns the number of items in the queue.'
+                         return(length(data))
+                       },
+                       #
+                       push = function(item) {
+                         'Inserts element at back of the queue.'
+                         data[[size()+1]] <<- item
+                       },
+                       #
+                       pop = function() {
+                         'Removes and returns head of queue (or raises error if queue is empty).'
+                         if (size() == 0) stop("queue is empty!")
+                         value <- data[[1]]
+                         data[[1]] <<- NULL
+                         value
+                       },
+                       #
+                       poll = function() {
+                         'Removes and returns head of queue (or NULL if queue is empty).'
+                         if (size() == 0) return(NULL)
+                         else pop()
+                       },
+                       #
+                       peek = function(pos = c(1)) {
+                         'Returns (but does not remove) specified positions in queue (or NULL if any one of them is not available).'
+                         if (size() < max(pos)) return(NULL)
+                         #
+                         if (length(pos) == 1) return(data[[pos]])
+                         else return(data[pos])
+                       },
+                       initialize=function(...) {
+                         callSuper(...)
+                         #
+                         # Initialise fields here (place holder)...
+                         #
+                         .self
+                       }
+                     )
+)
+
 siaction <- R6Class("siaction",
                     # Make this action mutable. TODO: Make it so that
                     # it doesn't need to be
@@ -242,6 +290,7 @@ shinyimg <- R6Class("shinyimg",
                         # The number of lazy actions we have done so far.
                         private$lazy_actions = 0
                         # bool value to determine if user can undo 
+                        private$order_list = Queue$new()
                       },
                       set_autodisplay = function() 
                       {
@@ -567,6 +616,7 @@ shinyimg <- R6Class("shinyimg",
                         #adds function to the history log
                         cat(self$logged_image,'$set_rotate(',rotate,')\n',sep="",file='~/history.R',append=TRUE)
                         # Sets rotation of image
+                        private$orderPrint(2, rotate, NULL, NULL, NULL)
                         private$mutator(10, rotate)
                       },
 
@@ -614,6 +664,8 @@ shinyimg <- R6Class("shinyimg",
                         # and new area.
                         private$xy1 = c(private$xoffset, private$yoffset)
                         private$xy2 = c(private$xoffset + xdiff, 
+                                        private$yoffset + ydiff)
+                        private$orderPrint(1, private$xoffset, private$yoffset, private$xoffset + xdiff, 
                                         private$yoffset + ydiff)
                         private$add_action()
                       },
@@ -770,6 +822,19 @@ shinyimg <- R6Class("shinyimg",
                       # immediately or not. 
                       # Defaults to off.
                       lazy_actions = 0,
+                      #list that maintains order of functions crop and rotate
+                      #order_list = Queue$new(),
+
+                      orderPrint = function(actionID, value1, value2, value3, value4)
+                      {
+                         private$order_list$push(actionID)
+                         private$order_list$push(value1)
+                         private$order_list$push(value2)
+                         private$order_list$push(value3)
+                         private$order_list$push(value4)
+
+
+                      },
                       
                       # The following are the private functions
                       mutator = function(actionID, amount) {
@@ -879,11 +944,12 @@ shinyimg <- R6Class("shinyimg",
                         private$brightness = args[1]
                         private$contrast = args[2]
                         private$gamma = args[3]
-                        private$xy1 = c(args[4], args[5])
-                        private$xy2 = c(args[6], args[7])   
+                        # private$xy1 = c(args[4], args[5])
+                        # private$xy2 = c(args[6], args[7])   
                         private$blur = args[8]
                         private$rotate = args[9]
                         private$grayscale = args[10]
+                        print(private$order_list)
 
                         # args[8] is blurring
                         if (args[8] > 0)
@@ -909,19 +975,33 @@ shinyimg <- R6Class("shinyimg",
                         # args[3] is gamma
                         private$current_image <- 
                           private$current_image ^ args[3]
- 
-                        # args[4] through args[7] are ABSOLUTE 
-                        # crop locations.
-                        private$current_image <- private$current_image[
-                          args[4]:args[6], args[5]:args[7], 
-                          ]
 
                         # args[10] is colormode
                         if (args[10] == 1)
                           private$current_image <- channel(private$current_image, "gray")
-       
-                        #args[11] is rotation
-                        private$current_image <- rotate(private$current_image, args[9])
+
+                        #need to create a copy of our queue so that we have 
+                        #persistent history 
+                        order_copy <- private$order_list$copy()
+                        while (order_copy$size() != 0)
+                        {
+                          popped1 <- order_copy$pop() 
+                          if (popped1 == 1)
+                          {
+                            x1 = order_copy$pop()
+                            y1 = order_copy$pop()
+                            x2 = order_copy$pop()
+                            y2 = order_copy$pop()
+
+                            private$current_image <- private$current_image[
+                               x1:x2, y1:y2, 
+                               ]
+                          }
+                          else if (popped1 == 2)
+                          {
+                            private$current_image <- rotate(private$current_image, order_copy$pop())
+                          }
+                        }
 
                         private$myhistory <- args
 
