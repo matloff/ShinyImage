@@ -574,14 +574,16 @@ shinyimg <- R6Class("shinyimg",
                       add_rotate = function() {
                         #adds function to the history log
                         cat(self$logged_image,'$add_rotate()\n',sep='',file='~/history.R',append=TRUE)
-                        private$mutator(9, 1)
+                        private$add_order(2, private$rotate + 10, NULL, NULL, NULL)
+                        private$mutator(9, 10)
                       }, 
 
                       # Adjusts rotate by -1 degree
                       remove_rotate = function() {
                         #adds function to the history log
                         cat(self$logged_image,'$remove_rotate()\n',sep='',file='~/history.R',append=TRUE)
-                        private$mutator(9, -1)
+                        private$add_order(2, private$rotate - 10, NULL, NULL, NULL)
+                        private$mutator(9, -10)
                       },
 
                       set_brightness = function(brightness) {
@@ -616,7 +618,7 @@ shinyimg <- R6Class("shinyimg",
                         #adds function to the history log
                         cat(self$logged_image,'$set_rotate(',rotate,')\n',sep="",file='~/history.R',append=TRUE)
                         # Sets rotation of image
-                        private$orderPrint(2, rotate, NULL, NULL, NULL)
+                        private$add_order(2, rotate, NULL, NULL, NULL)
                         private$mutator(10, rotate)
                       },
 
@@ -641,6 +643,8 @@ shinyimg <- R6Class("shinyimg",
                         y1 = min(location$y[1], location$y[2])
                         x2 = max(location$x[1], location$x[2])
                         y2 = max(location$y[1], location$y[2])
+
+                        private$add_order(1, x1, y1, x2, y2)
                         # NM:  for history file
                         cmd <- paste('cropxy(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
@@ -665,8 +669,8 @@ shinyimg <- R6Class("shinyimg",
                         private$xy1 = c(private$xoffset, private$yoffset)
                         private$xy2 = c(private$xoffset + xdiff, 
                                         private$yoffset + ydiff)
-                        private$orderPrint(1, private$xoffset, private$yoffset, private$xoffset + xdiff, 
-                                        private$yoffset + ydiff)
+                        # private$add_order(1, private$xoffset, private$yoffset, private$xoffset + xdiff, 
+                        #                 private$yoffset + ydiff)
                         private$add_action()
                       },
                       # The function used by Shiny to crop using absolute 
@@ -696,6 +700,8 @@ shinyimg <- R6Class("shinyimg",
                         private$xy1 = c(private$xoffset, private$yoffset)
                         private$xy2 = c(private$xoffset + xdiff, 
                                         private$yoffset + ydiff)
+                        private$add_order(1, private$xy1[[1]], private$xy1[[2]], private$xy2[[1]], 
+                                        private$xy2[[2]])
                         private$add_action()
                       },
                       # Returns the size of the current image.
@@ -825,15 +831,13 @@ shinyimg <- R6Class("shinyimg",
                       #list that maintains order of functions crop and rotate
                       #order_list = Queue$new(),
 
-                      orderPrint = function(actionID, value1, value2, value3, value4)
+                      add_order = function(actionID, value1, value2, value3, value4)
                       {
                          private$order_list$push(actionID)
                          private$order_list$push(value1)
                          private$order_list$push(value2)
                          private$order_list$push(value3)
                          private$order_list$push(value4)
-
-
                       },
                       
                       # The following are the private functions
