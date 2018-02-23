@@ -605,16 +605,18 @@ shinyimg <- R6Class("shinyimg",
                       add_rotate = function() {
                         #adds function to the history log
                         cat(self$logged_image,'$add_rotate()\n',sep='',file='~/history.R',append=TRUE)
-                        private$add_order(2, private$rotate + 10, NULL, NULL, NULL)
                         private$mutator(9, 10)
+                        # Do after mutator() so we have updated private$actions.
+                        private$add_order(2, private$actions, 10, NULL, NULL, NULL)
                       }, 
 
                       # Adjusts rotate by -1 degree
                       remove_rotate = function() {
                         #adds function to the history log
                         cat(self$logged_image,'$remove_rotate()\n',sep='',file='~/history.R',append=TRUE)
-                        private$add_order(2, private$rotate - 10, NULL, NULL, NULL)
                         private$mutator(9, -10)
+                        # Do after mutator() so we have updated private$actions.
+                        private$add_order(2, private$actions, -10, NULL, NULL, NULL)
                       },
 
                       set_brightness = function(brightness) {
@@ -649,8 +651,11 @@ shinyimg <- R6Class("shinyimg",
                         #adds function to the history log
                         cat(self$logged_image,'$set_rotate(',rotate,')\n',sep="",file='~/history.R',append=TRUE)
                         # Sets rotation of image
-                        private$add_order(2, rotate, NULL, NULL, NULL)
                         private$mutator(10, rotate)
+                        # Subtract to get relative rotation (e.g. if current rotation is 180 deg
+                        # and we set rotation at 210 deg, relative rotation is 30).
+                        # Do after mutator() so we have updated private$actions.
+                        private$add_order(2, private$actions, rotate - private$rotate, NULL, NULL, NULL)
                       },
 
                       set_grayscale = function(grayscale) {
@@ -674,8 +679,6 @@ shinyimg <- R6Class("shinyimg",
                         y1 = min(location$y[1], location$y[2])
                         x2 = max(location$x[1], location$x[2])
                         y2 = max(location$y[1], location$y[2])
-
-                        private$add_order(1, x1, y1, x2, y2)
                         # NM:  for history file
                         cmd <- paste('cropxy(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
@@ -703,12 +706,13 @@ shinyimg <- R6Class("shinyimg",
                         # private$add_order(1, private$xoffset, private$yoffset, private$xoffset + xdiff, 
                         #                 private$yoffset + ydiff)
                         private$add_action()
+
+                        # Do after add_action() so we have updated private$actions.
+                        private$add_order(1, private$actions, x1, y1, x2, y2)
                       },
                       # The function used by Shiny to crop using absolute 
                       # coordinates. 
                       cropxy = function(x1, x2, y1, y2) {
-
-                        private$add_order(1, x1, y1, x2, y2)
                         # NM:  for history file
                         cmd <- paste('cropxy(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
@@ -736,6 +740,9 @@ shinyimg <- R6Class("shinyimg",
                                         private$yoffset + ydiff)
                         
                         private$add_action()
+
+                        # Do after add_action() so we have updated private$actions.
+                        private$add_order(1, private$actions, x1, y1, x2, y2)
                       },
                       # Returns the size of the current image.
                       # Needed for Shiny to determine the max values of
@@ -864,13 +871,13 @@ shinyimg <- R6Class("shinyimg",
                       #list that maintains order of functions crop and rotate
                       #order_list = Queue$new(),
 
-                      add_order = function(actionID, value1, value2, value3, value4)
+                      # whichActionID: number specifying whether we're doing crop or rotate
+                      # (i.e. which non-commutative action)
+                      # actionIndex: what numbered action this is (among all actions,
+                      # not just non-commutative ones)
+                      add_order = function(whichActionID, actionIndex, value1, value2, value3, value4)
                       {
-                         private$order_list$push(actionID)
-                         private$order_list$push(value1)
-                         private$order_list$push(value2)
-                         private$order_list$push(value3)
-                         private$order_list$push(value4)
+                      	private$order_list$push(c(whichActionID,actionIndex,value1,value2,value3,value4))
                       },
                       
                       # The following are the private functions
@@ -974,10 +981,11 @@ shinyimg <- R6Class("shinyimg",
                           {
                             #last elem is either the rotate coordinates
                             #or y2 for crop
-                            y2 <- private$order_list$reverse_pop()
+                            #y2 <- private$order_list$reverse_pop()
                             #last2 elem is either 2 for rotate
                             # or crop coordinate x2
-                            last2_elem <- private$order_list$reverse_pop()
+                            #last2_elem <- private$order_list$reverse_pop()
+
 
                             if (last2_elem == 2)
                             {
@@ -1071,21 +1079,21 @@ shinyimg <- R6Class("shinyimg",
                         order_copy <- private$order_list$copy()
                         while (order_copy$size() != 0)
                         {
-                          popped1 <- order_copy$pop() 
-                          if (popped1 == 1)
+                          popped <- order_copy$pop()
+                          if (popped[1] == 1)
                           {
-                            x1 = order_copy$pop()
-                            y1 = order_copy$pop()
-                            x2 = order_copy$pop()
-                            y2 = order_copy$pop()
+                          	x1 = popped[3]
+                          	y1 = popped[4]
+                          	x2 = popped[5]
+                          	y2 = popped[6]
 
-                            private$current_image <- private$current_image[
-                               x1:x2, y1:y2, 
-                               ]
-                          }
-                          else if (popped1 == 2)
+                          	private$current_image <- private$current_image[
+                          		x1:x2, y1:y2,
+                          		]
+                          } 
+                          else if (popped[1] == 2)
                           {
-                            private$current_image <- rotate(private$current_image, order_copy$pop())
+                          	private$current_image <- rotate(private$current_image, popped[3])
                           }
                         }
 
