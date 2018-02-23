@@ -28,61 +28,6 @@ library(R6)
 #' }  
 #'
 
-#used to keep track of rotate, crop, or any other function that requires order
-Queue <- setRefClass(Class = "Queue",
-                     fields = list(
-                       name = "character",
-                       data = "list"
-                     ),
-                     methods = list(
-                       size = function() {
-                         'Returns the number of items in the queue.'
-                         return(length(data))
-                       },
-                       #
-                       push = function(item) {
-                         'Inserts element at back of the queue.'
-                         data[[size()+1]] <<- item
-                       },
-                       #
-                       pop = function() {
-                         'Removes and returns head of queue (or raises error if queue is empty).'
-                         if (size() == 0) stop("queue is empty!")
-                         value <- data[[1]]
-                         data[[1]] <<- NULL
-                         value
-                       },
-                       reverse_pop = function() {
-                        'Removes tail of queue'
-                        if (size() == 0) stop("queue is empty!")
-                        value <- data[[size()]]
-                        data[[size()]] <<- NULL
-                        value
-                       },
-                       #
-                       poll = function() {
-                         'Removes and returns head of queue (or NULL if queue is empty).'
-                         if (size() == 0) return(NULL)
-                         else pop()
-                       },
-                       #
-                       peek = function(pos = c(1)) {
-                         'Returns (but does not remove) specified positions in queue (or NULL if any one of them is not available).'
-                         if (size() < max(pos)) return(NULL)
-                         #
-                         if (length(pos) == 1) return(data[[pos]])
-                         else return(data[pos])
-                       },
-                       initialize=function(...) {
-                         callSuper(...)
-                         #
-                         # Initialise fields here (place holder)...
-                         #
-                         .self
-                       }
-                     )
-)
-
 siaction <- R6Class("siaction",
                     # Make this action mutable. TODO: Make it so that
                     # it doesn't need to be
@@ -286,10 +231,11 @@ shinyimg <- R6Class("shinyimg",
                         # Option to have the output automatically rendered
                         # autodisplay is off till function is called
                         private$autodisplay = 1
+                        # Boolean Variable to indicate if action taken 
+                        # was non-commutative (e.g. crop/rotate)
+                        private$non_commutative_action = 0
                         # The filename used for the autosave in 
                         # case of crashes
-                        #private$autosave_filename = "workspace.si"
-                        #heere
                         private$autosave_filename = 
                           paste(format(Sys.time(), "%b%d%H%M%S"), "-", "workspace.si",sep="")
                         # Determines if we lazy load
@@ -297,9 +243,6 @@ shinyimg <- R6Class("shinyimg",
                         # The number of lazy actions we have done so far.
                         private$lazy_actions = 0
                         # bool value to determine if user can undo 
-                        private$order_list = Queue$new()
-                        # Queue that stores non-commutative actions
-                        # currently only supports rotate and crop
                         private$indexed_images <- vector("list")
                         # list that stores copies of all versions 
                         # of si objects created
@@ -332,6 +275,31 @@ shinyimg <- R6Class("shinyimg",
                         if (!is.null(private$current_image)) {
                           display(private$current_image, method = "raster")
                         }
+                        # will comment out later
+                        # confirming all si obj are stored properly
+                        print("IN RENDER")
+                        print(private$indexed_images)
+                      },
+                      renderPrev = function() {
+                      	cat(self$logged_image,'$renderPrev()\n',sep='',file='~/history.R',append=TRUE)
+
+                      	# Reset the lazy actions
+                        private$lazy_actions = 0;
+                        
+                        #Used when private$non_commutative_actions = 1
+                        #Same as render, except its used by crop, rotate (and other non-commutative actions)
+                        #uses the previous image to create a new edit instead of editing the original image
+            			#images are edited in their respective functions
+            			# so we can just display the image
+                        
+                        # If we actually have an image currently, try to display it. 
+                        if (!is.null(private$current_image)) {
+                          display(private$current_image, method = "raster")
+                      	}
+                      	# will comment out later
+                        # confirming all si obj are stored properly
+                        print("IN RENDERPREV")
+                        print(private$indexed_images)
                       },
                       # Function to write the current state of the program to 
                       # file.
@@ -605,18 +573,52 @@ shinyimg <- R6Class("shinyimg",
                       add_rotate = function() {
                         #adds function to the history log
                         cat(self$logged_image,'$add_rotate()\n',sep='',file='~/history.R',append=TRUE)
+                        
+                        # adds 10 to the rotation of current image 
+                        private$current_image <<- rotate(private$current_image, 10)
+
+                        length <- length(private$indexed_images)
+
+                        #we add the latest image to the list
+                        #we must specify the node in the list 
+                        # or else it will put each value in the si object
+                        # as its own node 
+                        private$indexed_images[[length + 1]] <- private$current_image
+
+                        # We set our boolean value of non_commutative_action to 1
+                        # mutator then calls add action
+                        # add action calls renderPrev (instead of render)
+                        # thus, we display an image that modified its previous image
+                        # (render would have modified the original image)
+                        private$non_commutative_action = 1
+
                         private$mutator(9, 10)
-                        # Do after mutator() so we have updated private$actions.
-                        private$add_order(2, private$actions, 10, NULL, NULL, NULL)
                       }, 
 
                       # Adjusts rotate by -1 degree
                       remove_rotate = function() {
                         #adds function to the history log
-                        cat(self$logged_image,'$remove_rotate()\n',sep='',file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$add_rotate()\n',sep='',file='~/history.R',append=TRUE)
+                        
+                        # removes 10 from the rotation of current image 
+                        private$current_image <<- rotate(private$current_image,-10)
+
+                        length <- length(private$indexed_images)
+
+                        #we add the latest image to the list
+                        #we must specify the node in the list 
+                        # or else it will put each value in the si object
+                        # as its own node 
+                        private$indexed_images[[length + 1]] <- private$current_image
+
+                        # We set our boolean value of non_commutative_action to 1
+                        # mutator then calls add action
+                        # add action calls renderPrev (instead of render)
+                        # thus, we display an image that modified its previous image
+                        # (render would have modified the original image)
+                        private$non_commutative_action = 1
+
                         private$mutator(9, -10)
-                        # Do after mutator() so we have updated private$actions.
-                        private$add_order(2, private$actions, -10, NULL, NULL, NULL)
                       },
 
                       set_brightness = function(brightness) {
@@ -650,12 +652,31 @@ shinyimg <- R6Class("shinyimg",
                       set_rotate = function(rotate) {
                         #adds function to the history log
                         cat(self$logged_image,'$set_rotate(',rotate,')\n',sep="",file='~/history.R',append=TRUE)
-                        # Sets rotation of image
+                        
+                        # Sets rotation of current image
+                        print("private$rotate is: ")
+                        print(private$rotate)
+                        private$current_image <<- rotate(private$current_image, rotate - private$rotate)
+
+                        # Then, we add the image to our list of saved images 
+                        # we get the length of the list that contains
+                        # all versions of the si object we create
+                        length <- length(private$indexed_images)
+
+                        #we add the latest image to the list
+                        #we must specify the node in the list 
+                        # or else it will put each value in the si object
+                        # as its own node 
+                        private$indexed_images[[length + 1]] <- private$current_image
+
+                        # We set our boolean value of non_commutative_action to 1
+                        # mutator then calls add action
+                        # add action calls renderPrev (instead of render)
+                        # thus, we display an image that modified its previous image
+                        # (render would have modified the original image)
+                        private$non_commutative_action = 1
+
                         private$mutator(10, rotate)
-                        # Subtract to get relative rotation (e.g. if current rotation is 180 deg
-                        # and we set rotation at 210 deg, relative rotation is 30).
-                        # Do after mutator() so we have updated private$actions.
-                        private$add_order(2, private$actions, rotate - private$rotate, NULL, NULL, NULL)
                       },
 
                       set_grayscale = function(grayscale) {
@@ -671,7 +692,6 @@ shinyimg <- R6Class("shinyimg",
                       # user locate the two corners of the subimage. 
                       crop = function() {
 
-                        #possibly create a special instance for rotation
                         print("Select the two opposite corners 
                               of a rectangle on the plot.")
                         location = locator(2)
@@ -679,14 +699,38 @@ shinyimg <- R6Class("shinyimg",
                         y1 = min(location$y[1], location$y[2])
                         x2 = max(location$x[1], location$x[2])
                         y2 = max(location$y[1], location$y[2])
-                        # NM:  for history file
+
+                        #adds function to history file
                         cmd <- paste('cropxy(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
                         cat(self$logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
-                        #comment and print here --
+                       
+                       	#modifies current image 
                         private$current_image <<- 
                           private$current_image[x1:x2,y1:y2,]
+
+                        # we add the latest image to the list
+                        # we get the length of the list that contains
+                        # all versions of the si object we create
+                        length <- length(private$indexed_images)
+
+                        #we add the latest image to the list
+                        #we must specify the node in the list 
+                        # or else it will put each value in the si object
+                        # as its own node 
+                        private$indexed_images[[length + 1]] <- private$current_image
+
+                        # We set our boolean value of non_commutative_action to 1
+                        # mutator then calls add action
+                        # add action calls renderPrev (instead of render)
+                        # thus, we display an image that modified its previous image
+                        # (render would have modified the original image)
+                        private$non_commutative_action = 1
+
+                        private$add_action()
                         
+                        #BELOW GIVES US ABSOLUTE CROPPING
+                        #CURRENTLY NOT NEEDED
                         # In order to maintain a correct cropping, 
                         # we need to know how much of
                         # the original image has already been cropped.
@@ -703,25 +747,41 @@ shinyimg <- R6Class("shinyimg",
                         private$xy1 = c(private$xoffset, private$yoffset)
                         private$xy2 = c(private$xoffset + xdiff, 
                                         private$yoffset + ydiff)
-                        # private$add_order(1, private$xoffset, private$yoffset, private$xoffset + xdiff, 
-                        #                 private$yoffset + ydiff)
-                        private$add_action()
-
-                        # Do after add_action() so we have updated private$actions.
-                        private$add_order(1, private$actions, x1, y1, x2, y2)
                       },
                       # The function used by Shiny to crop using absolute 
                       # coordinates. 
                       cropxy = function(x1, x2, y1, y2) {
-                        # NM:  for history file
+                        #adds function to history file
                         cmd <- paste('cropxy(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
-                        cat(self$logged_image, '$', cmd,'\n',sep='',file='~/history.R',append=TRUE)
-
-                        #same as crop but used by shiny
+                        cat(self$logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
+                       
+                       	#modifies current image 
                         private$current_image <<- 
                           private$current_image[x1:x2,y1:y2,]
+
+                        # we add the latest image to the list
+                        # we get the length of the list that contains
+                        # all versions of the si object we create
+                        length <- length(private$indexed_images)
+
+                        #we add the latest image to the list
+                        #we must specify the node in the list 
+                        # or else it will put each value in the si object
+                        # as its own node 
+                        private$indexed_images[[length + 1]] <- private$current_image
+
+                        # We set our boolean value of non_commutative_action to 1
+                        # mutator then calls add action
+                        # add action calls renderPrev (instead of render)
+                        # thus, we display an image that modified its previous image
+                        # (render would have modified the original image)
+                        private$non_commutative_action = 1
                         
+                        private$add_action()
+                        
+                        #BELOW GIVES US ABSOLUTE CROPPING
+                        #CURRENTLY NOT NEEDED
                         # In order to maintain a correct cropping, 
                         # we need to know how much of
                         # the original image has already been cropped.
@@ -738,11 +798,6 @@ shinyimg <- R6Class("shinyimg",
                         private$xy1 = c(private$xoffset, private$yoffset)
                         private$xy2 = c(private$xoffset + xdiff, 
                                         private$yoffset + ydiff)
-                        
-                        private$add_action()
-
-                        # Do after add_action() so we have updated private$actions.
-                        private$add_order(1, private$actions, x1, y1, x2, y2)
                       },
                       # Returns the size of the current image.
                       # Needed for Shiny to determine the max values of
@@ -957,51 +1012,9 @@ shinyimg <- R6Class("shinyimg",
                         # to prune the extra actions for our 
                         # versions of si objects
 
-                        # We also need to clear all but the last
-                        # element in our Queue that contains 
-                        # all crops and rotates that were made
-                        # this is needed because if cropped an image
-                        # then undid the image
-                        # we need to clear the crops that occur
-                        # however, we must keep the last value
-                        # because it contains the new crop
-
-                        # if we cropped an image twice
-                        # and undid the second crop
-                        # we have the first crop saved in our 
-                        # private$indexed_images 
-                        # so we don't need to have it saved
                         if (private$actions < length(private$indexed_images)) {
                           private$indexed_images <- 
                             private$indexed_images[1:private$actions]
-
-
-                          print(private$order_list)
-                          if (private$order_list$size() != 0)
-                          {
-                            #last elem is either the rotate coordinates
-                            #or y2 for crop
-                            #y2 <- private$order_list$reverse_pop()
-                            #last2 elem is either 2 for rotate
-                            # or crop coordinate x2
-                            #last2_elem <- private$order_list$reverse_pop()
-
-
-                            if (last2_elem == 2)
-                            {
-                              private$order_list = Queue$new()
-                              private$add_order(2, y2, NULL, NULL, NULL)
-                            }
-                            else 
-                            {
-                              y1 = private$order_list$reverse_pop()
-                              x1 = private$order_list$reverse_pop()
-                              private$order_list = Queue$new()
-                              private$add_order(1, x1, y1, last2_elem, y2)
-                            }
-
-                            print(private$order_list)
-                          }
                         }
                         
                         # Use the siaction constructor to create a 
@@ -1022,10 +1035,16 @@ shinyimg <- R6Class("shinyimg",
                         # added an action to the action list
                         private$actions <- private$actions + 1
                         
-                        # If the autodisplay flag is on, render the 
-                        # changes.
-                        if (private$autodisplay) {
-                          self$render()
+                        # If the non_commutative_action flag is on, render the 
+                        # image as is
+                        if (private$non_commutative_action)
+                        {
+                        	self$renderPrev()
+                        }
+                        # else we render the changes
+                        else
+                        {
+                        	self$render()
                         }
                       },
                       
@@ -1074,29 +1093,6 @@ shinyimg <- R6Class("shinyimg",
                         if (args[10] == 1)
                           private$current_image <- channel(private$current_image, "gray")
 
-                        #need to create a copy of our queue so that we have 
-                        #persistent history 
-                        order_copy <- private$order_list$copy()
-                        while (order_copy$size() != 0)
-                        {
-                          popped <- order_copy$pop()
-                          if (popped[1] == 1)
-                          {
-                          	x1 = popped[3]
-                          	y1 = popped[4]
-                          	x2 = popped[5]
-                          	y2 = popped[6]
-
-                          	private$current_image <- private$current_image[
-                          		x1:x2, y1:y2,
-                          		]
-                          } 
-                          else if (popped[1] == 2)
-                          {
-                          	private$current_image <- rotate(private$current_image, popped[3])
-                          }
-                        }
-
                         private$myhistory <- args
 
                         # we get the length of the list that contains
@@ -1112,7 +1108,7 @@ shinyimg <- R6Class("shinyimg",
                         # will comment out later
                         # confirming that all the si objects 
                         # are being stored properly 
-                        print(private$indexed_images)
+                        # print(private$indexed_images)
                       },
                       # The matr argument imports a matrix as the image.
                       # The remaining two arguments are supplied by the 
