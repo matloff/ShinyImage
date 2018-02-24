@@ -387,9 +387,10 @@ shinyimg <- R6Class("shinyimg",
                           # of our si object 
                           # we go back to the action number 
                           private$current_image <<- private$indexed_images[[private$actions]]
-                          # Apply the action.
-                          # private$applyAction(
-                          #   private$img_history[private$actions])
+
+                          #changes value of rotate to the current value during an undo 
+                          #need this for absolute rotation in set rotate 
+                          private$rotate <- private$img_history[[private$actions]]$get_action()[9]
                           
                           display(private$current_image, method = "raster")
                           # TODO: IDEA. Lazy loading. Don't actually apply 
@@ -420,10 +421,11 @@ shinyimg <- R6Class("shinyimg",
                           # of our si object 
                           # we go back to the action number 
                           private$current_image <<- private$indexed_images[[private$actions]]
-                          # Apply the action.
-                          # private$applyAction(
-                          #   private$img_history[private$actions])
                           
+                          #changes value of rotate to the current value during an undo 
+                          #need this for absolute rotation in set rotate 
+                          private$rotate <- private$img_history[[private$actions]]$get_action()[9]
+
                           display(private$current_image, method = "raster")
                           
                           return(1)
@@ -446,6 +448,9 @@ shinyimg <- R6Class("shinyimg",
                           # we go back to the action number 
                           private$current_image <<- private$indexed_images[[private$actions]]
                           
+                          #changes value of rotate to the current value during an undo 
+                          #need this for absolute rotation in set rotate 
+                          private$rotate <- private$img_history[[private$actions]]$get_action()[9]
                           # TODO: IDEA. Lazy loading. Don't actually apply the
                           # action UNTIL we're done redoing.
                           
@@ -471,6 +476,9 @@ shinyimg <- R6Class("shinyimg",
                           # we go back to the action number 
                           private$current_image <<- private$indexed_images[[private$actions]]
                           
+                          #changes value of rotate to the current value during an undo 
+                          #need this for absolute rotation in set rotate 
+                          private$rotate <- private$img_history[[private$actions]]$get_action()[9]
                           # TODO: IDEA. Lazy loading. Don't actually apply the
                           # action UNTIL we're done redoing.
                           
@@ -656,7 +664,7 @@ shinyimg <- R6Class("shinyimg",
                         # Sets rotation of current image
                         print("private$rotate is: ")
                         print(private$rotate)
-                        private$current_image <<- rotate(private$current_image, rotate - private$rotate)
+                        private$current_image <<- rotate(private$current_image, rotate - private$rotate, bg.col = "white")
 
                         # Then, we add the image to our list of saved images 
                         # we get the length of the list that contains
