@@ -650,12 +650,18 @@ shinyimg <- R6Class("shinyimg",
                       set_rotate = function(rotate) {
                         #adds function to the history log
                         cat(self$logged_image,'$set_rotate(',rotate,')\n',sep="",file='~/history.R',append=TRUE)
+                        # we need to get the previous value of private$rotate before mutator updates it
+                        # we use this valie in add_order in order to absolute cropping
+                        # mutator must be before add_order so our private$actions are updated properly 
+                        prev_rotate_value <- private$rotate
                         # Sets rotation of image
                         private$mutator(10, rotate)
+
                         # Subtract to get relative rotation (e.g. if current rotation is 180 deg
                         # and we set rotation at 210 deg, relative rotation is 30).
                         # Do after mutator() so we have updated private$actions.
-                        private$add_order(2, private$actions, rotate - private$rotate, NULL, NULL, NULL)
+                        cat("set_rotate: ", rotate-prev_rotate_value, rotate, prev_rotate_value, "\n")
+                        private$add_order(2, private$actions, rotate - prev_rotate_value, NULL, NULL, NULL)
                       },
 
                       set_grayscale = function(grayscale) {
@@ -971,36 +977,48 @@ shinyimg <- R6Class("shinyimg",
                         # we have the first crop saved in our 
                         # private$indexed_images 
                         # so we don't need to have it saved
-                        if (private$actions < length(private$indexed_images)) {
-                          private$indexed_images <- 
-                            private$indexed_images[1:private$actions]
+                        # if (private$actions < length(private$indexed_images)) {
+                        #   private$indexed_images <- 
+                        #     private$indexed_images[1:private$actions]
 
 
-                          print(private$order_list)
-                          if (private$order_list$size() != 0)
+                        #   print(private$order_list)
+                        #   if (private$order_list$size() != 0)
+                        #   {
+                        #     #last elem is either the rotate coordinates
+                        #     #or y2 for crop
+                        #     #y2 <- private$order_list$reverse_pop()
+                        #     #last2 elem is either 2 for rotate
+                        #     # or crop coordinate x2
+                        #     #last2_elem <- private$order_list$reverse_pop()
+
+
+                        #     if (last2_elem == 2)
+                        #     {
+                        #       private$order_list = Queue$new()
+                        #       private$add_order(2, y2, NULL, NULL, NULL)
+                        #     }
+                        #     else 
+                        #     {
+                        #       y1 = private$order_list$reverse_pop()
+                        #       x1 = private$order_list$reverse_pop()
+                        #       private$order_list = Queue$new()
+                        #       private$add_order(1, x1, y1, last2_elem, y2)
+                        #     }
+
+                        #     print(private$order_list)
+                        #   }
+                        # }
+
+                        # Clear the redo-able non-commutative actions from the queue.
+                        if (private$order_list$size() > 0)
+                        {
+                          # While the last action in the order list has action id
+                          # greater than current one.
+                          while (private$actions
+                          	< private$order_list$peek(private$order_list$size())[2])
                           {
-                            #last elem is either the rotate coordinates
-                            #or y2 for crop
-                            #y2 <- private$order_list$reverse_pop()
-                            #last2 elem is either 2 for rotate
-                            # or crop coordinate x2
-                            #last2_elem <- private$order_list$reverse_pop()
-
-
-                            if (last2_elem == 2)
-                            {
-                              private$order_list = Queue$new()
-                              private$add_order(2, y2, NULL, NULL, NULL)
-                            }
-                            else 
-                            {
-                              y1 = private$order_list$reverse_pop()
-                              x1 = private$order_list$reverse_pop()
-                              private$order_list = Queue$new()
-                              private$add_order(1, x1, y1, last2_elem, y2)
-                            }
-
-                            print(private$order_list)
+                          	private$order_list$reverse_pop()
                           }
                         }
                         
@@ -1112,7 +1130,7 @@ shinyimg <- R6Class("shinyimg",
                         # will comment out later
                         # confirming that all the si objects 
                         # are being stored properly 
-                        print(private$indexed_images)
+                        # print(private$indexed_images)
                       },
                       # The matr argument imports a matrix as the image.
                       # The remaining two arguments are supplied by the 
