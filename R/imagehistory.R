@@ -650,18 +650,11 @@ shinyimg <- R6Class("shinyimg",
                       set_rotate = function(rotate) {
                         #adds function to the history log
                         cat(self$logged_image,'$set_rotate(',rotate,')\n',sep="",file='~/history.R',append=TRUE)
-                        # we need to get the previous value of private$rotate before mutator updates it
-                        # we use this valie in add_order in order to absolute cropping
-                        # mutator must be before add_order so our private$actions are updated properly 
-                        prev_rotate_value <- private$rotate
+                        # need to add 1 to private$actions because it will only be updated 
+                        # after it calls mutator
+                        private$add_order(2, private$actions + 1, rotate - private$rotate, NULL, NULL, NULL)
                         # Sets rotation of image
                         private$mutator(10, rotate)
-
-                        # Subtract to get relative rotation (e.g. if current rotation is 180 deg
-                        # and we set rotation at 210 deg, relative rotation is 30).
-                        # Do after mutator() so we have updated private$actions.
-                        cat("set_rotate: ", rotate-prev_rotate_value, rotate, prev_rotate_value, "\n")
-                        private$add_order(2, private$actions, rotate - prev_rotate_value, NULL, NULL, NULL)
                       },
 
                       set_grayscale = function(grayscale) {
@@ -959,68 +952,7 @@ shinyimg <- R6Class("shinyimg",
                             private$img_history[1:private$actions]
                         }
 
-                        # If we are not at the most recent image, we need
-                        # to prune the extra actions for our 
-                        # versions of si objects
-
-                        # We also need to clear all but the last
-                        # element in our Queue that contains 
-                        # all crops and rotates that were made
-                        # this is needed because if cropped an image
-                        # then undid the image
-                        # we need to clear the crops that occur
-                        # however, we must keep the last value
-                        # because it contains the new crop
-
-                        # if we cropped an image twice
-                        # and undid the second crop
-                        # we have the first crop saved in our 
-                        # private$indexed_images 
-                        # so we don't need to have it saved
-                        # if (private$actions < length(private$indexed_images)) {
-                        #   private$indexed_images <- 
-                        #     private$indexed_images[1:private$actions]
-
-
-                        #   print(private$order_list)
-                        #   if (private$order_list$size() != 0)
-                        #   {
-                        #     #last elem is either the rotate coordinates
-                        #     #or y2 for crop
-                        #     #y2 <- private$order_list$reverse_pop()
-                        #     #last2 elem is either 2 for rotate
-                        #     # or crop coordinate x2
-                        #     #last2_elem <- private$order_list$reverse_pop()
-
-
-                        #     if (last2_elem == 2)
-                        #     {
-                        #       private$order_list = Queue$new()
-                        #       private$add_order(2, y2, NULL, NULL, NULL)
-                        #     }
-                        #     else 
-                        #     {
-                        #       y1 = private$order_list$reverse_pop()
-                        #       x1 = private$order_list$reverse_pop()
-                        #       private$order_list = Queue$new()
-                        #       private$add_order(1, x1, y1, last2_elem, y2)
-                        #     }
-
-                        #     print(private$order_list)
-                        #   }
-                        # }
-
-                        # Clear the redo-able non-commutative actions from the queue.
-                        if (private$order_list$size() > 0)
-                        {
-                          # While the last action in the order list has action id
-                          # greater than current one.
-                          while (private$actions
-                          	< private$order_list$peek(private$order_list$size())[2])
-                          {
-                          	private$order_list$reverse_pop()
-                          }
-                        }
+                        
                         
                         # Use the siaction constructor to create a 
                         # new action and add it to the img_history list.
@@ -1039,6 +971,26 @@ shinyimg <- R6Class("shinyimg",
                         # Add one to the action counter because we just 
                         # added an action to the action list
                         private$actions <- private$actions + 1
+                        
+
+                        # Clear the redo-able non-commutative actions from the queue.
+                        if (private$order_list$size() > 0)
+                        {
+                          print(private$order_list$size())
+                          print(private$order_list$peek(private$order_list$size())[2])
+                          # While the last action in the order list has action id
+                          # greater than current one.
+                          while (private$actions
+                            < private$order_list$peek(private$order_list$size())[2])
+                          {
+                            print("private$actions")
+                            print(private$actions)
+                            print("peek value")
+                            print(private$order_list$peek(private$order_list$size())[2])
+
+                            private$order_list$reverse_pop()
+                          }
+                        }
                         
                         # If the autodisplay flag is on, render the 
                         # changes.
@@ -1095,6 +1047,8 @@ shinyimg <- R6Class("shinyimg",
                         #need to create a copy of our queue so that we have 
                         #persistent history 
                         order_copy <- private$order_list$copy()
+                        print("order_copy: ")
+                        print(order_copy)
                         while (order_copy$size() != 0)
                         {
                           popped <- order_copy$pop()
