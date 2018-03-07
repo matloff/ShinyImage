@@ -420,8 +420,8 @@ shinyimg <- R6Class("shinyimg",
                           # we go back to the action number 
                           private$current_image <<- private$indexed_images[[private$actions]]
                           # Apply the action.
-                          # private$applyAction(
-                          #   private$img_history[private$actions])
+                          private$applyAction(
+                            private$img_history[private$actions])
                           
                           display(private$current_image, method = "raster")
                           # TODO: IDEA. Lazy loading. Don't actually apply 
@@ -453,8 +453,8 @@ shinyimg <- R6Class("shinyimg",
                           # we go back to the action number 
                           private$current_image <<- private$indexed_images[[private$actions]]
                           # Apply the action.
-                          # private$applyAction(
-                          #   private$img_history[private$actions])
+                          private$applyAction(
+                            private$img_history[private$actions])
                           
                           display(private$current_image, method = "raster")
                           
@@ -473,6 +473,8 @@ shinyimg <- R6Class("shinyimg",
                           # Increment by one action, then apply it
                           private$actions <- private$actions + 1
                           
+                          private$applyAction(
+-                            private$img_history[private$actions])
                           # we go to our list that contains all the versions 
                           # of our si object 
                           # we go back to the action number 
@@ -498,6 +500,8 @@ shinyimg <- R6Class("shinyimg",
                           # Increment by one action, then apply it
                           private$actions <- private$actions + 1
                           
+                          private$applyAction(
+-                            private$img_history[private$actions])
                           # we go to our list that contains all the versions 
                           # of our si object 
                           # we go back to the action number 
@@ -704,10 +708,10 @@ shinyimg <- R6Class("shinyimg",
                                         private$yoffset + ydiff)
                         # private$add_order(1, private$xoffset, private$yoffset, private$xoffset + xdiff, 
                         #                 private$yoffset + ydiff)
-                        private$add_action()
 
-                        # Do after add_action() so we have updated private$actions.
-                        private$add_order(1, private$actions, x1, y1, x2, y2)
+                        # Do before add_action() so we have updated private$actions.
+                        private$add_order(1, private$actions + 1, x1, y1, x2, y2)
+                        private$add_action()
                       },
                       # The function used by Shiny to crop using absolute 
                       # coordinates. 
@@ -738,10 +742,9 @@ shinyimg <- R6Class("shinyimg",
                         private$xy2 = c(private$xoffset + xdiff, 
                                         private$yoffset + ydiff)
                         
+                        # Do before add_action() so we have updated private$actions.
+                        private$add_order(1, private$actions + 1, x1, y1, x2, y2)
                         private$add_action()
-
-                        # Do after add_action() so we have updated private$actions.
-                        private$add_order(1, private$actions, x1, y1, x2, y2)
                       },
                       # Returns the size of the current image.
                       # Needed for Shiny to determine the max values of
