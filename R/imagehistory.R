@@ -418,10 +418,13 @@ shinyimg <- R6Class("shinyimg",
                           # we go to our list that contains all the versions 
                           # of our si object 
                           # we go back to the action number 
-                          private$current_image <<- private$indexed_images[[private$actions]]
-                          # Apply the action.
+
                           private$applyAction(
                             private$img_history[private$actions])
+
+                          private$current_image <<- private$indexed_images[[private$actions]]
+                          # Apply the action.
+            
                           
                           display(private$current_image, method = "raster")
                           # TODO: IDEA. Lazy loading. Don't actually apply 
@@ -448,13 +451,14 @@ shinyimg <- R6Class("shinyimg",
                           # Step back by one action
                           private$actions <- private$actions - 1
                           
+                          private$applyAction(
+                            private$img_history[private$actions])
                           # we go to our list that contains all the versions 
                           # of our si object 
                           # we go back to the action number 
                           private$current_image <<- private$indexed_images[[private$actions]]
                           # Apply the action.
-                          private$applyAction(
-                            private$img_history[private$actions])
+                          
                           
                           display(private$current_image, method = "raster")
                           
@@ -672,21 +676,25 @@ shinyimg <- R6Class("shinyimg",
                       
                       # The command line cropper uses locator to have the
                       # user locate the two corners of the subimage. 
-                      crop = function() {
+                      crop = function(x1, x2, y1, y2) {
+                        # TODO edit Shiny app from cropxy to crop
+                        if (missing(x1) || missing(x2) || missing(y1) || missing(y2))
+                        {
+                          #possibly create a special instance for rotation
+                          print("Select the two opposite corners 
+                                of a rectangle on the plot.")
+                          location = locator(2)
+                          x1 = min(location$x[1], location$x[2])
+                          y1 = min(location$y[1], location$y[2])
+                          x2 = max(location$x[1], location$x[2])
+                          y2 = max(location$y[1], location$y[2])
+                        }
 
-                        #possibly create a special instance for rotation
-                        print("Select the two opposite corners 
-                              of a rectangle on the plot.")
-                        location = locator(2)
-                        x1 = min(location$x[1], location$x[2])
-                        y1 = min(location$y[1], location$y[2])
-                        x2 = max(location$x[1], location$x[2])
-                        y2 = max(location$y[1], location$y[2])
                         # NM:  for history file
                         cmd <- paste('cropxy(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
                         cat(self$logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
-                        #comment and print here --
+                        
                         private$current_image <<- 
                           private$current_image[x1:x2,y1:y2,]
                         
@@ -713,39 +721,7 @@ shinyimg <- R6Class("shinyimg",
                         private$add_order(1, private$actions + 1, x1, y1, x2, y2)
                         private$add_action()
                       },
-                      # The function used by Shiny to crop using absolute 
-                      # coordinates. 
-                      cropxy = function(x1, x2, y1, y2) {
-                        # NM:  for history file
-                        cmd <- paste('cropxy(',
-                           x1, ',', x2, ',', y1, ',', y2, ')', sep='')
-                        cat(self$logged_image, '$', cmd,'\n',sep='',file='~/history.R',append=TRUE)
-
-                        #same as crop but used by shiny
-                        private$current_image <<- 
-                          private$current_image[x1:x2,y1:y2,]
-                        
-                        # In order to maintain a correct cropping, 
-                        # we need to know how much of
-                        # the original image has already been cropped.
-                        xdiff = x2 - x1
-                        ydiff = y2 - y1
-                        
-                        # The offset is needed to maintain the ABSOLUTE 
-                        # crop data.
-                        private$xoffset = private$xoffset + x1
-                        private$yoffset = private$yoffset + y1
-                        
-                        # Create the absolute crop data using the offsets
-                        # and new area.
-                        private$xy1 = c(private$xoffset, private$yoffset)
-                        private$xy2 = c(private$xoffset + xdiff, 
-                                        private$yoffset + ydiff)
-                        
-                        # Do before add_action() so we have updated private$actions.
-                        private$add_order(1, private$actions + 1, x1, y1, x2, y2)
-                        private$add_action()
-                      },
+   
                       # Returns the size of the current image.
                       # Needed for Shiny to determine the max values of
                       # the sliders. 
