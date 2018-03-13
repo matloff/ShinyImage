@@ -718,7 +718,7 @@ shinyimg <- R6Class("shinyimg",
                         #                 private$yoffset + ydiff)
 
                         # Do before add_action() so we have updated private$actions.
-                        private$add_order(1, private$actions + 1, x1, y1, x2, y2)
+                        private$add_order(1, private$actions, x1, y1, x2, y2)
                         private$add_action()
                       },
    
@@ -931,8 +931,6 @@ shinyimg <- R6Class("shinyimg",
                             private$img_history[1:private$actions]
                         }
 
-                        
-                        
                         # Use the siaction constructor to create a 
                         # new action and add it to the img_history list.
                         private$img_history <-
@@ -949,16 +947,23 @@ shinyimg <- R6Class("shinyimg",
                                                               ))
                         # Add one to the action counter because we just 
                         # added an action to the action list
-                        private$actions <- private$actions + 1
                         
 
                         # Clear the redo-able non-commutative actions from the queue.
                         if (private$order_list$size() > 0)
                         {
-                          print(private$order_list$size())
-                          print(private$order_list$peek(private$order_list$size())[2])
+                          # print(private$order_list$size())
+                          # print(private$order_list$peek(private$order_list$size())[2])
                           # While the last action in the order list has action id
                           # greater than current one.
+                          print("private actions: ")
+                          print(private$actions)
+                          print("private$order_list_size")
+                          print(private$order_list$peek(private$order_list$size())[2])
+                          print("privateorder_list")
+
+                          print(private$order_list)
+
                           while (private$actions
                             < private$order_list$peek(private$order_list$size())[2])
                           {
@@ -971,6 +976,8 @@ shinyimg <- R6Class("shinyimg",
                           }
                         }
                         
+                        private$actions <- private$actions + 1
+
                         # If the autodisplay flag is on, render the 
                         # changes.
                         if (private$autodisplay) {
@@ -1026,8 +1033,8 @@ shinyimg <- R6Class("shinyimg",
                         #need to create a copy of our queue so that we have 
                         #persistent history 
                         order_copy <- private$order_list$copy()
-                        print("order_copy: ")
-                        print(order_copy)
+                        # print("order_copy: ")
+                        # print(order_copy)
                         while (order_copy$size() != 0)
                         {
                           popped <- order_copy$pop()
