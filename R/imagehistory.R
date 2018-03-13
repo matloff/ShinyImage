@@ -613,18 +613,20 @@ shinyimg <- R6Class("shinyimg",
                       add_rotate = function() {
                         #adds function to the history log
                         cat(self$logged_image,'$add_rotate()\n',sep='',file='~/history.R',append=TRUE)
+                        # need to add 1 to private$actions because it will only be updated 
+                        # after it calls mutator
+                        private$add_order(2, private$actions + 1, 10, NULL, NULL, NULL)
                         private$mutator(9, 10)
-                        # Do after mutator() so we have updated private$actions.
-                        private$add_order(2, private$actions, 10, NULL, NULL, NULL)
                       }, 
 
                       # Adjusts rotate by -1 degree
                       remove_rotate = function() {
                         #adds function to the history log
                         cat(self$logged_image,'$remove_rotate()\n',sep='',file='~/history.R',append=TRUE)
+                        # need to add 1 to private$actions because it will only be updated 
+                        # after it calls mutator
+                        private$add_order(2, private$actions + 1, -10, NULL, NULL, NULL)
                         private$mutator(9, -10)
-                        # Do after mutator() so we have updated private$actions.
-                        private$add_order(2, private$actions, -10, NULL, NULL, NULL)
                       },
 
                       set_brightness = function(brightness) {
@@ -857,6 +859,61 @@ shinyimg <- R6Class("shinyimg",
                       {
                       	private$order_list$push(c(whichActionID,actionIndex,value1,value2,value3,value4))
                       },
+                      # refactoring all of the actions from the previous functions
+                      # add_action, mtuator, and add_order
+                      # calls a bunch of helpers
+                      do_action = function(actionID, amount) {
+   		               	remove_potential_redos()
+                      	private$actions <- private$actions + 1
+                      	# do_action parameter that tells if non-commutative 
+                      	# if non-commuatate
+                      		update_queue()
+                      	update_img_history()
+                      	update_saved_images()
+                      	render()
+                      },
+                      # prunes img_history and indexed_images
+                      remove_potential_redos = function() {
+                      	# private$actions is not updated for this function
+                      	# only function to have an un-updated private$actions 
+                      	# in do_action
+
+                      	# If we are not at the most recent image, we need 
+                        # to prune the extra actions for img_history
+                        if (private$actions < 
+                            length(private$img_history)) {
+                          private$img_history <- 
+                            private$img_history[1:private$actions]
+                        }
+
+						# If we are not at the most recent image, we need 
+                        # to prune the extra actions for indexed_images
+                        if (private$actions < 
+                            length(private$indexed_images)) {
+                          private$indexed_images <- 
+                            private$indexed_images[1:private$actions]
+                        }
+
+                        # TODO!!!! COPIED AND DID NOT EDIT
+                        if (private$order_list$size() > 0)
+                        {
+                          while (private$actions
+                            < private$order_list$peek(private$order_list$size())[2])
+                          {
+                            print("private$actions")
+                            print(private$actions)
+                            print("peek value")
+                            print(private$order_list$peek(private$order_list$size())[2])
+                            print("order_list")
+                            print(private$order_list)
+
+
+                            private$order_list$reverse_pop()
+                          }
+                        }
+
+
+                      }
                       
                       # The following are the private functions
                       mutator = function(actionID, amount) {
@@ -948,6 +1005,9 @@ shinyimg <- R6Class("shinyimg",
                         # Add one to the action counter because we just 
                         # added an action to the action list
                         
+                        private$actions <- private$actions + 1
+
+                        print(private$order_list)
 
                         # Clear the redo-able non-commutative actions from the queue.
                         if (private$order_list$size() > 0)
@@ -956,13 +1016,13 @@ shinyimg <- R6Class("shinyimg",
                           # print(private$order_list$peek(private$order_list$size())[2])
                           # While the last action in the order list has action id
                           # greater than current one.
-                          print("private actions: ")
-                          print(private$actions)
-                          print("private$order_list_size")
-                          print(private$order_list$peek(private$order_list$size())[2])
-                          print("privateorder_list")
+                          # print("private actions: ")
+                          # print(private$actions)
+                          # print("private$order_list_size")
+                          # print(private$order_list$peek(private$order_list$size())[2])
+                          # print("privateorder_list")
 
-                          print(private$order_list)
+                          # print(private$order_list)
 
                           while (private$actions
                             < private$order_list$peek(private$order_list$size())[2])
@@ -971,13 +1031,14 @@ shinyimg <- R6Class("shinyimg",
                             print(private$actions)
                             print("peek value")
                             print(private$order_list$peek(private$order_list$size())[2])
+                            print("order_list")
+                            print(private$order_list)
+
 
                             private$order_list$reverse_pop()
                           }
                         }
                         
-                        private$actions <- private$actions + 1
-
                         # If the autodisplay flag is on, render the 
                         # changes.
                         if (private$autodisplay) {
