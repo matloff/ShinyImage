@@ -693,6 +693,31 @@ shinyimg <- R6Class("shinyimg",
                         # Can revert image to colormode if argument is 0
                         private$do_action(11, grayscale)
                       },
+
+                      # The command line cropper uses locator to have the
+                      # user locate the two corners of the subimage. 
+                      crop = function(x1, x2, y1, y2) {
+                        # TODO edit Shiny app from cropxy to crop
+
+                        # If crop coordinates not given, get them from the user.
+                        if (missing(x1) || missing(x2) || missing(y1) || missing(y2))
+                        {
+                          print("Select the two opposite corners 
+                                of a rectangle on the plot.")
+                          location = locator(2)
+                          x1 = min(location$x[1], location$x[2])
+                          y1 = min(location$y[1], location$y[2])
+                          x2 = max(location$x[1], location$x[2])
+                          y2 = max(location$y[1], location$y[2])
+                        }
+
+                        # NM:  for history file
+                        cmd <- paste('cropxy(',
+                           x1, ',', x2, ',', y1, ',', y2, ')', sep='')
+                        cat(self$logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
+
+                        private$do_action(12, c(x1=x1,x2=x2,y1=y1,y2=y2), TRUE, 1)
+                      },
                       
                       # HAVE NOT TRANSLATED TO DO_ACTION
                       # # The command line cropper uses locator to have the
@@ -716,6 +741,7 @@ shinyimg <- R6Class("shinyimg",
                       #      x1, ',', x2, ',', y1, ',', y2, ')', sep='')
                       #   cat(self$logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
                         
+                      # DOES NOTHING:
                       #   private$current_image <<- 
                       #     private$current_image[x1:x2,y1:y2,]
                         
@@ -962,6 +988,37 @@ shinyimg <- R6Class("shinyimg",
                         private$order_list$push(c(actionID, whichNonCommAction, nonCommValue))
                       },
 
+                      update_crop_values = function(cropValues) {
+                        if (length(cropValues) != 4)
+                          stop("Bad cropValues vector")
+
+                        print(paste("cropValues: ", cropValues))
+
+                        cropValues = as.list(cropValues)
+                        x1 = cropValues$x1
+                        x2 = cropValues$x2
+                        y1 = cropValues$y1
+                        y2 = cropValues$y2
+
+                        # In order to maintain a correct cropping, 
+                        # we need to know how much of
+                        # the original image has already been cropped.
+                        xdiff = x2 - x1
+                        ydiff = y2 - y1
+                        
+                        # The offset is needed to maintain the ABSOLUTE 
+                        # crop data.
+                        private$xoffset = private$xoffset + x1
+                        private$yoffset = private$yoffset + y1
+                        
+                        # Create the absolute crop data using the offsets
+                        # and new area.
+                        private$xy1 = c(private$xoffset, private$yoffset)
+                        private$xy2 = c(private$xoffset + xdiff, 
+                                        private$yoffset + ydiff)
+                      },
+
+                      # amount is a length 4 vector if the action is a crop.
                       update_img_values = function(actionID, amount) {
                         private$lazy_actions <- private$lazy_actions + 1
                         
@@ -1002,7 +1059,10 @@ shinyimg <- R6Class("shinyimg",
                                private$rotate <- amount,
 
                                # Action ID 11, grayscale setting
-                               private$grayscale <- amount
+                               private$grayscale <- amount,
+
+                               # Action ID 12, crop
+                               private$update_crop_values(amount)
                         )
                         # private$add_action()
                       },
@@ -1084,10 +1144,11 @@ shinyimg <- R6Class("shinyimg",
                           popped <- order_copy$pop()
                           if (popped[2] == 1)
                           {
-                            x1 = popped[3]
-                            y1 = popped[4]
-                            x2 = popped[5]
-                            y2 = popped[6]
+                            cropValues = as.list(popped[3:6])
+                            x1 = cropValues$x1
+                            x2 = cropValues$x2
+                            y1 = cropValues$y1
+                            y2 = cropValues$y2
 
                             private$current_image <- private$current_image[
                               x1:x2, y1:y2,
