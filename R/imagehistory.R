@@ -412,19 +412,7 @@ shinyimg <- R6Class("shinyimg",
                         # original
                         # image (aka action #1)
                         if (private$actions != 1) {
-                          # Step back by one action
-                          private$actions <- private$actions - 1
-                          
-                          # we go to our list that contains all the versions 
-                          # of our si object 
-                          # we go back to the action number 
-
-                          action = private$img_history[private$actions]
-                          dataframe = action[[1]]
-                          args = dataframe$get_action()
-                          private$update_all_img_values(args)
-
-                          private$current_image <<- private$indexed_images[[private$actions]]
+                          private$doUndo()
                           
                           display(private$current_image, method = "raster")
                           # TODO: IDEA. Lazy loading. Don't actually apply 
@@ -448,16 +436,7 @@ shinyimg <- R6Class("shinyimg",
                         # original
                         # image (aka action #1)
                         if (private$actions != 1) {
-                          # Step back by one action
-                          private$actions <- private$actions - 1
-                          
-                          private$applyAction(
-                            private$img_history[private$actions])
-                          # we go to our list that contains all the versions 
-                          # of our si object 
-                          # we go back to the action number 
-                          private$current_image <<- private$indexed_images[[private$actions]]
-                          # Apply the action.
+                          private$doUndo()
                           
                           
                           display(private$current_image, method = "raster")
@@ -474,19 +453,7 @@ shinyimg <- R6Class("shinyimg",
                         cat(self$logged_image,'$redo()\n',sep='',file='~/history.R',append=TRUE)
                         # If there are actions to redo
                         if (private$actions < length(private$img_history)) {
-                          # Increment by one action, then apply it
-                          private$actions <- private$actions + 1
-                          
-                          # we go to our list that contains all the versions 
-                          # of our si object 
-                          # we go back to the action number 
-
-                          action = private$img_history[private$actions]
-                          dataframe = action[[1]]
-                          args = dataframe$get_action()
-                          private$update_all_img_values(args)
-
-                          private$current_image <<- private$indexed_images[[private$actions]]
+                          private$doRedo()
                           
                           # TODO: IDEA. Lazy loading. Don't actually apply the
                           # action UNTIL we're done redoing.
@@ -505,15 +472,7 @@ shinyimg <- R6Class("shinyimg",
                         cat(self$logged_image,'$redo()\n',sep='',file='~/history.R',append=TRUE)
                         # If there are actions to redo
                         if (private$actions < length(private$img_history)) {
-                          # Increment by one action, then apply it
-                          private$actions <- private$actions + 1
-                          
-                          private$applyAction(
-                            private$img_history[private$actions])
-                          # we go to our list that contains all the versions 
-                          # of our si object 
-                          # we go back to the action number 
-                          private$current_image <<- private$indexed_images[[private$actions]]
+                          private$doRedo()
                           
                           # TODO: IDEA. Lazy loading. Don't actually apply the
                           # action UNTIL we're done redoing.
@@ -947,6 +906,36 @@ shinyimg <- R6Class("shinyimg",
                       	private$update_saved_images()
                       	private$render()
 
+                      },
+                      doUndo = function() {
+                        # Step back by one action
+                          private$actions <- private$actions - 1
+                          
+                          # we go to our list that contains all the versions 
+                          # of our si object 
+                          # we go back to the action number 
+
+                          action = private$img_history[private$actions]
+                          dataframe = action[[1]]
+                          args = dataframe$get_action()
+                          private$update_all_img_values(args)
+
+                          private$current_image <<- private$indexed_images[[private$actions]]
+                      },
+                      doRedo = function() {
+                        # Increment by one action, then apply it
+                          private$actions <- private$actions + 1
+                          
+                          # we go to our list that contains all the versions 
+                          # of our si object 
+                          # we go back to the action number 
+
+                          action = private$img_history[private$actions]
+                          dataframe = action[[1]]
+                          args = dataframe$get_action()
+                          private$update_all_img_values(args)
+
+                          private$current_image <<- private$indexed_images[[private$actions]]
                       },
                       # prunes img_history and indexed_images
                       remove_potential_redos = function() {
