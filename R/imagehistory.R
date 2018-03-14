@@ -419,12 +419,12 @@ shinyimg <- R6Class("shinyimg",
                           # of our si object 
                           # we go back to the action number 
 
-                          private$applyAction(
-                            private$img_history[private$actions])
+                          action = private$img_history[private$actions]
+                          dataframe = action[[1]]
+                          args = dataframe$get_action()
+                          private$update_all_img_values(args)
 
                           private$current_image <<- private$indexed_images[[private$actions]]
-                          # Apply the action.
-            
                           
                           display(private$current_image, method = "raster")
                           # TODO: IDEA. Lazy loading. Don't actually apply 
@@ -934,7 +934,7 @@ shinyimg <- R6Class("shinyimg",
                       		private$update_queue(private$actions, whichNonCommAction, mutatorAmount)
                         }
 
-                        private$update_img_values(actionID, mutatorAmount)
+                        private$update_img_amount(actionID, mutatorAmount)
 
                       	private$update_img_history()
                         private$generate_current_image(private$img_history[private$actions])
@@ -966,33 +966,21 @@ shinyimg <- R6Class("shinyimg",
                             private$indexed_images[1:private$actions]
                         }
 
-                        # TODO!!!! COPIED AND DID NOT EDIT
-                        if (private$order_list$size() > 0)
+                        while (private$order_list$size() > 0 &&
+                          private$actions
+                          < private$order_list$peek(private$order_list$size())[["actionID"]])
                         {
-                          while (private$actions
-                            < private$order_list$peek(private$order_list$size())[2])
-                          {
-                            # print("private$actions")
-                            # print(private$actions)
-                            # print("peek value")
-                            # print(private$order_list$peek(private$order_list$size())[2])
-                            # print("order_list")
-                            # print(private$order_list)
-
-
-                            private$order_list$reverse_pop()
-                          }
+                          private$order_list$reverse_pop()
                         }
                       },
                       update_queue = function(actionID, whichNonCommAction, nonCommValue) {
-                        private$order_list$push(c(actionID, whichNonCommAction, nonCommValue))
+                        private$order_list$push(c(actionID=actionID,
+                          whichNonCommAction=whichNonCommAction, nonCommValue=nonCommValue))
                       },
 
                       update_crop_values = function(cropValues) {
                         if (length(cropValues) != 4)
                           stop("Bad cropValues vector")
-
-                        print(paste("cropValues: ", cropValues))
 
                         cropValues = as.list(cropValues)
                         x1 = cropValues$x1
@@ -1019,7 +1007,7 @@ shinyimg <- R6Class("shinyimg",
                       },
 
                       # amount is a length 4 vector if the action is a crop.
-                      update_img_values = function(actionID, amount) {
+                      update_img_amount = function(actionID, amount) {
                         private$lazy_actions <- private$lazy_actions + 1
                         
                         switch(actionID,
@@ -1091,11 +1079,7 @@ shinyimg <- R6Class("shinyimg",
                                                               ))
                       },
 
-                      generate_current_image = function(action) {
-                        # Unpack the action variable
-                        dataframe = action[[1]]
-                        # Use the action's getter to return the c()'d args
-                        args = dataframe$get_action()
+                      update_all_img_values = function(args) {
                         private$brightness = args[1]
                         private$contrast = args[2]
                         private$gamma = args[3]
@@ -1104,6 +1088,14 @@ shinyimg <- R6Class("shinyimg",
                         private$blur = args[8]
                         private$rotate = args[9]
                         private$grayscale = args[10]
+                      },
+
+                      generate_current_image = function(action) {
+                        # Unpack the action variable
+                        dataframe = action[[1]]
+                        # Use the action's getter to return the c()'d args
+                        args = dataframe$get_action()
+                        private$update_all_img_values(args)
 
                         # args[8] is blurring
                         if (args[8] > 0)
@@ -1145,10 +1137,10 @@ shinyimg <- R6Class("shinyimg",
                           if (popped[2] == 1)
                           {
                             cropValues = as.list(popped[3:6])
-                            x1 = cropValues$x1
-                            x2 = cropValues$x2
-                            y1 = cropValues$y1
-                            y2 = cropValues$y2
+                            x1 = cropValues$nonCommValue.x1
+                            x2 = cropValues$nonCommValue.x2
+                            y1 = cropValues$nonCommValue.y1
+                            y2 = cropValues$nonCommValue.y2
 
                             private$current_image <- private$current_image[
                               x1:x2, y1:y2,
@@ -1413,6 +1405,7 @@ shinyimg <- R6Class("shinyimg",
                           # the contrast but telling it to make another
                           # image. 
                           private$current_image <- private$local_img * 1
+                          private$update_saved_images()
 
                           # Here we set the xy2 coordinate, which is the
                           # lower right coordinate of the image. 
