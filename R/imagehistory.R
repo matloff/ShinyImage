@@ -477,11 +477,15 @@ shinyimg <- R6Class("shinyimg",
                           # Increment by one action, then apply it
                           private$actions <- private$actions + 1
                           
-                          private$applyAction(
--                            private$img_history[private$actions])
                           # we go to our list that contains all the versions 
                           # of our si object 
                           # we go back to the action number 
+
+                          action = private$img_history[private$actions]
+                          dataframe = action[[1]]
+                          args = dataframe$get_action()
+                          private$update_all_img_values(args)
+
                           private$current_image <<- private$indexed_images[[private$actions]]
                           
                           # TODO: IDEA. Lazy loading. Don't actually apply the
