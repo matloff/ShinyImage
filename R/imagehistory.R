@@ -685,7 +685,7 @@ shinyimg <- R6Class("shinyimg",
                         }
 
                         # NM:  for history file
-                        cmd <- paste('cropxy(',
+                        cmd <- paste('crop(',
                            x1, ',', x2, ',', y1, ',', y2, ')', sep='')
                         cat(self$logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
 
@@ -696,7 +696,7 @@ shinyimg <- R6Class("shinyimg",
                       # if arg is 0, then returns image back to original state
                       # if no arg is provided, flips image
                       flip_horizontally = function(flip) {
-                        cat(self$logged_image,'$flip()\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$flip_horizontally()\n',sep="",file='~/history.R',append=TRUE)
                         # flips image
                         if (missing(flip))
                           flip <- 1
@@ -713,7 +713,7 @@ shinyimg <- R6Class("shinyimg",
                       # if arg is 0, then returns image back to original state
                       # if no arg is provided, flops image
                       flop_vertically = function(flop) {
-                        cat(self$logged_image,'$flop()\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$flop_horizontally()\n',sep="",file='~/history.R',append=TRUE)
                         # flips image
                         if (missing(flop))
                           flop <- 1
