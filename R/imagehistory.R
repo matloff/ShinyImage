@@ -89,7 +89,7 @@ siaction <- R6Class("siaction",
                     lock_objects = FALSE,
                     public = list(
                       # Initialize all the values of this action
-                      initialize = function(brightness, contrast, gamma, crop, blur, rotate, grayscale) {
+                      initialize = function(brightness, contrast, gamma, crop, blur, rotate, grayscale, flip, flop) {
                         private$brightness <- brightness
                         private$contrast <- contrast
                         private$gamma <- gamma
@@ -97,6 +97,8 @@ siaction <- R6Class("siaction",
                         private$blur <- blur
                         private$rotate <- rotate
                         private$grayscale <- grayscale
+                        private$flip <- flip
+                        private$flop <- flop
                       },
                       # Get the c()'d properties of this particular action
                       get_action = function() {
@@ -106,7 +108,9 @@ siaction <- R6Class("siaction",
                                   private$crop, 
                                   private$blur, 
                                   private$rotate, 
-                                  private$grayscale))
+                                  private$grayscale,
+                                  private$flip, 
+                                  private$flop))
                       }
                     ),
                     private = list(
@@ -117,7 +121,9 @@ siaction <- R6Class("siaction",
                       crop = NULL,
                       blur = 0, 
                       rotate = 0, 
-                      grayscale = 0
+                      grayscale = 0, 
+                      flip = 0, 
+                      flop = 0
                     )
 )
 
@@ -255,7 +261,7 @@ shinyimg <- R6Class("shinyimg",
                         cat(self$logged_image,'$set_default()\n',sep='',file='~/history.R',append=TRUE)
 
                         # Default brightness
-                        private$myhistory = c(0,0,0,0,0,0,0,0,0,0)
+                        private$myhistory = c(0,0,0,0,0,0,0,0,0,0,0,0,0)
                         private$brightness = 0
                         # Default Contrast
                         private$contrast = 1
@@ -267,6 +273,10 @@ shinyimg <- R6Class("shinyimg",
                         private$rotate = 0
                         # Default grayscale 
                         private$grayscale = 0 
+                        # Default flip (flips an image horizontally) 
+                        private$flip = 0
+                        # Default flop (flips an image vertically)
+                        private$flop = 0
                         # CURRENT Number of actions. Can be less than the
                         # Actual number of actions due to undos.
                         private$actions = 0
@@ -336,7 +346,7 @@ shinyimg <- R6Class("shinyimg",
                       # Function to write the current state of the program to 
                       # file.
                       save = function(file = private$autosave_filename) {
-                        cat(logged_image,'$save(',file,')\n',sep="",file='~/history.R',append=TRUE)
+                        cat(self$logged_image,'$save(',file,')\n',sep="",file='~/history.R',append=TRUE)
 
                         # Generated action matrix done in O(1) time.
                         action_matrix <- matrix(NA, 
@@ -681,6 +691,39 @@ shinyimg <- R6Class("shinyimg",
 
                         private$do_action(12, c(x1=x1,x2=x2,y1=y1,y2=y2), TRUE, 1)
                       },
+
+                      # flips an image around the horizontal axis
+                      # if arg is 0, then returns image back to original state
+                      # if no arg is provided, flips image
+                      flip_horizontally = function(flip) {
+                        cat(self$logged_image,'$flip()\n',sep="",file='~/history.R',append=TRUE)
+                        # flips image
+                        if (missing(flip))
+                          flip <- 1
+
+                        # actionID = 13 for flip
+                        # mutatorAmount = flip (how much flip is changing -- either 1 or 0)
+                        # isNonCommutative = TRUE
+                        # whichNonCommAction = 3 (bc its flip, not crop or rotate or flop)
+                        private$do_action(13, flip, TRUE, 3)
+
+                      }, 
+
+                      # flops an image around the vertical axis
+                      # if arg is 0, then returns image back to original state
+                      # if no arg is provided, flops image
+                      flop_vertically = function(flop) {
+                        cat(self$logged_image,'$flop()\n',sep="",file='~/history.R',append=TRUE)
+                        # flips image
+                        if (missing(flop))
+                          flop <- 1
+
+                        # actionID = 14 for flop
+                        # mutatorAmount = flop (how much flip is changing -- either 1 or 0)
+                        # isNonCommutative = TRUE
+                        # whichNonCommAction = 4 (bc its flop, not crop or rotate or flip)
+                        private$do_action(14, flop, TRUE, 4)
+                      },
                       
                       # HAVE NOT TRANSLATED TO DO_ACTION
                       # # The command line cropper uses locator to have the
@@ -798,6 +841,14 @@ shinyimg <- R6Class("shinyimg",
                       get_color = function() {
                       	return(private$grayscale)
                   	  },
+                      # returns a copy of the flip value
+                      get_flip = function() {
+                        return(private$flip)
+                      }, 
+                      # returns a copy of the flop value
+                      get_flop = function() {
+                        return(private$flop)
+                      },
                       # returns a copy of the list of image histories
                       get_imghistory = function() { 
                         return(private$img_history)
@@ -828,7 +879,7 @@ shinyimg <- R6Class("shinyimg",
                     private = list(
                       # The following are the members of the shinyimg obj.
                       # Default brightness
-                      myhistory = c(0,0,0,0,0,0,0,0,0,0),
+                      myhistory = c(0,0,0,0,0,0,0,0,0,0,0,0,0),
                       #names(myhistory) <- c(1,2,3,4,5,6,7,8,9,10),
                       brightness = 0,
                       # Default Contrast
@@ -836,7 +887,9 @@ shinyimg <- R6Class("shinyimg",
                       gamma = 1, 
                       blur = 0, 
                       rotate = 0, 
-                      grayscale = 0, 
+                      grayscale = 0,
+                      flip = 0, 
+                      flop = 0, 
                       # CURRENT Number of actions. Can be less than the
                       # Actual number of actions due to undos.
                       actions = 0,
@@ -1043,7 +1096,13 @@ shinyimg <- R6Class("shinyimg",
                                private$grayscale <- amount,
 
                                # Action ID 12, crop
-                               private$update_crop_values(amount)
+                               private$update_crop_values(amount),
+
+                               # Action ID 13, flip
+                               private$flip <- amount,
+
+                               # Action ID 14, flop
+                               private$flop <- amount
                         )
                         # private$add_action()
                       },
@@ -1057,7 +1116,9 @@ shinyimg <- R6Class("shinyimg",
                                             crop2y = private$xy2[2],
                                             blurring = private$blur,
                                             rotation = private$rotate, 
-                                            colorMode = private$grayscale) {                              
+                                            colorMode = private$grayscale,
+                                            flip_value = private$flip, 
+                                            flop_value = private$flop) {                              
                         private$img_history <-
                           c(private$img_history, siaction$new(bright, 
                                                               cont, 
@@ -1068,7 +1129,9 @@ shinyimg <- R6Class("shinyimg",
                                                               ),
                                                               blurring, 
                                                               rotation, 
-                                                              colorMode
+                                                              colorMode, 
+                                                              flip_value, 
+                                                              flop_value
                                                               ))
                       },
 
@@ -1081,6 +1144,8 @@ shinyimg <- R6Class("shinyimg",
                         private$blur = args[8]
                         private$rotate = args[9]
                         private$grayscale = args[10]
+                        private$flip = args[11]
+                        private$flop = args[12]
                       },
 
                       generate_current_image = function(action) {
@@ -1142,6 +1207,14 @@ shinyimg <- R6Class("shinyimg",
                           else if (popped[2] == 2)
                           {
                             private$current_image <- rotate(private$current_image, popped[3])
+                          }
+                          else if (popped[2] == 3)
+                          {
+                            private$current_image <- flip(private$current_image)
+                          }
+                          else if (popped[2] == 4)
+                          {
+                            private$current_image <- flop(private$current_image)
                           }
                         }
                       },
