@@ -351,25 +351,35 @@ shinyimg <- R6Class("shinyimg",
                         # Generated action matrix done in O(1) time.
                         action_matrix <- matrix(NA, 
                                                 nrow=length(private$img_history), 
-                                                ncol=10)
+                                                ncol=12)
                         # Fill in the history data
                         i = 1
                         for (item in private$img_history) {
                           history <- item$get_action()
+                          # print("history")
+                          # print(history)
                           # TODO: Map function perhaps?
                           action_matrix[i, ] <- c(history[1], history[2], 
                                                   history[3], history[4], 
                                                   history[5], history[6], 
                                                   history[7], history[8],
-                                                  history[9], history[10])
+                                                  history[9], history[10],
+                                                  history[11], history[12])
                           i = i + 1
                         }
+                        # print("action_matrix")
+                        # print(action_matrix)
                         # Save the current action number
                         actions <- private$actions
                         # Save the current image as well
                         img <- imageData(private$local_img)
+
+                        order_list = private$order_list
+                        indexed_images = private$indexed_images
+
                         # Save everything to file.
-                        base::save(action_matrix, actions, img, file=file)
+                        base::save(action_matrix, actions, img,
+                          order_list, indexed_images, file=file)
                       },
                       # Counterpart to the save function, will load from
                       # previous save file.
@@ -380,6 +390,9 @@ shinyimg <- R6Class("shinyimg",
                         private$img_history = c()
                         
                         private$local_img <- Image(img)
+
+                        private$order_list = order_list
+                        private$indexed_images = indexed_images
                         
                         # Not sure if this fixes the issue -- Had
                         # some weird color issues like loading in
@@ -389,7 +402,19 @@ shinyimg <- R6Class("shinyimg",
                         
                         # FIll in the action matrix
                         for (i in 1:dim(action_matrix)[1]) {
-                          private$add_action(action_matrix[i, 1],
+                          # private$add_action(action_matrix[i, 1],
+                          #                    action_matrix[i, 2],
+                          #                    action_matrix[i, 3],
+                          #                    action_matrix[i, 4],
+                          #                    action_matrix[i, 5],
+                          #                    action_matrix[i, 6],
+                          #                    action_matrix[i, 7],
+                          #                    action_matrix[i, 8],
+                          #                    action_matrix[i, 9],
+                          #                    action_matrix[i, 10]
+                          # )
+                          private$update_img_history(
+                                             action_matrix[i, 1],
                                              action_matrix[i, 2],
                                              action_matrix[i, 3],
                                              action_matrix[i, 4],
@@ -398,20 +423,27 @@ shinyimg <- R6Class("shinyimg",
                                              action_matrix[i, 7],
                                              action_matrix[i, 8],
                                              action_matrix[i, 9],
-                                             action_matrix[i, 10]
+                                             action_matrix[i, 10],
+                                             action_matrix[i, 11],
+                                             action_matrix[i, 12]
                           )
                         }
                         private$actions <- actions
                         
                         # Apply the latest action
-                        private$applyAction(
-                          private$img_history[private$actions])
+                        action = private$img_history[private$actions]
+                        dataframe = action[[1]]
+                        args = dataframe$get_action()
+                        private$update_all_img_values(args)
+
+                        private$current_image <<- private$indexed_images[[private$actions]]
                         
                         # TODO: See if this should go in applyAction 
                         # instead.
-                        if (private$autodisplay) {
-                          self$render()
-                        }
+                        private$render()
+                        # if (private$autodisplay) {
+                        #   self$render()
+                        # }
                       },
                       # Uses the actions list (img_history) to undo the last
                       # done action. DOES NOT PRUNE THE LIST AT THIS POINT. 
@@ -665,6 +697,14 @@ shinyimg <- R6Class("shinyimg",
                         # Else image is colormode
                         # Can revert image to colormode if argument is 0
                         private$do_action(11, grayscale)
+                      },
+
+                      change_color_mode = function() {
+                        cat(self$logged_image,'$change_color_mode()\n',sep="",file='~/history.R',append=TRUE)
+                        if (private$grayscale == 1)
+                          private$do_action(11, 0)
+                        else
+                          private$do_action(11, 1)
                       },
 
                       # The command line cropper uses locator to have the
