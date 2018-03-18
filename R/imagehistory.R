@@ -695,11 +695,21 @@ shinyimg <- R6Class("shinyimg",
                       # flips an image around the horizontal axis
                       # if arg is 0, then returns image back to original state
                       # if no arg is provided, flips image
-                      flip_horizontally = function(flip) {
+                      flip_horizontally = function() {
                         cat(self$logged_image,'$flip_horizontally()\n',sep="",file='~/history.R',append=TRUE)
-                        # flips image
-                        if (missing(flip))
-                          flip <- 1
+                        if (private$flip == 0)
+                        {
+                        	flip <- 1
+                        }
+                        if (private$flip == 1)
+                        {
+                        	flip <- 0
+                        }
+
+
+                        # # flips image
+                        # if (missing(flip))
+                        #   flip <- 1
 
                         # actionID = 13 for flip
                         # mutatorAmount = flip (how much flip is changing -- either 1 or 0)
@@ -712,11 +722,17 @@ shinyimg <- R6Class("shinyimg",
                       # flops an image around the vertical axis
                       # if arg is 0, then returns image back to original state
                       # if no arg is provided, flops image
-                      flop_vertically = function(flop) {
+                      flop_vertically = function() {
                         cat(self$logged_image,'$flop_horizontally()\n',sep="",file='~/history.R',append=TRUE)
                         # flips image
-                        if (missing(flop))
-                          flop <- 1
+                        if (private$flop == 0)
+                        {
+                        	flop <- 1
+                        }
+                        if (private$flop == 1)
+                        {
+                        	flop <- 0
+                        }
 
                         # actionID = 14 for flop
                         # mutatorAmount = flop (how much flip is changing -- either 1 or 0)
