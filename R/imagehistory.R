@@ -1011,6 +1011,7 @@ shinyimg <- R6Class("shinyimg",
                       	private$update_img_history()
                         private$generate_current_image(private$img_history[private$actions])
                         private$generate_queued_image()
+                        private$update_colormode(private$img_history[private$actions])
                         # must have a generted image 
                       	private$update_saved_images()
                       	private$render()
@@ -1236,10 +1237,6 @@ shinyimg <- R6Class("shinyimg",
                         private$current_image <- 
                           private$current_image ^ args[3]
 
-                        # args[10] is colormode
-                        if (args[10] == 1)
-                          private$current_image <- channel(private$current_image, "gray")
-
                         private$myhistory <- args
                       },
 
@@ -1256,9 +1253,7 @@ shinyimg <- R6Class("shinyimg",
                             y1 = cropValues$nonCommValue.y1
                             y2 = cropValues$nonCommValue.y2
 
-                            private$current_image <- private$current_image[
-                              x1:x2, y1:y2,
-                              ]
+                            private$current_image <- private$current_image[x1:x2, y1:y2,]
                           } 
                           else if (popped[2] == 2)
                           {
@@ -1273,6 +1268,18 @@ shinyimg <- R6Class("shinyimg",
                             private$current_image <- flop(private$current_image)
                           }
                         }
+                      },
+
+                      update_colormode = function(action) {
+                        # Unpack the action variable
+                        dataframe = action[[1]]
+                        # Use the action's getter to return the c()'d args
+                        args = dataframe$get_action()
+                        private$update_all_img_values(args)
+
+                        # args[10] is colormode
+                        if (args[10] == 1)
+                          private$current_image <- channel(private$current_image, "gray")
                       },
 
                       update_saved_images = function() {
