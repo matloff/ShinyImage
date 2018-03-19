@@ -1,33 +1,6 @@
 library(EBImage)                             #Include EBImage Lib
 library(R6)
 
-#' Class providing object describing one action.
-#'
-#' @docType class
-#' @importFrom R6 R6Class
-#' @export
-#' @keywords data
-#' @return Object of \code{\link{R6Class}} representing a single ShinyImage action.
-#' @format \code{\link{R6Class}} object.
-#' @examples
-#' crop = c(c(0, 0), c(1200, 1400))
-#' siaction$new(0.1, 1, 0, crop, 1, 0, 0)
-#' @field brightness Stores address of your lightning server.
-#' @field contrast Stores id of your current session on the server.
-#' @field gamma Stores url of the last visualization created by this object.
-#' @field crop A double nested sequence of crops c\(c\(x1, y1\), c\(x2, y2\)\).
-#' @field blur stores value of blur
-#' @field rotate stores value of rotate 
-#' @field grayscale stores value of colormode (1 if grayscale, 0 if color)
-#' #' @section Methods:
-#' \describe{
-#'   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
-#'   \item{\code{new(brightness, contrast, gamma, crop)}}{This method is used to create object of this class with the appropriate parameters.}
-#'
-#'   \item{\code{get_action()}}{This method returns a c() list of the input parameters.}
-#' }  
-#'
-
 #used to keep track of rotate, crop, or any other function that requires order
 Queue <- setRefClass(Class = "Queue",
                      fields = list(
@@ -83,6 +56,32 @@ Queue <- setRefClass(Class = "Queue",
                      )
 )
 
+#' Class providing object describing one action.
+#'
+#' @docType class
+#' @importFrom R6 R6Class
+#' @export
+#' @keywords data
+#' @return Object of \code{\link{R6Class}} representing a single ShinyImage action.
+#' @format \code{\link{R6Class}} object.
+#' @examples
+#' crop = c(c(0, 0), c(1200, 1400))
+#' siaction$new(0.1, 1, 0, crop, 1, 0, 0)
+#' @field brightness Stores address of your lightning server.
+#' @field contrast Stores id of your current session on the server.
+#' @field gamma Stores url of the last visualization created by this object.
+#' @field crop A double nested sequence of crops c\(c\(x1, y1\), c\(x2, y2\)\).
+#' @field blur stores value of blur
+#' @field rotate stores value of rotate 
+#' @field grayscale stores value of colormode (1 if grayscale, 0 if color)
+#' #' @section Methods:
+#' \describe{
+#'   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
+#'   \item{\code{new(brightness, contrast, gamma, crop)}}{This method is used to create object of this class with the appropriate parameters.}
+#'
+#'   \item{\code{get_action()}}{This method returns a c() list of the input parameters.}
+#' }  
+#'
 siaction <- R6Class("siaction",
                     # Make this action mutable. TODO: Make it so that
                     # it doesn't need to be
@@ -102,6 +101,8 @@ siaction <- R6Class("siaction",
                       },
                       # Get the c()'d properties of this particular action
                       get_action = function() {
+                        # Note that because private$crop consists of 4 values,
+                        # it contributes 4 slots to this vector.
                         return (c(private$brightness, 
                                   private$contrast, 
                                   private$gamma, 
@@ -118,7 +119,7 @@ siaction <- R6Class("siaction",
                       brightness = 0,
                       contrast = 0,
                       gamma = 0,
-                      crop = NULL,
+                      crop = NULL,  # vector of length 4
                       blur = 0, 
                       rotate = 0, 
                       grayscale = 0, 
@@ -287,7 +288,7 @@ shinyimg <- R6Class("shinyimg",
                         # (relative to top left, which is 0, 0)
                         private$xoffset = 0
                         private$yoffset = 0
-                        # List of image histories
+                        # List of image histories (instances of "siaction")
                         private$img_history = c()
                         # Variable to store the source image
                         private$local_img = NULL
@@ -356,8 +357,6 @@ shinyimg <- R6Class("shinyimg",
                         i = 1
                         for (item in private$img_history) {
                           history <- item$get_action()
-                          # print("history")
-                          # print(history)
                           # TODO: Map function perhaps?
                           action_matrix[i, ] <- c(history[1], history[2], 
                                                   history[3], history[4], 
@@ -367,8 +366,6 @@ shinyimg <- R6Class("shinyimg",
                                                   history[11], history[12])
                           i = i + 1
                         }
-                        # print("action_matrix")
-                        # print(action_matrix)
                         # Save the current action number
                         actions <- private$actions
                         # Save the current image as well
@@ -431,10 +428,7 @@ shinyimg <- R6Class("shinyimg",
                         private$actions <- actions
                         
                         # Apply the latest action
-                        action = private$img_history[private$actions]
-                        dataframe = action[[1]]
-                        args = dataframe$get_action()
-                        private$update_all_img_values(args)
+                        private$update_all_img_values()
 
                         private$current_image <<- private$indexed_images[[private$actions]]
                         
@@ -1009,9 +1003,9 @@ shinyimg <- R6Class("shinyimg",
                         private$update_img_amount(actionID, mutatorAmount)
 
                       	private$update_img_history()
-                        private$generate_current_image(private$img_history[private$actions])
+                        private$generate_current_image()
                         private$generate_queued_image()
-                        private$update_colormode(private$img_history[private$actions])
+                        private$update_colormode()
                         # must have a generted image 
                       	private$update_saved_images()
                       	private$render()
@@ -1025,10 +1019,7 @@ shinyimg <- R6Class("shinyimg",
                           # of our si object 
                           # we go back to the action number 
 
-                          action = private$img_history[private$actions]
-                          dataframe = action[[1]]
-                          args = dataframe$get_action()
-                          private$update_all_img_values(args)
+                          private$update_all_img_values()
 
                           private$current_image <<- private$indexed_images[[private$actions]]
                       },
@@ -1040,10 +1031,7 @@ shinyimg <- R6Class("shinyimg",
                           # of our si object 
                           # we go back to the action number 
 
-                          action = private$img_history[private$actions]
-                          dataframe = action[[1]]
-                          args = dataframe$get_action()
-                          private$update_all_img_values(args)
+                          private$update_all_img_values()
 
                           private$current_image <<- private$indexed_images[[private$actions]]
                       },
@@ -1192,7 +1180,16 @@ shinyimg <- R6Class("shinyimg",
                                                               ))
                       },
 
-                      update_all_img_values = function(args) {
+                      # Sets all image values to what they are/were for the
+                      # current action.
+                      update_all_img_values = function() {
+                        # Get the vector of image values of the current action.
+                        args = private$img_history[private$actions]
+                        args = args[[1]]
+                        args = args$get_action()
+
+                        private$myhistory <- args
+
                         private$brightness = args[1]
                         private$contrast = args[2]
                         private$gamma = args[3]
@@ -1205,39 +1202,29 @@ shinyimg <- R6Class("shinyimg",
                         private$flop = args[12]
                       },
 
-                      generate_current_image = function(action) {
-                        # Unpack the action variable
-                        dataframe = action[[1]]
-                        # Use the action's getter to return the c()'d args
-                        args = dataframe$get_action()
-                        private$update_all_img_values(args)
+                      generate_current_image = function() {
+                        private$update_all_img_values()
 
-                        # args[8] is blurring
-                        if (args[8] > 0)
+                        if (private$blur > 0)
                         {
                           private$current_image <- 
-                            gblur(private$local_img, sigma = args[8])
+                            gblur(private$local_img, sigma = private$blur)
                         } 
 
                         #need to fix blur back to original image
-                        if (args[8] <= 0)
+                        if (private$blur <= 0)
                         {
                           private$current_image <- private$local_img
                         }      
 
-                        # args[2] is contrast
                         private$current_image <- 
-                          private$current_image * args[2]
+                          private$current_image * private$contrast
 
-                        # args[1] is brightness
                         private$current_image <- 
-                          private$current_image + args[1]
+                          private$current_image + private$brightness
 
-                        # args[3] is gamma
                         private$current_image <- 
-                          private$current_image ^ args[3]
-
-                        private$myhistory <- args
+                          private$current_image ^ private$gamma
                       },
 
                       generate_queued_image = function() {
@@ -1270,15 +1257,8 @@ shinyimg <- R6Class("shinyimg",
                         }
                       },
 
-                      update_colormode = function(action) {
-                        # Unpack the action variable
-                        dataframe = action[[1]]
-                        # Use the action's getter to return the c()'d args
-                        args = dataframe$get_action()
-                        private$update_all_img_values(args)
-
-                        # args[10] is colormode
-                        if (args[10] == 1)
+                      update_colormode = function() {
+                        if (private$grayscale == 1)
                           private$current_image <- channel(private$current_image, "gray")
                       },
 
