@@ -12,6 +12,7 @@ Authors@R: c(person("Alexander", "Fu", email = "alexfu95@gmail.com",
         role = c("aut", "cre")))
 Author: Alexander Fu [aut], 
   Ariel Shin [aut], 
+  Aaron Kaloti [aut],
   Norm Matloff [aut, cre]
 Maintainer: Norm Matloff <nsmatloff@ucdavis.edu>
 Description: Standard imaging operations, e.g. crop and contrast
