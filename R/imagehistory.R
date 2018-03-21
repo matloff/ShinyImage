@@ -465,23 +465,11 @@ shinyimg <- R6Class("shinyimg",
                         }
                       },
                       # undo function for Shiny app
-                      shinyUndo = function() {
-                        cat(self$logged_image,'$undo()\n',sep='',file='~/history.R',append=TRUE)
-
+                      canUndo = function() {
                         # If there are more actions to undo besides the 
                         # original
                         # image (aka action #1)
-                        if (private$actions != 1) {
-                          private$doUndo()
-                          
-                          
-                          display(private$current_image, method = "raster")
-                          
-                          return(1)
-                        } else {
-                          # There are no actions to undo.
-                          return(0)
-                        }
+                        return (private$actions > 1)
                       },
                       # Uses the actions list (img_history) to redo the last
                       # undone action.
@@ -504,24 +492,10 @@ shinyimg <- R6Class("shinyimg",
                         }
                       },
                       # Redo action for Shiny app
-                      shinyRedo = function() {
+                      canRedo = function() {
                         cat(self$logged_image,'$redo()\n',sep='',file='~/history.R',append=TRUE)
                         # If there are actions to redo
-                        if (private$actions < length(private$img_history)) {
-                          private$doRedo()
-                          
-                          # TODO: IDEA. Lazy loading. Don't actually apply the
-                          # action UNTIL we're done redoing.
-                          
-                          # TODO: See if this autodisplay should be applied to
-                          # the applyAction function instead.
-                          display(private$current_image, method = "raster")
-                        
-                          return(1)
-                        } else {
-                          # No actions to redo.
-                          return(0)
-                        }
+                        return (private$actions < length(private$img_history))
                       },
                       # Returns status of lazy loading
                       toggle_ll = function() {
