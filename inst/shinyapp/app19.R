@@ -57,11 +57,13 @@ ui <- fluidPage(
                 "file/si", 
                 ".si"))
           ),
-          radioButtons("color", label = ("Color Mode"), choices = list("Color" = 1, "Greyscale" = 2), selected = 1),
+          actionButton("color", "Change Color Mode"),
           sliderInput("bright", "Increase/Decrease Brightness:", min = -10, max = 10, value = 0, step = 0.1),
           sliderInput("contrast", "Increase/Decrease Contrast:", min = -10, max = 10, value = 0, step = 0.1), 
           sliderInput("gamma", "Increase/Decrease Gamma Correction", min = 0, max = 50, value = 1, step = 0.5),
-          # sliderInput("rotation", "Rotate Image", min = 0, max = 360, value = 0, step = 1),
+          sliderInput("rotation", "Rotate Image", min = 0, max = 360, value = 0, step = 1),
+          actionButton("flip", "Flip"),
+          actionButton("flop", "Flop"),
           sliderInput("blurring", "Blur Image", min = 0, max = 20, value = 0, step = 1),
           actionButton("button1", "Undo"), 
           actionButton("button2", "Redo"), 
@@ -153,10 +155,11 @@ server <- function(input, output, session) {
       #  By Bob Jagendorf 
       #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
       #  via Wikimedia Commons
-      shinyImageFile$shiny_img_origin <- 
+
+      output$plot1 <- renderPlot({
+      	shinyImageFile$shiny_img_origin <- 
         shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
-        #outputs image to plot1 -- main plot
-      output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+      })
     }
     #user chose input file option
     if (input$radio == 2)
@@ -187,14 +190,16 @@ server <- function(input, output, session) {
     {
       if (!is.null(current))
       {
-        shinyImageFile$shiny_img_origin <- current
-        output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()
+        
+        output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin <- current
         updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
         updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
         updateSliderInput(session, "gamma", value = shinyImageFile$shiny_img_origin$get_gamma())
         updateSliderInput(session, "blurring", value = shinyImageFile$shiny_img_origin$get_blur())
-        # updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
-        updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
+        updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
+        # updateSliderInput(session, "flip", value = shinyImageFile$shiny_img_origin$get_flip())
+        # updateSliderInput(session, "flop", value = shinyImageFile$shiny_img_origin$get_flop())
+        # updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
         })
       }
       else 
@@ -228,8 +233,10 @@ server <- function(input, output, session) {
     updateSliderInput(session, "contrast", value = 0)
     updateSliderInput(session, "gamma", value = 1)
     updateSliderInput(session, "rotation", value = 0)
-    updateSliderInput(session, "blurring", value = 0)
-    updateRadioButtons(session, "color", selected = 1)
+    updateSliderInput(session, "flip", value = 0)
+    # updateSliderInput(session, "flop", value = 0)
+    # updateSliderInput(session, "blurring", value = 0)
+    # updateRadioButtons(session, "color", selected = 1)
     session$resetBrush("plot_brush")
     # }
   })
@@ -252,33 +259,33 @@ server <- function(input, output, session) {
 
   #if they enter a new file, their file will become the new imageFile
   observeEvent(input$file1, {
-    shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
-    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+    
+    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))})
   })
 
   #if they enter a new url, their url will become the new new imageFile
   observeEvent(input$url1, {
     validate(need(input$url1 != "", "Must type in a valid jpeg, png, or tiff"))
-    shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
-    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)})
   })
 
   #if user uploads an image log, they will see the picture with previous settings
   #need to update sliders
   observeEvent(input$file2, {
-    shinyImageFile$shiny_img_origin$load(renameUpload(input$file2))
-    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+    output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$load(renameUpload(input$file2))})
 
     #need to update sliders to saved image settings
     updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
     updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
     updateSliderInput(session, "gamma", value = shinyImageFile$shiny_img_origin$get_gamma())
     updateSliderInput(session, "blurring", value = shinyImageFile$shiny_img_origin$get_blur())
-    # updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
-    updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
+    updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
+    # updateSliderInput(session, "flip", value = shinyImageFile$shiny_img_origin$get_flip())
+    # updateSliderInput(session, "flop", value = shinyImageFile$shiny_img_origin$get_flop())
+    # updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
   })
 
-#//////// END OF CODE FOR RADIO BUTTONS /////////////
+# #//////// END OF CODE FOR RADIO BUTTONS /////////////
 
 #//////// CODE FOR CROPPING AND PLOTS /////////////
 
@@ -291,8 +298,7 @@ server <- function(input, output, session) {
   recursiveCrop <- eventReactive(input$keep,{
     isolate({
       p <- input$plot_brush 
-      shinyImageFile$shiny_img_origin$cropxy(p$xmin,p$xmax,p$ymin,p$ymax)
-      output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$render()})
+      output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin$crop(p$xmin,p$xmax,p$ymin,p$ymax)})
     })
     session$resetBrush("plot_brush")
   })
@@ -320,8 +326,8 @@ server <- function(input, output, session) {
     validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
  
     preview <- shinyImageFile$shiny_img_origin$copy()
-    preview$set_autodisplay()
-    return(preview$cropxy(p$xmin,p$xmax,p$ymin,p$ymax))
+    # preview$set_autodisplay()
+    return(preview$crop(p$xmin,p$xmax,p$ymin,p$ymax))
   }
 
   #shows a preview of the cropped function
@@ -345,8 +351,7 @@ server <- function(input, output, session) {
   observeEvent(input$bright, {
     if (input$bright != 0)
     {
-      shinyImageFile$shiny_img_origin$set_brightness(input$bright / 10)
-      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$set_brightness(input$bright / 10))
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -358,8 +363,7 @@ server <- function(input, output, session) {
     #shiny img
     if (input$contrast != 0) {
       actualContrast = 1 + (input$contrast / 10)
-      shinyImageFile$shiny_img_origin$set_contrast(actualContrast)
-      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$set_contrast(actualContrast))
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -370,30 +374,43 @@ server <- function(input, output, session) {
   observeEvent(input$gamma, {
     if (input$gamma != 1)
     {
-      shinyImageFile$shiny_img_origin$set_gamma(input$gamma)
-      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$set_gamma(input$gamma))
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
       })    }
   })
 
-  # observeEvent(input$rotation, {
-  #   if (input$rotation != 0)
-  #   {
-  #     shinyImageFile$shiny_img_origin$set_rotate(input$rotation) 
-  #     output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
-  #     output$plot2 <- renderPlot({
-  #       croppedShiny(shinyImageFile$shiny_img_origin)
-  #       shinyjs::show("keep")
-  #     })    }
-  # })
+  observeEvent(input$rotation, {
+    if (input$rotation != 0)
+    {
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$set_rotate(input$rotation) )
+      output$plot2 <- renderPlot({
+        croppedShiny(shinyImageFile$shiny_img_origin)
+        shinyjs::show("keep")
+      })    }
+  })
+
+  observeEvent(input$flip, {
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$flip_horizontally() )
+      output$plot2 <- renderPlot({
+        croppedShiny(shinyImageFile$shiny_img_origin)
+        shinyjs::show("keep")
+      })
+  })
+
+  observeEvent(input$flop, {
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$flop_vertically() )
+      output$plot2 <- renderPlot({
+        croppedShiny(shinyImageFile$shiny_img_origin)
+        shinyjs::show("keep")
+      })
+  })
 
   observeEvent(input$blurring, {
     if (input$blurring != 0)
     {
-      shinyImageFile$shiny_img_origin$set_blur(input$blurring)
-      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$set_blur(input$blurring))
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
@@ -401,24 +418,11 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$color, {
-    if (input$color == 2)
-    {
-      shinyImageFile$shiny_img_origin$set_grayscale(1)
-      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
+      output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$change_color_mode())
       output$plot2 <- renderPlot({
         croppedShiny(shinyImageFile$shiny_img_origin)
         shinyjs::show("keep")
-      })    }
-    #prevents shiny from rendering color image at start up 
-    #checks to see if the user clicked color + they can click undo
-    if (input$color == 1 && shinyImageFile$shiny_img_origin$shinyUndo() != 0)
-    {
-     shinyImageFile$shiny_img_origin$set_grayscale(0)
-     output$plot1 <- renderPlot(shinyImageFile$shiny_img_origin$render())
-      output$plot2 <- renderPlot({
-        croppedShiny(shinyImageFile$shiny_img_origin)
-        shinyjs::show("keep")
-      })    }
+      })
   })
 
 #//////// END OF CODE FOR CROPPING AND PLOTS /////////////
@@ -437,35 +441,35 @@ server <- function(input, output, session) {
       #  By Bob Jagendorf 
       #  [CC BY 2.0 (http://creativecommons.org/licenses/by/2.0)], 
       #  via Wikimedia Commons
-      shinyImageFile$shiny_img_origin <- 
-        shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))
+      output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin <- 
+        shinyimg$new(system.file("images", "sample.jpg", package="ShinyImage"))})
     }
     if(input$radio == 2)
     {
-      shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
+      output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))})
     }
     if(input$radio == 3)
     {
-      shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)
+      output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin <- shinyimg$new(input$url1)})
     }
     if(input$radio == 4)
     {
       #TODO: more testing with previously saved objects
       if (!is.null(current))
       {
-        shinyImageFile$shiny_img_origin <- current
+        output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin <- current})
       }
       else 
-        shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))
+        output$plot1 <- renderPlot({shinyImageFile$shiny_img_origin <- shinyimg$new(renameUpload(input$file1))})
     }
     #TODO!!! if statement for #4
 
     updateSliderInput(session, "bright", value = 0)
     updateSliderInput(session, "contrast", value = 0)
     updateSliderInput(session, "gamma", value = 1)
-    # updateSliderInput(session, "rotation", value = 0)
+    updateSliderInput(session, "rotation", value = 0)
     updateSliderInput(session, "blurring", value = 0)
-    updateRadioButtons(session, "color", selected = 1)
+    # updateRadioButtons(session, "color", selected = 1)
     session$resetBrush("plot_brush")
   })
 
@@ -478,7 +482,7 @@ server <- function(input, output, session) {
     #needed to create a separate functino to check for the number of actions left
     #because of the auto render
 
-    if (shinyImageFile$shiny_img_origin$shinyUndo() == 0) {
+    if (!shinyImageFile$shiny_img_origin$canUndo()) {
       showModal(modalDialog(
       title = "Important message", 
         "No more actions to undo!"))
@@ -487,20 +491,21 @@ server <- function(input, output, session) {
     {
       output$plot1 <- renderPlot({
         #TODO: look into why its render and not undo 
-      shinyImageFile$shiny_img_origin$render() 
+      shinyImageFile$shiny_img_origin$undo()
       updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
       updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
       updateSliderInput(session, "gamma", value = shinyImageFile$shiny_img_origin$get_gamma())
       updateSliderInput(session, "blurring", value = shinyImageFile$shiny_img_origin$get_blur())
-      # updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
-      updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
-     })
-     }
+      updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
+      # updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
+      })
+    }
   })
 
   #redo button 
   observeEvent(input$button2, {
-    if (shinyImageFile$shiny_img_origin$shinyRedo() == 0) {
+
+    if (!shinyImageFile$shiny_img_origin$canRedo()) {
       showModal(modalDialog(
       title = "Important message", 
         "No more actions to redo!"))
@@ -511,13 +516,13 @@ server <- function(input, output, session) {
     else 
     {
       output$plot1 <- renderPlot({
-      shinyImageFile$shiny_img_origin$redo() 
+      redo_output <- shinyImageFile$shiny_img_origin$redo()
       updateSliderInput(session, "bright", value = shinyImageFile$shiny_img_origin$get_brightness() * 10)
       updateSliderInput(session, "contrast", value = (shinyImageFile$shiny_img_origin$get_contrast() - 1) * 10)
       updateSliderInput(session, "gamma", value = shinyImageFile$shiny_img_origin$get_gamma())
       updateSliderInput(session, "blurring", value = shinyImageFile$shiny_img_origin$get_blur())
-      # updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
-      updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
+      updateSliderInput(session, "rotation", value = shinyImageFile$shiny_img_origin$get_rotate())
+      # updateRadioButtons(session, "color", selected = shinyImageFile$shiny_img_origin$get_color() + 1)
     })
     }
   })
