@@ -326,7 +326,6 @@ server <- function(input, output, session) {
     validate(need(p$ymin >= 0, "Highlighted portion is out of bounds on the y-axis of your image 2"))
  
     preview <- shinyImageFile$shiny_img_origin$copy()
-    # preview$set_autodisplay()
     return(preview$crop(p$xmin,p$xmax,p$ymin,p$ymax))
   }
 

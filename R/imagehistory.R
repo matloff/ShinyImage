@@ -201,7 +201,6 @@ siaction <- R6Class("siaction",
 #'   \item{\code{redo()}}{Redos the next action after an undo has been performed without autorendering; used by Shiny. 
 #'      Will no longer redo if there are no more undos to redo.}
 #'   \item{\code{canRedo()}}{Checks if can redo; used by Shiny.}
-#'   \item{\code{toggle_ll()}}{Returns status of lazy loading.}
 #'   \item{\code{copy()}}{Returns a copy of the image.}
 #'   \item{\code{add_brightness()}}{Adds brightness to the image.}
 #'   \item{\code{remove_brightness()}}{Removes brightness (darkens) to the image.}
@@ -243,7 +242,6 @@ siaction <- R6Class("siaction",
 #'   \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
 #'   \item{\code{size()}}{Returns the current image dimentions.}
 #'   \item{\code{render()}}{Renders the current image.}
-#'   \item{\code{toggle_render()}}{Toggles the automatic rendering after making a change. By default, this option is off.}
 #'   }
 #'   
 shinyimg <- R6Class("shinyimg",
@@ -297,19 +295,12 @@ shinyimg <- R6Class("shinyimg",
                         private$local_img = NULL
                         # Variable to store the current image to display
                         private$current_image = NULL
-                        # Option to have the output automatically rendered
-                        # autodisplay is off till function is called
-                        private$autodisplay = 1
                         # The filename used for the autosave in 
                         # case of crashes
                         #private$autosave_filename = "workspace.si"
                         #heere
                         private$autosave_filename = 
                           paste(format(Sys.time(), "%b%d%H%M%S"), "-", "workspace.si",sep="")
-                        # Determines if we lazy load
-                        private$lazy_load = 0
-                        # The number of lazy actions we have done so far.
-                        private$lazy_actions = 0
                         # bool value to determine if user can undo 
                         private$order_list = Queue$new()
                         # Queue that stores non-commutative actions
@@ -405,13 +396,8 @@ shinyimg <- R6Class("shinyimg",
                         private$update_all_img_values()
 
                         private$current_image <<- private$indexed_images[[private$actions]]
-                        
-                        # TODO: See if this should go in applyAction 
-                        # instead.
+
                         private$render()
-                        # if (private$autodisplay) {
-                        #   self$render()
-                        # }
                       },
                       # Uses the actions list (img_history) to undo the last
                       # done action. DOES NOT PRUNE THE LIST AT THIS POINT. 
@@ -424,15 +410,7 @@ shinyimg <- R6Class("shinyimg",
                         if (private$actions != 1) {
                           private$doUndo()
                           
-                          display(private$current_image, method = "raster")
-                          # TODO: IDEA. Lazy loading. Don't actually apply 
-                          # the action UNTIL we're done undoing.
-                          
-                          # TODO: See if this autodisplay should be applied
-                          # to the applyAction function instead.
-                          # if (private$autodisplay) {
-                          #   self$render()
-                          # }
+                          display(private$current_image, method = "raster")                          
                         } else {
                           # There are no actions to undo.
                           print("No action to undo")
@@ -452,14 +430,7 @@ shinyimg <- R6Class("shinyimg",
                         # If there are actions to redo
                         if (private$actions < length(private$img_history)) {
                           private$doRedo()
-                          
-                          # TODO: IDEA. Lazy loading. Don't actually apply the
-                          # action UNTIL we're done redoing.
-                          
-                          # TODO: See if this autodisplay should be applied to
-                          # the applyAction function instead.
                           display(private$current_image, method = "raster")
-
                         } else {
                           # No actions to redo.
                           print("No action to redo")
@@ -470,19 +441,6 @@ shinyimg <- R6Class("shinyimg",
                         cat(self$logged_image,'$redo()\n',sep='',file='~/history.R',append=TRUE)
                         # If there are actions to redo
                         return (private$actions < length(private$img_history))
-                      },
-                      # Returns status of lazy loading
-                      toggle_ll = function() {
-                        private$lazy_load <- 1 - private$lazy_load;
-                        if (private$lazy_load == 1) {
-                          if (private$lazy_actions != 0) {
-                            private$applyAction(
-                              private$img_history[private$actions])
-                          }
-                          cat("Lazy loading on")
-                        } else {
-                          cat("Lazy loading off")
-                        }
                       },
                       # Returns a copy of this image. 
                       # One copy's changes will not affect the other.
@@ -718,14 +676,6 @@ shinyimg <- R6Class("shinyimg",
                       size = function() {
                         dim(private$current_image)
                       },
-                      # Function that handles the automatic render toggle.
-                      # Default autodisplay is off. 
-                      toggle_render = function() {
-                        private$autodisplay = 1 - private$autodisplay;
-                        if (private$autodisplay) {
-                          self$render()
-                        }
-                      },
                       # Gets the raw matrix slices of the current image
                       get_raw = function() {
                         return (imageData(private$current_img))
@@ -827,30 +777,11 @@ shinyimg <- R6Class("shinyimg",
                       local_img = NULL,
                       # Variable to store the current image to display
                       current_image = NULL,
-                      # Option to have the output automatically rendered
-                      autodisplay = 1,
                       # The filename used for the autosave in case of crashes
                       #autosave_filename = "workspace.si",
                       autosave_filename = 
                         paste(format(Sys.time(), "%b%d%H%M%S"), "-", "workspace.si",sep=""),
-                      # Startup function. Can take a image, and/or
-                      # the autosave filename.
-                      lazy_load = 0,
-                      # Determines if we apply the transfomation 
-                      # immediately or not. 
-                      # Defaults to off.
-                      lazy_actions = 0,
-                      #list that maintains order of functions crop and rotate
-                      #order_list = Queue$new(),
 
-                      # whichActionID: number specifying whether we're doing crop or rotate
-                      # (i.e. which non-commutative action)
-                      # actionIndex: what numbered action this is (among all actions,
-                      # not just non-commutative ones)
-                      # add_order = function(whichActionID, actionIndex, value1, value2, value3, value4)
-                      # {
-                      # 	private$order_list$push(c(whichActionID,actionIndex,value1,value2,value3,value4))
-                      # },
                       # refactoring all of the actions from the previous functions
                       # add_action, mtuator, and add_order
                       # calls a bunch of helpers
@@ -971,8 +902,6 @@ shinyimg <- R6Class("shinyimg",
 
                       # amount is a length 4 vector if the action is a crop.
                       update_img_amount = function(actionID, amount) {
-                        private$lazy_actions <- private$lazy_actions + 1
-                        
                         switch(actionID,
                                # ActionID 1, brightness adjustment
                                private$brightness <- 
@@ -1144,223 +1073,7 @@ shinyimg <- R6Class("shinyimg",
                           display(private$current_image, method = "raster")
                         }
                       },
-                      # # The following are the private functions
-                      # mutator = function(actionID, amount) {
-                        
-                      #   # Add a lazy action count. 
-                      #   private$lazy_actions <- private$lazy_actions + 1
-                        
-                      #   switch(actionID,
-                      #          # ActionID 1, brightness adjustment
-                      #          private$brightness <- 
-                      #            private$brightness + amount,
-                               
-                      #          # ActionID 2, brightness setting
-                      #          private$brightness <- amount,
-                               
-                      #          #  ActionID 3, contrast adjustment
-                      #          private$contrast <- 
-                      #            private$contrast + amount,
-                               
-                      #          #  ActionID 4, contrast setting
-                      #          private$contrast <- amount,
-
-                      #          # ActionID 5, gamm adjustment
-                      #          private$gamma <- 
-                      #            private$gamma + amount, 
-
-                      #          # ActionID 6, gamma setting
-                      #          private$gamma <- amount,
-
-                      #          # Action ID 7, blur adjustment
-                      #          private$blur <- 
-                      #            private$blur + amount, 
-
-                      #          # Action ID 8, blur setting
-                      #          private$blur <- amount,
-
-                      #          # Action ID 9, rotate adjustment
-                      #          private$rotate <- 
-                      #            private$rotate + amount, 
-
-                      #          # Action ID 10, rotate setting
-                      #          private$rotate <- amount,
-
-                      #          # Action ID 11, grayscale setting
-                      #          private$grayscale <- amount
-                      #   )
-                        
-                      #   private$add_action()
-                      # },
                       
-                      # # The main workhorse function for scribing an action.
-                      # # crop parameters refer to the top left x, top left y,
-                      # # bottom right x, bottom right y respectively. 
-                      # add_action = function(bright = private$brightness, 
-                      #                       cont = private$contrast, 
-                      #                       gam = private$gamma, 
-                      #                       crop1x = private$xy1[1],
-                      #                       crop1y = private$xy1[2], 
-                      #                       crop2x = private$xy2[1], 
-                      #                       crop2y = private$xy2[2],
-                      #                       blurring = private$blur,
-                      #                       rotation = private$rotate, 
-                      #                       colorMode = private$grayscale
-                                            
-                      # ) {
-                        
-                      #   # If we are not at the most recent image, we need 
-                      #   # to prune the extra actions. 
-                      #   if (private$actions < 
-                      #       length(private$img_history)) {
-                      #     private$img_history <- 
-                      #       private$img_history[1:private$actions]
-                      #   }
-
-                      #   # Use the siaction constructor to create a 
-                      #   # new action and add it to the img_history list.
-                      #   private$img_history <-
-                      #     c(private$img_history, siaction$new(bright, 
-                      #                                         cont, 
-                      #                                         gam, 
-                      #                                         c(
-                      #                                           c(crop1x,crop1y), 
-                      #                                           c(crop2x, crop2y)
-                      #                                         ),
-                      #                                         blurring, 
-                      #                                         rotation, 
-                      #                                         colorMode
-                      #                                         ))
-                      #   # Add one to the action counter because we just 
-                      #   # added an action to the action list
-                        
-                      #   private$actions <- private$actions + 1
-
-                      #   print(private$order_list)
-
-                      #   # Clear the redo-able non-commutative actions from the queue.
-                      #   if (private$order_list$size() > 0)
-                      #   {
-                      #     # print(private$order_list$size())
-                      #     # print(private$order_list$peek(private$order_list$size())[2])
-                      #     # While the last action in the order list has action id
-                      #     # greater than current one.
-                      #     # print("private actions: ")
-                      #     # print(private$actions)
-                      #     # print("private$order_list_size")
-                      #     # print(private$order_list$peek(private$order_list$size())[2])
-                      #     # print("privateorder_list")
-
-                      #     # print(private$order_list)
-
-                      #     while (private$actions
-                      #       < private$order_list$peek(private$order_list$size())[2])
-                      #     {
-                      #       print("private$actions")
-                      #       print(private$actions)
-                      #       print("peek value")
-                      #       print(private$order_list$peek(private$order_list$size())[2])
-                      #       print("order_list")
-                      #       print(private$order_list)
-
-                      #       private$order_list$reverse_pop()
-                      #     }
-                      #   }
-                        
-                      #   # If the autodisplay flag is on, render the 
-                      #   # changes.
-                      #   if (private$autodisplay) {
-                      #     self$render()
-                      #   }
-                      # },
-                      
-                      # # This function generates a modified image
-                      # # from the original (local_img)
-                      # applyAction = function(action) {
-                      #   # Unpack the action variable
-                      #   dataframe = action[[1]]
-                      #   # Use the action's getter to return the c()'d args
-                      #   args = dataframe$get_action()
-                      #   private$brightness = args[1]
-                      #   private$contrast = args[2]
-                      #   private$gamma = args[3]
-                      #   # private$xy1 = c(args[4], args[5])
-                      #   # private$xy2 = c(args[6], args[7])   
-                      #   private$blur = args[8]
-                      #   private$rotate = args[9]
-                      #   private$grayscale = args[10]
-
-                      #   # args[8] is blurring
-                      #   if (args[8] > 0)
-                      #   {
-                      #     private$current_image <- 
-                      #       gblur(private$local_img, sigma = args[8])
-                      #   } 
-
-                      #   #need to fix blur back to original image
-                      #   if (args[8] <= 0)
-                      #   {
-                      #     private$current_image <- private$local_img
-                      #   }      
-
-                      #   # args[2] is contrast
-                      #   private$current_image <- 
-                      #     private$current_image * args[2]
-
-                      #   # args[1] is brightness
-                      #   private$current_image <- 
-                      #     private$current_image + args[1]
-
-                      #   # args[3] is gamma
-                      #   private$current_image <- 
-                      #     private$current_image ^ args[3]
-
-                      #   # args[10] is colormode
-                      #   if (args[10] == 1)
-                      #     private$current_image <- channel(private$current_image, "gray")
-
-                      #   #need to create a copy of our queue so that we have 
-                      #   #persistent history 
-                      #   order_copy <- private$order_list$copy()
-                      #   # print("order_copy: ")
-                      #   # print(order_copy)
-                      #   while (order_copy$size() != 0)
-                      #   {
-                      #     popped <- order_copy$pop()
-                      #     if (popped[1] == 1)
-                      #     {
-                      #     	x1 = popped[3]
-                      #     	y1 = popped[4]
-                      #     	x2 = popped[5]
-                      #     	y2 = popped[6]
-
-                      #     	private$current_image <- private$current_image[
-                      #     		x1:x2, y1:y2,
-                      #     		]
-                      #     } 
-                      #     else if (popped[1] == 2)
-                      #     {
-                      #     	private$current_image <- rotate(private$current_image, popped[3])
-                      #     }
-                      #   }
-
-                      #   private$myhistory <- args
-
-                      #   # we get the length of the list that contains
-                      #   # all versions of the si object we create
-                      #   length <- length(private$indexed_images)
-
-                      #   #we add the latest image to the list
-                      #   #we must specify the node in the list 
-                      #   # or else it will put each value in the si object
-                      #   # as its own node 
-                      #   private$indexed_images[[length + 1]] <- private$current_image
-
-                      #   # will comment out later
-                      #   # confirming that all the si objects 
-                      #   # are being stored properly 
-                      #   # print(private$indexed_images)
-                      # },
                       # The matr argument imports a matrix as the image.
                       # The remaining two arguments are supplied by the 
                       # constructors for shinyimg.
