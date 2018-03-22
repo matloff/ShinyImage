@@ -739,7 +739,7 @@ shinyimg <- R6Class("shinyimg",
                       get_history_directory = function() {
                       	setwd('~')
                       	return(cat('history.R is located at ', getwd(), '/history.R\n', sep = ""))
-                      },
+                      }
                       #Uses a matrix as the image. Can be used to reintegrate
                       # a get_raw generated matrix.
                       # Disabled as this feature could be abused. 
