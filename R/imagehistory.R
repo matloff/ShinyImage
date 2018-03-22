@@ -178,7 +178,7 @@ siaction <- R6Class("siaction",
 #' 
 #' small_tiger$set_grayscale(0) #reverts back to colormode
 #' 
-#' small_tiger$cropxy(0,10,0,10) #crops by the coordinates inputted
+#' small_tiger$crop(0,10,0,10) #crops by the coordinates inputted
 #' 
 #' small_tiger$undo #undoes the crop
 #' 
@@ -194,15 +194,13 @@ siaction <- R6Class("siaction",
 #' @section Methods:
 #' \describe{
 #'   \item{Documentation}{The user should not need to create an action object. This is a class used exclusively by a shinyimg to keep track of a set of changes.}
-#'   \item{\code{set_autodisplay()}}{Turns on automatic rendering of image. User must still initially call render() to display image}
-#'   \item{\code{set_autodisplay_OFF()}}{Turns off automatic image rendering}
 #'   \item{\code{new(img)}}{Default constructor. \code{img} can be either a URL or a location of a local image.}
 #'   \item{\code{undo()}}{Undoes the last change done to this image. When the original image state is reached, no more undos are possible.}
 #'   \item{\code{redo()}}{Redos the next action after an undo has been performed. Will no longer redo if there are no more undos to redo.}
-#'   \item{\code{shinyUndo()}}{Undoes the last change done to this image without autorendering; used by Shiny. 
-#'      When the original image state is reached, no more undos are possible.}
+#'   \item{\code{canUndo()}}{Checks if can undo; used by Shiny.}
 #'   \item{\code{redo()}}{Redos the next action after an undo has been performed without autorendering; used by Shiny. 
 #'      Will no longer redo if there are no more undos to redo.}
+#'   \item{\code{canRedo()}}{Checks if can redo; used by Shiny.}
 #'   \item{\code{toggle_ll()}}{Returns status of lazy loading.}
 #'   \item{\code{copy()}}{Returns a copy of the image.}
 #'   \item{\code{add_brightness()}}{Adds brightness to the image.}
@@ -221,9 +219,12 @@ siaction <- R6Class("siaction",
 #'   \item{\code{set_blur()}}{Sets the blur of the image by number inputted.}
 #'   \item{\code{set_rotate()}}{Sets the degree of rotation of the image by number inputted.}
 #'   \item{\code{set_grayscale((num))}}{Sets the image to grayscale if 1 is inputted; Reverts the image back to colormode if 0 is inputted}
+#'   \item{\code{change_color_mode()}}{Toggles between grayscale and colormode.}
 #'   \item{\code{crop()}}{Uses locator to get corners of an image. Automatically finds min and max coordinates. 
-#'     After two points are selected, a cropping selection can be create in order to crop the image to the desired size.}
-#'   \item{\code{cropxy()}}{Performs same action as crop but it is used by Shiny and the parameters are different.}
+#'     After two points are selected, a cropping selection can be create in order to crop the image to the desired size.
+#'     If crop coordinates are passed, uses those instead of asking user.}
+#'   \item{\code{flip_horizontally()}}{Flips image around horizontal axis.}
+#'   \item{\code{flop_vertically()}}{Flops image around vertical axis.}
 #'   \item{\code{get_raw()}}{Gets the raw matrix slices of the current image.}
 #'   \item{\code{gethistory()}}{Returns a copy of the members of the shinyimg object stored in myhistory.}
 #'   \item{\code{get_brightness()}}{Returns a copy of the value stored for brightness.}
@@ -232,9 +233,11 @@ siaction <- R6Class("siaction",
 #'   \item{\code{get_blur()}}{Returns a copy of the value stored for blur.}
 #'   \item{\code{get_rotate()}}{Returns a copy of the value stored for rotation.}
 #'   \item{\code{get_color()}}{Returns a copy of the value stored for grayscale/colormode.}
+#'   \item{\code{get_flip()}}{Returns copy of the value stored for flip (1 means flipped).}
+#'   \item{\code{get_flop()}}{Returns copy of the value stored for flop (1 means flopped).}
 #'   \item{\code{get_imghistory()}}{Returns a copy of the list of image histories.}
 #'   \item{\code{get_actions()}}{Returns a copy of the list of the input parameters.}
-#'   \item{\code{checkRedo()}}{Returns a bool value to check the status of available Redoes; used by Shiny.}
+#'   \item{\code{get_history_directory()}}{Gets directory of the history.R file.}
 #'   \item{\code{save(filepath)}}{Saves the current state to be resumed later. \code{filepath} has a default value of 'workspace.si'}
 #'   \item{\code{saveImage(filepath)}}{Saves a jpg of the image.}
 #'   \item{\code{load(filepath)}}{Loads a previously saved state. \code{filepath} has a default value of 'workspace.si'}
@@ -315,35 +318,6 @@ shinyimg <- R6Class("shinyimg",
                         # list that stores copies of all versions 
                         # of si objects created
                       },
-                      # set_autodisplay = function() 
-                      # {
-                      #   cat(self$logged_image,'$set_autodisplay()\n',sep='',file='~/history.R',append=TRUE)
-
-                      #   private$autodisplay = 1
-                      #   #TODO: need to add self$render
-                      #   #currently, unable to display image after calling set_autodisplay()
-                      # },
-                      # #turns off autodisplay
-                      # set_autodisplay_OFF = function()
-                      # {
-                      #   cat(self$logged_image,'$set_autodisplay_OFF()\n',sep='',file='~/history.R',append=TRUE)
-                      #   private$autodisplay = 0
-                      # },
-                      # # Outputs the image as a plot
-                      # render = function() {
-                      #   cat(self$logged_image,'$render()\n',sep='',file='~/history.R',append=TRUE)
-
-                      #   # Reset the lazy actions
-                      #   private$lazy_actions = 0;
-                        
-                      #   # Apply all pending actions
-                      #   private$applyAction(private$img_history[private$actions])
-                        
-                      #   # If we actually have an image currently, try to display it. 
-                      #   if (!is.null(private$current_image)) {
-                      #     display(private$current_image, method = "raster")
-                      #   }
-                      # },
                       # Function to write the current state of the program to 
                       # file.
                       save = function(file = private$autosave_filename) {
@@ -678,8 +652,6 @@ shinyimg <- R6Class("shinyimg",
                       # The command line cropper uses locator to have the
                       # user locate the two corners of the subimage. 
                       crop = function(x1, x2, y1, y2) {
-                        # TODO edit Shiny app from cropxy to crop
-
                         # If crop coordinates not given, get them from the user.
                         if (missing(x1) || missing(x2) || missing(y1) || missing(y2))
                         {
@@ -701,8 +673,6 @@ shinyimg <- R6Class("shinyimg",
                       },
 
                       # flips an image around the horizontal axis
-                      # if arg is 0, then returns image back to original state
-                      # if no arg is provided, flips image
                       flip_horizontally = function() {
                         cat(self$logged_image,'$flip_horizontally()\n',sep="",file='~/history.R',append=TRUE)
                         if (private$flip == 0)
@@ -714,11 +684,6 @@ shinyimg <- R6Class("shinyimg",
                         	flip <- 0
                         }
 
-
-                        # # flips image
-                        # if (missing(flip))
-                        #   flip <- 1
-
                         # actionID = 13 for flip
                         # mutatorAmount = flip (how much flip is changing -- either 1 or 0)
                         # isNonCommutative = TRUE
@@ -728,8 +693,6 @@ shinyimg <- R6Class("shinyimg",
                       }, 
 
                       # flops an image around the vertical axis
-                      # if arg is 0, then returns image back to original state
-                      # if no arg is provided, flops image
                       flop_vertically = function() {
                         cat(self$logged_image,'$flop_horizontally()\n',sep="",file='~/history.R',append=TRUE)
                         # flips image
@@ -748,65 +711,6 @@ shinyimg <- R6Class("shinyimg",
                         # whichNonCommAction = 4 (bc its flop, not crop or rotate or flip)
                         private$do_action(14, flop, TRUE, 4)
                       },
-                      
-                      # HAVE NOT TRANSLATED TO DO_ACTION
-                      # # The command line cropper uses locator to have the
-                      # # user locate the two corners of the subimage. 
-                      # crop = function(x1, x2, y1, y2) {
-                      #   # TODO edit Shiny app from cropxy to crop
-                      #   if (missing(x1) || missing(x2) || missing(y1) || missing(y2))
-                      #   {
-                      #     #possibly create a special instance for rotation
-                      #     print("Select the two opposite corners 
-                      #           of a rectangle on the plot.")
-                      #     location = locator(2)
-                      #     x1 = min(location$x[1], location$x[2])
-                      #     y1 = min(location$y[1], location$y[2])
-                      #     x2 = max(location$x[1], location$x[2])
-                      #     y2 = max(location$y[1], location$y[2])
-                      #   }
-
-                      #   # NM:  for history file
-                      #   cmd <- paste('cropxy(',
-                      #      x1, ',', x2, ',', y1, ',', y2, ')', sep='')
-                      #   cat(self$logged_image,'$',cmd,'\n',sep='',file='~/history.R',append=TRUE)
-                        
-                      # DOES NOTHING:
-                      #   private$current_image <<- 
-                      #     private$current_image[x1:x2,y1:y2,]
-                        
-                      #   # In order to maintain a correct cropping, 
-                      #   # we need to know how much of
-                      #   # the original image has already been cropped.
-                      #   xdiff = x2 - x1
-                      #   ydiff = y2 - y1
-                        
-                      #   # The offset is needed to maintain the ABSOLUTE 
-                      #   # crop data.
-                      #   private$xoffset = private$xoffset + x1
-                      #   private$yoffset = private$yoffset + y1
-                        
-                      #   # Create the absolute crop data using the offsets
-                      #   # and new area.
-                      #   private$xy1 = c(private$xoffset, private$yoffset)
-                      #   private$xy2 = c(private$xoffset + xdiff, 
-                      #                   private$yoffset + ydiff)
-                      #   # private$add_order(1, private$xoffset, private$yoffset, private$xoffset + xdiff, 
-                      #   #                 private$yoffset + ydiff)
-
-                      #   # Do before add_action() so we have updated private$actions.
-                      #   private$add_order(1, private$actions, x1, y1, x2, y2)
-                      #   private$add_action()
-
-
-                      #   # private$add_order(2, private$actions + 1, 10, NULL, NULL, NULL)
-                      #   # actionID = 9 (9 was for add/remove rotate but we need to keep it
-                      #   # for set_rotate so we can pass in the relative value for updating queue)
-                      #   # mutatorAmount = 10; how much rotate is changing
-                      #   # isNonCommutative = TRUE
-                      #   # whichNonCommAction = 2 (bc its rotate, not crop)
-                      #   private$do_action(9, rotate - private$rotate, TRUE, 2)
-                      # },
    
                       # Returns the size of the current image.
                       # Needed for Shiny to determine the max values of
@@ -886,12 +790,6 @@ shinyimg <- R6Class("shinyimg",
                       	setwd('~')
                       	return(cat('history.R is located at ', getwd(), '/history.R\n', sep = ""))
                       },
-                      # returns a copy of the status of redoes available
-                      checkRedo = function() {
-                        if (private$actions < length(private$img_history))
-                          return(TRUE)
-                        else return(FALSE)
-                      }
                       #Uses a matrix as the image. Can be used to reintegrate
                       # a get_raw generated matrix.
                       # Disabled as this feature could be abused. 
